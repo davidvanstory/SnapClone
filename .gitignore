@@ -41,5 +41,4 @@ app-example
 # Local configuration - do not commit
 mcp.json
 
-
-
+SupabaseAdmin.json

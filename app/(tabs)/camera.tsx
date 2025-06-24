@@ -6,6 +6,7 @@
  * - Camera permissions handling
  * - Photo capture with quality settings
  * - Image preview after capture
+ * - Photo upload to Supabase Storage
  * - Themed styling that adapts to light/dark mode
  * - Error handling and loading states
  */
@@ -13,8 +14,9 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useThemeColor } from '@/hooks/useThemeColor';
+import { uploadPhoto } from '@/lib/photoService';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function CameraScreen() {
@@ -27,6 +29,12 @@ export default function CameraScreen() {
   // State for capturing process
   const [isCapturing, setIsCapturing] = useState(false);
   
+  // State for upload process
+  const [isUploading, setIsUploading] = useState(false);
+  
+  // State for upload success
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  
   // Camera permissions hook
   const [permission, requestPermission] = useCameraPermissions();
   
@@ -37,6 +45,7 @@ export default function CameraScreen() {
 
   console.log('🎥 Camera Screen - Rendering with permission:', permission?.granted);
   console.log('📷 Camera Screen - Captured photo:', capturedPhoto ? 'Photo captured' : 'No photo');
+  console.log('⏫ Camera Screen - Upload state:', { isUploading, uploadSuccess });
 
   /**
    * Handle camera permission request
@@ -84,6 +93,7 @@ export default function CameraScreen() {
       
       console.log('✅ Camera Screen - Photo captured:', photo.uri);
       setCapturedPhoto(photo.uri);
+      setUploadSuccess(false); // Reset upload success state
       
     } catch (error) {
       console.error('❌ Camera Screen - Capture error:', error);
@@ -94,11 +104,67 @@ export default function CameraScreen() {
   };
 
   /**
+   * Upload photo to Supabase
+   */
+  const handleUploadPhoto = async () => {
+    if (!capturedPhoto) {
+      console.error('❌ Camera Screen - No photo to upload');
+      Alert.alert('Error', 'No photo to upload');
+      return;
+    }
+
+    console.log('⏫ Camera Screen - Starting photo upload');
+    setIsUploading(true);
+
+    try {
+      const result = await uploadPhoto(capturedPhoto);
+      
+      if (result.success) {
+        console.log('✅ Camera Screen - Photo uploaded successfully!');
+        console.log('🌐 Public URL:', result.publicUrl);
+        
+        setUploadSuccess(true);
+        Alert.alert(
+          'Success! 🎉',
+          'Your photo has been uploaded to Supabase!',
+          [
+            {
+              text: 'Take Another',
+              onPress: resetCamera,
+            },
+            {
+              text: 'OK',
+              style: 'default',
+            },
+          ]
+        );
+      } else {
+        console.error('❌ Camera Screen - Upload failed:', result.error);
+        Alert.alert(
+          'Upload Failed',
+          result.error || 'Failed to upload photo. Please try again.',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error) {
+      console.error('❌ Camera Screen - Upload error:', error);
+      Alert.alert(
+        'Upload Error',
+        'An unexpected error occurred while uploading. Please try again.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  /**
    * Reset to camera view from preview
    */
   const resetCamera = () => {
     console.log('🔄 Camera Screen - Resetting camera view');
     setCapturedPhoto(null);
+    setUploadSuccess(false);
   };
 
   // Handle permission not granted
@@ -144,12 +210,41 @@ export default function CameraScreen() {
             resizeMode="cover"
           />
           <View style={styles.previewOverlay}>
-            <TouchableOpacity
-              style={[styles.resetButton, { backgroundColor: tintColor }]}
-              onPress={resetCamera}
-            >
-              <Text style={styles.resetButtonText}>Take Another Photo</Text>
-            </TouchableOpacity>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={[styles.secondaryButton, { borderColor: tintColor }]}
+                onPress={resetCamera}
+                disabled={isUploading}
+              >
+                <Text style={[styles.secondaryButtonText, { color: tintColor }]}>
+                  Take Another
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[
+                  styles.primaryButton,
+                  { backgroundColor: uploadSuccess ? '#4CAF50' : tintColor },
+                  isUploading && styles.buttonDisabled
+                ]}
+                onPress={handleUploadPhoto}
+                disabled={isUploading || uploadSuccess}
+              >
+                <Text style={styles.primaryButtonText}>
+                  {isUploading 
+                    ? 'Uploading...' 
+                    : uploadSuccess 
+                      ? 'Uploaded! ✅' 
+                      : 'Save to Supabase'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            
+            {isUploading && (
+              <Text style={[styles.statusText, { color: textColor }]}>
+                📤 Uploading to Supabase...
+              </Text>
+            )}
           </View>
         </>
       ) : (
@@ -277,19 +372,47 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 120,
+    height: 140,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    paddingHorizontal: 20,
   },
-  resetButton: {
+  buttonContainer: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 8,
+  },
+  primaryButton: {
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
+    minWidth: 140,
+    alignItems: 'center',
   },
-  resetButtonText: {
+  primaryButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  secondaryButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 2,
+    minWidth: 120,
+    alignItems: 'center',
+  },
+  secondaryButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  statusText: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 8,
   },
 }); 
