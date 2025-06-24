@@ -33,6 +33,14 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow SnapClone to access your camera to take photos",
+          "microphonePermission": "Allow SnapClone to access your microphone to record videos",
+          "recordAudioAndroid": true
+        }
       ]
     ],
     "experiments": {
