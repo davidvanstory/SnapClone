@@ -78,4 +78,4 @@ export interface Database {
   };
 }
 
-console.log('✅ Supabase client initialized successfully'); 
+console.log('✅ Supabase client initialized successfully');
