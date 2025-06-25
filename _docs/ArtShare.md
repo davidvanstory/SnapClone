@@ -85,18 +85,12 @@ A mobile app for art students to share works-in-progress in low-pressure, epheme
 ### Asset Management
 - [ ] **Frame Assets**: High-quality PNG overlays with transparency
 - [ ] **Image Optimization**: Expo ImageManipulator for compression and resizing
-- [ ] **Font Integration**: Google Fonts integration for Montserrat and Instrument Serif
+- [ ] **Font Integration**: Refer to UIDesign.md
 
 ## Design Requests
 
 ### Visual Identity
-- [ ] **Monochromatic elegance**: White backgrounds, charcoal text (#2C2C2C), soft gray surfaces
-   - [ ] Single accent color for critical actions only
-- [ ] **Typography system**: 
-   - [ ] **Primary**: Montserrat for UI elements, buttons, body text, and labels
-   - [ ] **Display**: Instrument Serif for headings, user names, and emphasis
-   - [ ] Generous line spacing (1.5-1.6x) and clear hierarchy
-- [ ] **Generous whitespace**: 8px grid system with breathing room around all elements
+- Refer to UIDesign.md
 
 ### Interface Design
 - [ ] **Camera-first layout**: Full-screen capture with minimal, translucent controls

@@ -18,7 +18,7 @@
 **🚨 What Needs Major Rework for Draft:**
 - **Class Joining Flow**: Current flow has username setup, but Draft needs class code entry after authentication
 - **Home Screen**: Current shows demo content, needs class feed with ephemeral posts
-- **UI/Typography**: Uses default fonts, needs Instrument Serif + Montserrat
+- **UI/Typography**: Review UIDesign.md
 - **Database Schema**: Missing classes, posts, comments, AI feedback tables
 - **Navigation**: Current tabs are "Home" and "Explore", needs "Class Feed" and "Camera"
 
@@ -100,7 +100,7 @@
   - [ ] 1.10 Create class joining modal for accessing class feed
   - [ ] 1.11 Update profile setup to be optional/simplified for Draft requirements
 
-- [x] **2.0 Camera & Photo Management System** 
+- [x] **2.0 Camera & Photo Management System (Glass Morphism Interface)**
   - [x] 2.1 Set up camera permissions handling and error states
   - [x] 2.2 Create camera interface with full-screen viewfinder
   - [x] 2.3 Implement photo capture with quality settings and haptic feedback
@@ -109,9 +109,11 @@
   - [x] 2.6 Create photo upload service with metadata storage
   - [x] 2.7 Implement file size optimization and MIME type handling
   - [x] 2.8 Add upload progress indicators and success/error states
-  - [ ] 2.9 Create frame selection interface with live preview
-  - [ ] 2.10 Implement frame overlay processing using Expo ImageManipulator
-  - [ ] 2.11 Add frame assets and horizontal carousel selector
+  - [ ] 2.9 Create glass morphism frame selection interface with live preview: horizontal carousel with glass morphism frame cards showing previews
+  - [ ] 2.10 Implement frame overlay processing using Expo ImageManipulator with "Add Frame" button using glass morphism styling
+  - [ ] 2.11 Update camera controls to glass morphism specs: bottom glass card slides up from edge, large 80px centered capture button with subtle shadow, settings as glass morphism pills
+  - [ ] 2.12 Build post-capture sharing interface with glass morphism: artwork displayed full-screen with large glass morphism controls card centered over artwork
+  - [ ] 2.13 Add frame assets and horizontal carousel selector with glass morphism styling matching UIDesign.md specifications
 
 - [ ] **3.0 Class Management & Social Infrastructure**
   - [ ] 3.1 Create classes database migration with join codes
@@ -125,53 +127,53 @@
   - [ ] 3.9 Set up RLS policies for class-based content isolation
   - [ ] 3.10 Create demo data seed with 5 fake classmates and sample posts
 
-- [ ] **4.0 Feed Display & Post Creation System**
-  - [ ] 4.1 Build main class feed screen layout with scroll view
-  - [ ] 4.2 Create FeedPost component for artwork display
-  - [ ] 4.3 Implement post creation service with sharing controls
-  - [ ] 4.4 Build sharing controls interface (viewer limits, duration selection)
-  - [ ] 4.5 Create post upload flow from camera to feed
-  - [ ] 4.6 Add immediate feed updates when new posts are created
-  - [ ] 4.7 Implement artwork-centric layout with maximum comfortable sizing
-  - [ ] 4.8 Create elegant typography hierarchy (Instrument Serif + Montserrat)
-  - [ ] 4.9 Build smooth loading states and skeleton screens
-  - [ ] 4.10 Add post interaction tap handlers for full-screen viewing
+- [ ] **4.0 Glass Morphism Feed Display (Artwork-as-Background System)**
+  - [ ] 4.1 Replace current home screen with artwork-as-background feed: each post artwork fills entire screen with dark gradient overlay (rgba(0,0,0,0.3) to transparent)
+  - [ ] 4.2 Create glass morphism feed card components: Top card (post info), Bottom-left card (stats), Bottom-right card (actions) with exact UIDesign.md positioning (20px margins)
+  - [ ] 4.3 Implement vertical swipe navigation between posts with smooth artwork crossfades (400ms ease-out transitions)
+  - [ ] 4.4 Build FeedPost component with Primary Glass Card specs for post info: artist name (Instrument Serif 18pt white), class name (Montserrat 12pt rgba(255,255,255,0.7)), timer (Montserrat 14pt white)
+  - [ ] 4.5 Create bottom-left stats card with Secondary Glass specs: view count "3 of 5 viewers" (Montserrat 12pt), time remaining "Expires in 18 min" (Montserrat 11pt)
+  - [ ] 4.6 Build bottom-right actions card with Secondary Glass specs: camera icon (24px white), AI feedback icon, comment icon with count, 12px gaps between buttons
+  - [ ] 4.7 Replace current sharing controls with glass morphism card centered over artwork: viewer limit slider (warm sage accent), duration pills (30min/2hrs/tomorrow), "Share with Class" button (warm sage background)
+  - [ ] 4.8 Implement glass morphism typography hierarchy: Instrument Serif for artist names/headers, Montserrat for all UI elements with exact UIDesign.md font sizes
+  - [ ] 4.9 Build skeleton screens maintaining glass morphism aesthetic: animated gradients from rgba(255,255,255,0.1) to rgba(255,255,255,0.2) with backdrop blur
+  - [ ] 4.10 Create smooth loading states with glass morphism cards appearing (scale 0.95->1.0 with 300ms opacity fade-in)
 
-- [ ] **5.0 Social Features & Commenting System**
-  - [ ] 5.1 Create individual post detail screen with full-screen artwork view
-  - [ ] 5.2 Build CommentBubble component with character limit display
-  - [ ] 5.3 Implement comment creation with 100-150 character validation
-  - [ ] 5.4 Set up real-time comment updates using Supabase Realtime
-  - [ ] 5.5 Create comment submission with immediate optimistic updates
-  - [ ] 5.6 Build encouraging comment tone with pre-populated examples
-  - [ ] 5.7 Implement comment animation and smooth appearance effects
-  - [ ] 5.8 Add comment timestamp display and user attribution
-  - [ ] 5.9 Create comment state management in Zustand store
-  - [ ] 5.10 Build supportive interaction patterns and UI feedback
+- [ ] **5.0 Glass Morphism Social Features & Commenting System**
+  - [ ] 5.1 Create full-screen artwork view with glass morphism comments overlay that slides up from bottom: higher opacity glass card (rgba(255,255,255,0.25)) with scrollable comment list
+  - [ ] 5.2 Build CommentBubble component with glass morphism background and precise typography: user names (Instrument Serif 14pt white), comment text (Montserrat 14pt rgba(255,255,255,0.9)), timestamps (Montserrat 11pt rgba(255,255,255,0.5))
+  - [ ] 5.3 Implement comment input with glass morphism styling: background rgba(255,255,255,0.2), border rgba(255,255,255,0.3), placeholder rgba(255,255,255,0.5), character counter (subtle, appears when typing)
+  - [ ] 5.4 Create user names in Instrument Serif 14pt white over artwork backgrounds with 12px spacing between comments per UIDesign.md
+  - [ ] 5.5 Add comment text in Montserrat 14pt rgba(255,255,255,0.9) with proper line height (1.4-1.5x) and padding within glass morphism comment bubbles
+  - [ ] 5.6 Implement timestamp display in Montserrat 11pt rgba(255,255,255,0.5) positioned below comment text with consistent spacing
+  - [ ] 5.7 Create comment submission with warm sage accent send button (#8B9D83) and paper plane icon, integrated on right side of multi-line input
+  - [ ] 5.8 Build encouraging pre-populated demo comments with glass morphism styling: "Beautiful work on the shading!", "Love the composition!", "The texture details are amazing!"
+  - [ ] 5.9 Add smooth comment appearance animations: slide up and fade (300ms) maintaining glass morphism backdrop blur throughout
+  - [ ] 5.10 Implement real-time comment updates with glass morphism aesthetic: new comments appear with scale from 0.95 to 1.0 plus opacity fade-in
 
-- [ ] **6.0 AI Feedback Integration System**
-  - [ ] 6.1 Set up OpenAI API account and obtain GPT-4V access keys
-  - [ ] 6.2 Create AI feedback database migration for storing responses
-  - [ ] 6.3 Build Supabase Edge Function for secure OpenAI API integration
-  - [ ] 6.4 Create AIFeedbackButton component (appears only on user's own posts)
-  - [ ] 6.5 Implement AI prompt engineering for encouraging, actionable feedback
-  - [ ] 6.6 Build loading states with 3-second target response time
-  - [ ] 6.7 Create AI response display with proper formatting
-  - [ ] 6.8 Implement unlimited AI feedback access (no rate limiting)
-  - [ ] 6.9 Add error handling for AI service unavailability
-  - [ ] 6.10 Create AI feedback state management and caching
+- [ ] **6.0 Glass Morphism AI Feedback Integration System**
+  - [ ] 6.1 Create "Get AI Feedback" button in bottom-right actions card with glass morphism styling and warm tan accent (#B8956A) - only visible on user's own posts
+  - [ ] 6.2 Implement AI feedback display as large glass morphism card with higher opacity (rgba(255,255,255,0.25)) centered over artwork background
+  - [ ] 6.3 Add "AI Feedback" header in Instrument Serif 18pt white with proper spacing within glass card per UIDesign.md specifications
+  - [ ] 6.4 Create elegant loading states with skeleton screen: animated gradient from rgba(255,255,255,0.1) to rgba(255,255,255,0.2) maintaining backdrop blur
+  - [ ] 6.5 Display "Analyzing your artwork..." in Montserrat 12pt rgba(255,255,255,0.7) during 2-3 second processing with realistic progression
+  - [ ] 6.6 Format AI response text in Montserrat 14pt rgba(255,255,255,0.9) with encouraging, constructive tone and proper line height (1.4-1.5x)
+  - [ ] 6.7 Add dismissal interaction: tap outside card or X button (top-right) with smooth fade-out animation (300ms) maintaining glass aesthetic
+  - [ ] 6.8 Position AI feedback button in bottom-right actions card alongside camera/comment icons with 12px gaps per UIDesign.md positioning specs
+  - [ ] 6.9 Set up OpenAI API account, obtain GPT-4V access keys, and implement via Supabase Edge Functions for artwork analysis
+  - [ ] 6.10 Ensure AI feedback button only appears on user's own posts with consistent glass morphism styling (Secondary Glass specs for icon button)
 
-- [ ] **7.0 Ephemeral Content Management System**
-  - [ ] 7.1 Create CountdownTimer component with live seconds display
-  - [ ] 7.2 Implement post expiration calculation and duration tracking
-  - [ ] 7.3 Build automatic post deletion system via scheduled function
-  - [ ] 7.4 Create cleanup Edge Function for expired content removal
-  - [ ] 7.5 Implement smooth fade-out animations for post expiration
-  - [ ] 7.6 Set up storage cleanup for expired image files
-  - [ ] 7.7 Build peaceful transition animations (200-300ms duration)
-  - [ ] 7.8 Create post-deletion feed reorganization logic
-  - [ ] 7.9 Implement timer persistence across app restarts
-  - [ ] 7.10 Add visual indicators for content lifecycle stages
+- [ ] **7.0 Glass Morphism Ephemeral Content Management System**
+  - [ ] 7.1 Create countdown timer in Montserrat 14pt white within top glass card showing exact time remaining with live updates
+  - [ ] 7.2 Implement live seconds display with smooth number transitions and proper typography (Montserrat Regular) maintaining glass morphism backdrop blur
+  - [ ] 7.3 Add "Expires in X min" text in Montserrat 11pt rgba(255,255,255,0.7) in bottom-left stats card with consistent spacing
+  - [ ] 7.4 Create post expiration with 2-second fade-out plus scale to 0.95 animation maintaining glass morphism aesthetic throughout transition
+  - [ ] 7.5 Implement smooth artwork crossfade when posts expire and reorganize: 400ms ease-out transitions with glass cards maintained during artwork transitions
+  - [ ] 7.6 Build visual countdown warnings for last 60 seconds with subtle glass morphism effects: gentle pulsing of timer text, no jarring color changes
+  - [ ] 7.7 Create 5-second "undo" option with glass morphism popup after deletion: centered glass card with "Undo" button using warm sage accent (#8B9D83)
+  - [ ] 7.8 Add peaceful transition animations maintaining glass aesthetic: all ephemeral actions use smooth scale/fade transitions rather than abrupt changes
+  - [ ] 7.9 Implement automatic cleanup with smooth feed reorganization: expired posts fade out gracefully while maintaining glass morphism cards for remaining content
+  - [ ] 7.10 Create visual indicators for content lifecycle within glass cards: subtle timer progression without anxiety-inducing urgency, celebrating temporary nature
 
 - [ ] **8.0 Demo Environment & Content Management**
   - [ ] 8.1 Create realistic fake user profiles (Maya, Jordan, Sam, Casey, Riley)
@@ -185,17 +187,17 @@
   - [ ] 8.9 Build content quality validation for realistic class environment
   - [ ] 8.10 Set up demo reset functionality for clean demonstrations
 
-- [ ] **9.0 UI Polish & Design Implementation (CRITICAL - CURRENT UI IS WRONG)**
-  - [ ] 9.1 Implement monochromatic color scheme (#2C2C2C charcoal text, white backgrounds)
-  - [ ] 9.2 Set up custom font loading (Instrument Serif + Montserrat) - currently using SpaceMono
-  - [ ] 9.3 Create generous whitespace design with 8px grid system
-  - [ ] 9.4 Rebuild tab navigation interface (currently "Home"/"Explore", needs "Class Feed"/"Camera")
-  - [ ] 9.5 Implement single accent color for critical actions (currently using tint colors)
-  - [ ] 9.6 Create thumb-friendly touch targets (44px minimum)
-  - [ ] 9.7 Build progressive disclosure for advanced features
-  - [ ] 9.8 Implement haptic feedback for key interactions
-  - [ ] 9.9 Create smooth micro-animations throughout app
-  - [ ] 9.10 Add visual hierarchy consistency across all screens
+- [ ] **9.0 Glass Morphism Design System Implementation (CRITICAL - REPLACE CURRENT SOLID UI)**
+  - [ ] 9.1 Implement complete glass morphism design system from UIDesign.md replacing all current solid color implementations
+  - [ ] 9.2 Update Colors.ts to use exact UIDesign.md specifications: Primary Glass (rgba(255,255,255,0.15)), Secondary Glass (rgba(255,255,255,0.1)), Text Glass (rgba(255,255,255,0.9)), accent colors (Warm Sage #8B9D83, Soft Coral #E67E50, Warm Tan #B8956A)
+  - [ ] 9.3 Update ThemedText.tsx typography to exact UIDesign.md font sizes: Instrument Serif (32-42pt app name, 24-28pt screen titles, 16-18pt usernames), Montserrat (20-24pt headers, 14-16pt body, 12-14pt labels, 11-12pt metadata, 10-11pt small)
+  - [ ] 9.4 Create GlassMorphismCard component with Primary Glass specs: background rgba(255,255,255,0.15), backdrop-filter blur(12px), border 1px solid rgba(255,255,255,0.2), box-shadow 0 4px 20px rgba(0,0,0,0.08), border-radius 20px
+  - [ ] 9.5 Create SecondaryGlassCard component with Secondary Glass specs: background rgba(255,255,255,0.1), backdrop-filter blur(8px), border 1px solid rgba(255,255,255,0.15), box-shadow 0 2px 12px rgba(0,0,0,0.05), border-radius 16px
+  - [ ] 9.6 Replace current feed layout with artwork-as-background system: full-screen artwork with dark gradient overlay (rgba(0,0,0,0.3) to transparent)
+  - [ ] 9.7 Implement glass morphism feed cards in exact positions: Top card (20px margins, post info), Bottom left (20px from edges, stats), Bottom right (20px from edges, actions with 12px gaps)
+  - [ ] 9.8 Update all button components to glass morphism specs: Primary buttons (rgba(255,255,255,0.9) or warm sage), Secondary buttons (Primary Glass specs), Icon buttons (44x44px, Secondary Glass specs, 22px border radius)
+  - [ ] 9.9 Replace current tab navigation with glass morphism styling and correct tab names: "Class Feed" and "Camera" instead of "Home" and "Explore"
+  - [ ] 9.10 Implement glass morphism animations: screen transitions (400ms cubic-bezier(0.25,0.46,0.45,0.94)), element animations (cards scale 0.95->1.0 with 300ms fade-in), button interactions (scale to 0.98 for 150ms)
 
 - [ ] **10.0 Performance Optimization & Testing**
   - [ ] 10.1 Optimize photo capture to launch under 1 second

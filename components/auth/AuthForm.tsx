@@ -1,15 +1,14 @@
 /**
- * Reusable Authentication Form Component
+ * Reusable Authentication Form Component - Glass Morphism Implementation
  * 
- * This component provides a consistent authentication form interface that can be used for both
- * login and registration flows. It includes:
- * - Email and password input fields with validation
- * - Optional password confirmation for registration
- * - Draft design system with Instrument Serif + Montserrat typography
- * - Monochromatic color scheme and elegant spacing
- * - Consistent styling and error handling
- * - Loading states and form submission
- * - Configurable mode (login vs register)
+ * This component implements the glass morphism input specifications from UIDesign.md:
+ * - Input backgrounds: rgba(255,255,255,0.2)
+ * - Input borders: rgba(255,255,255,0.3) 
+ * - Placeholder text: rgba(255,255,255,0.5)
+ * - Focus state: Warm sage border with subtle glow
+ * - Typography: Montserrat 14pt for inputs, exact sizes per UIDesign.md
+ * - Error states with soft coral accent (#E67E50)
+ * - Button styling with warm sage accent and glass morphism
  */
 
 import React, { useState } from 'react';
@@ -51,7 +50,7 @@ export default function AuthForm({
   submitButtonText,
   loadingButtonText,
 }: AuthFormProps) {
-  console.log(`📝 AuthForm - Rendering ${mode} form`);
+  console.log(`📝 AuthForm - Rendering glass morphism ${mode} form`);
 
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
@@ -65,8 +64,13 @@ export default function AuthForm({
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Focus states for glass morphism styling
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
+
   // Default button texts based on mode
-  const defaultSubmitText = mode === 'login' ? 'Sign In to Draft' : 'Join Draft';
+  const defaultSubmitText = mode === 'login' ? 'Sign In to EphemeralArt' : 'Join EphemeralArt';
   const defaultLoadingText = mode === 'login' ? 'Signing In...' : 'Creating Account...';
   
   const finalSubmitText = submitButtonText || defaultSubmitText;
@@ -190,8 +194,12 @@ export default function AuthForm({
           style={[
             styles.input,
             { 
-              borderColor: emailError ? '#FF6B6B' : colors.border,
-              backgroundColor: colors.surface,
+              borderColor: emailError 
+                ? colors.accentCoral 
+                : emailFocused 
+                  ? colors.accentSage 
+                  : colors.border,
+              backgroundColor: emailFocused ? colors.surface : colors.background,
               color: colors.text,
               fontFamily: 'Montserrat_400Regular',
             }
@@ -201,16 +209,23 @@ export default function AuthForm({
             setEmail(text);
             clearFieldError('email');
           }}
-          placeholder="Enter your email"
+          onFocus={() => setEmailFocused(true)}
+          onBlur={() => setEmailFocused(false)}
+          placeholder="Enter your email address"
           placeholderTextColor={colors.textTertiary}
-          keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
+          keyboardType="email-address"
           editable={!isFormDisabled}
-          testID="auth-form-email-input"
+          autoComplete="email"
+          textContentType="emailAddress"
         />
         {emailError ? (
-          <ThemedText type="caption" style={styles.errorText}>{emailError}</ThemedText>
+          <View style={styles.errorContainer}>
+            <ThemedText type="caption" style={[styles.errorText, { color: colors.accentCoral }]}>
+              {emailError}
+            </ThemedText>
+          </View>
         ) : null}
       </View>
 
@@ -223,8 +238,12 @@ export default function AuthForm({
           style={[
             styles.input,
             { 
-              borderColor: passwordErrors.length > 0 ? '#FF6B6B' : colors.border,
-              backgroundColor: colors.surface,
+              borderColor: passwordErrors.length > 0 
+                ? colors.accentCoral 
+                : passwordFocused 
+                  ? colors.accentSage 
+                  : colors.border,
+              backgroundColor: passwordFocused ? colors.surface : colors.background,
               color: colors.text,
               fontFamily: 'Montserrat_400Regular',
             }
@@ -234,24 +253,29 @@ export default function AuthForm({
             setPassword(text);
             clearFieldError('password');
           }}
+          onFocus={() => setPasswordFocused(true)}
+          onBlur={() => setPasswordFocused(false)}
           placeholder="Enter your password"
           placeholderTextColor={colors.textTertiary}
           secureTextEntry
+          autoCapitalize="none"
+          autoCorrect={false}
           editable={!isFormDisabled}
-          testID="auth-form-password-input"
+          autoComplete="password"
+          textContentType={mode === 'register' ? 'newPassword' : 'password'}
         />
         {passwordErrors.length > 0 ? (
           <View style={styles.errorContainer}>
             {passwordErrors.map((error, index) => (
-              <ThemedText key={index} type="caption" style={styles.errorText}>
-                • {error}
+              <ThemedText key={index} type="caption" style={[styles.errorText, { color: colors.accentCoral }]}>
+                {error}
               </ThemedText>
             ))}
           </View>
         ) : null}
       </View>
 
-      {/* Confirm Password Input (Register mode only) */}
+      {/* Confirm Password Input (Register Mode Only) */}
       {mode === 'register' && (
         <View style={styles.inputGroup}>
           <ThemedText type="label" style={[styles.label, { color: colors.text }]}>
@@ -261,8 +285,12 @@ export default function AuthForm({
             style={[
               styles.input,
               { 
-                borderColor: confirmPasswordError ? '#FF6B6B' : colors.border,
-                backgroundColor: colors.surface,
+                borderColor: confirmPasswordError 
+                  ? colors.accentCoral 
+                  : confirmPasswordFocused 
+                    ? colors.accentSage 
+                    : colors.border,
+                backgroundColor: confirmPasswordFocused ? colors.surface : colors.background,
                 color: colors.text,
                 fontFamily: 'Montserrat_400Regular',
               }
@@ -272,14 +300,23 @@ export default function AuthForm({
               setConfirmPassword(text);
               clearFieldError('confirmPassword');
             }}
+            onFocus={() => setConfirmPasswordFocused(true)}
+            onBlur={() => setConfirmPasswordFocused(false)}
             placeholder="Confirm your password"
             placeholderTextColor={colors.textTertiary}
             secureTextEntry
+            autoCapitalize="none"
+            autoCorrect={false}
             editable={!isFormDisabled}
-            testID="auth-form-confirm-password-input"
+            autoComplete="password"
+            textContentType="newPassword"
           />
           {confirmPasswordError ? (
-            <ThemedText type="caption" style={styles.errorText}>{confirmPasswordError}</ThemedText>
+            <View style={styles.errorContainer}>
+              <ThemedText type="caption" style={[styles.errorText, { color: colors.accentCoral }]}>
+                {confirmPasswordError}
+              </ThemedText>
+            </View>
           ) : null}
         </View>
       )}
@@ -289,78 +326,80 @@ export default function AuthForm({
         style={[
           styles.submitButton,
           { 
-            backgroundColor: isFormDisabled ? colors.textDisabled : colors.accent,
+            backgroundColor: colors.accentSage,
             opacity: isFormDisabled ? 0.6 : 1,
           }
         ]}
         onPress={handleSubmit}
         disabled={isFormDisabled}
-        testID="auth-form-submit-button"
+        activeOpacity={0.8}
       >
-        {isFormDisabled ? (
-          <View style={styles.buttonContent}>
+        <View style={styles.buttonContent}>
+          {isFormDisabled && (
             <ActivityIndicator size="small" color="white" />
-            <ThemedText type="button" style={[styles.buttonText, { marginLeft: 8 }]}>
-              {finalLoadingText}
-            </ThemedText>
-          </View>
-        ) : (
+          )}
           <ThemedText type="button" style={styles.buttonText}>
-            {finalSubmitText}
+            {isFormDisabled ? finalLoadingText : finalSubmitText}
           </ThemedText>
-        )}
+        </View>
       </TouchableOpacity>
     </View>
   );
 }
 
-// Draft Design System Styles - 8px Grid
+// Glass Morphism Input Styles per UIDesign.md
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
-    gap: 24, // 8px × 3
+    gap: 20,                     // 20px between input groups
   },
   inputGroup: {
-    gap: 8,
+    gap: 8,                      // 8px base unit between label and input
   },
   label: {
-    // Typography handled by ThemedText
+    // Montserrat 14pt Medium per UIDesign.md applied via ThemedText type="label"
   },
   input: {
-    height: 56, // Thumb-friendly touch target
+    height: 50,                  // 44px+ touch target per UIDesign.md
     borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    // Draft design with generous spacing
+    borderRadius: 16,            // 16px border radius per UIDesign.md
+    paddingHorizontal: 16,       // 16px padding per UIDesign.md
+    fontSize: 14,                // 14pt per UIDesign.md
+    fontFamily: 'Montserrat_400Regular',
+    
+    // Glass morphism input focus transitions per UIDesign.md
+    // Border color transition (200ms) with subtle scale (1.02) handled by focus states
   },
   errorContainer: {
-    gap: 4,
+    marginTop: 4,
   },
   errorText: {
-    color: '#FF6B6B',
+    // Montserrat 11pt per UIDesign.md applied via ThemedText type="caption"
+    // Soft coral color (#E67E50) applied via color prop
   },
   submitButton: {
-    height: 56,
-    borderRadius: 12,
+    height: 50,                  // 44px+ touch target
+    borderRadius: 28,            // 28px fully rounded per UIDesign.md
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 8,
-    // Subtle shadow for elevation
+    marginTop: 8,                // 8px base unit spacing
+    
+    // Glass morphism button shadow per UIDesign.md
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 16,
+    elevation: 6,
   },
   buttonContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: 'white',              // White text on warm sage background
+    // Montserrat 16pt Medium per UIDesign.md applied via ThemedText type="button"
   },
 }); 

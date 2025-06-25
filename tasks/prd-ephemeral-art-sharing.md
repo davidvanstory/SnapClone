@@ -116,10 +116,14 @@ Draft is a mobile application designed to reduce anxiety and pressure for art st
 30. **Post-Deletion Feed Update**: The system must smoothly reorganize remaining posts when content is removed
 
 ### User Interface & Navigation
-31. **Clean Typography Hierarchy**: The system must use Instrument Serif for user names/headings and Montserrat for body text/UI elements
-32. **Monochromatic Color Scheme**: The system must use white backgrounds, charcoal text (#2C2C2C), with single accent color for critical actions
-33. **Minimal Tab Navigation**: The system must provide simple two-tab interface ("Class Feed" and "Camera") with clean visual design
-34. **Class Context Display**: The system must show class name in header ("Monday Drawing Fundamentals") for user orientation
+31. **Glass Morphism Design**: The system must implement the complete glass morphism design system from UIDesign.md with backdrop blur, translucent cards, and layered content
+32. **Artwork-as-Background Feed**: The system must display each artwork as full-screen background with glass morphism cards layered on top for post information, stats, and actions
+33. **Typography System**: The system must implement Instrument Serif for headers/usernames and Montserrat for UI elements with specified font sizes from UIDesign.md
+34. **Monochromatic Color Palette**: The system must use the specified color system (Pure White #FFFFFF, Charcoal Text #2C2C2C, Soft Gray Surfaces #F8F8F8, accent colors sparingly)
+35. **Glass Morphism Cards**: The system must implement Primary Glass Cards (rgba(255,255,255,0.15) with 12px blur) and Secondary Glass Cards (rgba(255,255,255,0.1) with 8px blur)
+36. **Feed Navigation**: The system must allow vertical swipe between posts with smooth artwork crossfades behind glass cards
+37. **Tab Navigation**: The system must provide glass morphism tab bar with "Class Feed" and "Camera" using the specified styling
+38. **Class Context Display**: The system must show class name in header using Montserrat typography
 
 ---
 
@@ -147,37 +151,58 @@ Draft is a mobile application designed to reduce anxiety and pressure for art st
 
 ## Design Considerations
 
-### Visual Identity & Aesthetic
-The design must embody "monochromatic elegance" that reduces visual clutter and creates a calming, professional environment conducive to sharing vulnerable creative work.
+### Visual Identity & Aesthetic (Source: UIDesign.md)
+The design must implement the complete glass morphism elegance system from UIDesign.md that reduces visual clutter and creates a sophisticated, calming environment conducive to sharing vulnerable creative work.
 
-**Core Design Principles:**
-- **Minimalism Over Features**: Every UI element must justify its presence; remove rather than add
-- **Whitespace as Comfort**: Generous spacing creates breathing room that reduces visual anxiety
-- **Typography as Personality**: Instrument Serif adds warmth for personal elements (names, titles) while Montserrat provides clarity for functional text
-- **Single Accent Color**: One carefully chosen accent color for critical actions maintains focus and prevents overwhelm
+**Core Design Principles (Per UIDesign.md):**
+- **Artwork as Hero**: Every design decision serves to elevate and showcase student artwork
+- **Glass Morphism Elegance**: Sophisticated layering with backdrop blur creates depth without overwhelming content
+- **Ephemeral Beauty**: Visual cues that celebrate the temporary nature of shared art
+- **Encouraging Atmosphere**: Design language that reduces anxiety and builds confidence
+
+**Typography System (Per UIDesign.md - Exact Font Sizes):**
+- **Instrument Serif**: App name/large headers (32-42pt Medium), screen titles (24-28pt Medium), user names/artist credits (16-18pt Regular), decorative elements (14-16pt Regular)
+- **Montserrat**: Primary headers (20-24pt Medium), body text/comments (14-16pt Regular), button text (14-16pt Medium), labels (12-14pt Medium), metadata/timestamps (11-12pt Regular), small details (10-11pt Regular)
+
+**Color Palette (Per UIDesign.md - Exact Colors):**
+- **Primary Neutrals**: Pure White (#FFFFFF), Charcoal Text (#2C2C2C), Soft Gray Surfaces (#F8F8F8), Medium Gray (#E5E5E5)
+- **Glass Morphism Colors**: Primary Glass (rgba(255,255,255,0.15) with 12px blur), Secondary Glass (rgba(255,255,255,0.1) with 8px blur), Text Glass (rgba(255,255,255,0.9)), Secondary Text Glass (rgba(255,255,255,0.7)), Subtle Text Glass (rgba(255,255,255,0.5))
+- **Accent Colors (Sparingly)**: Warm Sage (#8B9D83), Soft Coral (#E67E50), Warm Tan (#B8956A)
+
+**Glass Morphism Technical Specifications (Per UIDesign.md):**
+- **Primary Glass Cards**: background rgba(255,255,255,0.15), backdrop-filter blur(12px), border 1px solid rgba(255,255,255,0.2), box-shadow 0 4px 20px rgba(0,0,0,0.08), border-radius 20px
+- **Secondary Glass Elements**: background rgba(255,255,255,0.1), backdrop-filter blur(8px), border 1px solid rgba(255,255,255,0.15), box-shadow 0 2px 12px rgba(0,0,0,0.05), border-radius 16px
 
 ### Key Interface Patterns
 
-#### Launch & Authentication Flow
-- **Launch Screen**: Clean white background with "Draft" in elegant Instrument Serif, minimal loading indicators
-- **Login Interface**: Simple centered form with "Your Name" and "Class Code" fields, large "Join Class" button
-- **Welcome Confirmation**: Warm confirmation message "Welcome to [Class Name], [User Name]!" with smooth transition
+#### Launch & Authentication Flow (Per UIDesign.md)
+- **Launch Screen**: Soft gradient from #F8F8F8 to #FFFFFF, "EphemeralArt" in Instrument Serif 42pt centered, tagline "Share. Encourage. Fade." in Montserrat 16pt
+- **Login Interface**: Clean white with subtle paper texture, glass morphism container, header "Welcome to EphemeralArt" in Instrument Serif 28pt
+- **Welcome Screen**: Centered content with generous whitespace, "Welcome, [Name]!" in Instrument Serif 32pt, "Join a Class" button with warm sage background
 
-#### Feed Design Philosophy
-- **Art-Centric Layout**: Artwork displayed at maximum comfortable size to honor the creative work
-- **Subtle Metadata**: View counts, timers, and user names present but not competing with artwork for attention
-- **Encouraging Comment Style**: Comments styled to feel supportive rather than critical, with adequate spacing between responses
+#### Feed Design Philosophy (Per UIDesign.md - Exact Specifications)
+- **Artwork as Full-Screen Background**: Each artwork becomes full-screen background with subtle dark gradient overlay (rgba(0,0,0,0.3) to transparent)
+- **Glass Morphism Cards Layout**: Information layered over artwork using translucent glass cards with backdrop blur
+  - **Top Card (Post Information)**: 20px margin from top/left/right, contains artist name (Instrument Serif 18pt white), class name (Montserrat 12pt rgba(255,255,255,0.7)), timer countdown (Montserrat 14pt white)
+  - **Bottom Left Card (Post Stats)**: 20px from bottom/left, contains view count "3 of 5 viewers" (Montserrat 12pt), time remaining "Expires in 18 min" (Montserrat 11pt)
+  - **Bottom Right Card (Actions)**: 20px from bottom/right, contains camera icon (24px white), AI feedback icon, comment icon with count, 12px gaps between
+- **Vertical Swipe Navigation**: Switch between posts with smooth artwork crossfades behind glass cards (400ms ease-out transitions)
+- **Glass Morphism Positioning**: All cards use Primary Glass specs for post info, Secondary Glass specs for stats/actions
 
-#### Camera & Capture Experience
-- **Full-Screen Immersion**: Camera interface takes full screen to create focused, professional capture environment
-- **Minimal Control Overlay**: Essential controls (capture button, flash toggle) with translucent backgrounds
-- **Guided Composition**: Subtle grid lines available but not forced, respecting user's artistic autonomy
+#### Camera & Capture Experience (Per UIDesign.md)
+- **Full-Screen Viewfinder**: No UI chrome during capture, optional subtle white grid lines
+- **Glass Morphism Controls**: Bottom glass card slides up from edge, large 80px centered capture button with subtle shadow
+- **Post-Capture Flow**: Artwork displayed full-screen, optional "Add Frame" button with horizontal carousel preview
+- **Sharing Controls**: Large glass morphism card centered over artwork with viewer slider and duration selection
 
-### Animation & Interaction Design
-- **Gentle Transitions**: 200-300ms duration for all animations, creating smooth rather than snappy interactions
-- **Haptic Reinforcement**: Tactile feedback for key actions (photo capture, posting) to provide confirmation without visual disruption
+### Animation & Interaction Design (Per UIDesign.md - Exact Specifications)
+- **Screen Transitions**: 400ms duration with cubic-bezier(0.25, 0.46, 0.45, 0.94) easing, crossfade for artwork backgrounds, slide for overlays
+- **Element Animations**: Cards appearing with scale from 0.95 to 1.0 plus opacity fade-in (300ms), button interactions scale to 0.98 (150ms), input focus border color transition (200ms) with subtle scale (1.02)
+- **Deletion Animations**: Post expiration with 2-second fade-out plus scale to 0.95, comment removal slide up and fade (300ms), gentle shake animation before deletion
+- **Haptic Feedback**: Light impact for button taps/selection changes, medium impact for post creation/successful actions, heavy impact for deletions/errors, selection feedback for slider adjustments/frame selection
 - **Progressive Disclosure**: Advanced features (framing, detailed controls) revealed only when requested to avoid overwhelming new users
-- **Peaceful Ephemeral Transitions**: Content expiration handled with graceful fade-outs rather than abrupt removal
+- **Glass Morphism Animations**: Smooth backdrop blur transitions, hover states increase background opacity to 0.25, interactive states with slight scale (0.98) and increased shadow
+- **Countdown Animations**: Visual countdown warnings for last 60 seconds with subtle effects, 5-second "undo" option with glass morphism popup after deletion
 
 ### Responsive & Accessibility Considerations
 - **Mobile-First Design**: All layouts optimized for smartphone usage with thumb-friendly interaction zones
@@ -195,7 +220,14 @@ The design must embody "monochromatic elegance" that reduces visual clutter and 
 - **AI Integration**: OpenAI GPT-4V API via Supabase Edge Functions for artwork analysis and feedback
 - **Image Processing**: Expo ImageManipulator for frame overlay compositing and photo optimization
 - **State Management**: Zustand for lightweight, scalable app state management
-- **Styling System**: NativeWind (Tailwind CSS for React Native) for consistent design implementation
+- **Styling System**: React Native StyleSheet with complete glass morphism design system implementation
+- **Typography**: Expo Google Fonts for Instrument Serif and Montserrat font families with exact font sizes per UIDesign.md
+- **Glass Morphism Implementation**: 
+  - **iOS**: Expo BlurView with backdrop-filter blur(12px/8px) for Primary/Secondary Glass Cards
+  - **Android**: Custom shadow approximations with translucent backgrounds
+  - **Precise Specs**: Primary Glass (rgba(255,255,255,0.15) + 12px blur), Secondary Glass (rgba(255,255,255,0.1) + 8px blur)
+  - **Border Radius**: Screen containers (28px), Primary cards (20px), Secondary cards (16px), Buttons (28px fully rounded)
+- **Animation System**: React Native Reanimated for glass morphism transitions, scale animations, and smooth artwork crossfades
 
 ### Database Schema Requirements
 

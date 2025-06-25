@@ -1,12 +1,13 @@
 /**
- * Login Screen Component
+ * Login Screen Component - Glass Morphism Implementation
  * 
- * This screen provides authentication interface for existing users including:
- * - Email and password input fields with validation
- * - Sign in functionality with error handling
- * - Navigation to registration screen
- * - Draft design system with elegant typography and spacing
- * - Loading states and user feedback
+ * This screen implements the login interface from UIDesign.md specifications:
+ * - Clean white background with subtle paper texture
+ * - Glass morphism container (Primary Glass Card specs)
+ * - "Welcome to EphemeralArt" header in Instrument Serif 28pt
+ * - Email/password inputs with glass morphism styling
+ * - Warm sage accent color for focus states
+ * - Typography hierarchy per UIDesign.md exact specifications
  */
 
 import { Link, router } from 'expo-router';
@@ -21,12 +22,13 @@ import {
 } from 'react-native';
 import AuthForm, { type AuthFormData } from '../../components/auth/AuthForm';
 import { ThemedText } from '../../components/ThemedText';
+import GlassMorphismCard from '../../components/ui/GlassMorphismCard';
 import { Colors } from '../../constants/Colors';
 import { useColorScheme } from '../../hooks/useColorScheme';
 import { useAuthStore } from '../../store/authStore';
 
 export default function LoginScreen() {
-  console.log('🔑 Login Screen - Rendering login interface');
+  console.log('🔑 Login Screen - Rendering glass morphism login interface');
 
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
@@ -67,83 +69,105 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Soft gradient background per UIDesign.md */}
+      <View style={[styles.backgroundGradient, { backgroundColor: colors.surface }]} />
+      
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
         <View style={styles.content}>
-          {/* Header - Draft Branding */}
-          <View style={styles.header}>
-            <ThemedText type="title" style={[styles.title, { color: colors.text }]}>
-              Welcome to Draft
-            </ThemedText>
-            <ThemedText type="body" style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Sign in to join your art class
-            </ThemedText>
-          </View>
+          {/* Glass Morphism Card Container per UIDesign.md */}
+          <GlassMorphismCard type="primary" style={styles.loginCard}>
+            {/* Header - EphemeralArt Branding per UIDesign.md */}
+            <View style={styles.header}>
+              <ThemedText type="screenTitle" style={[styles.title, { color: colors.text }]}>
+                Welcome to EphemeralArt
+              </ThemedText>
+              <ThemedText type="bodyText" style={[styles.subtitle, { color: colors.textSecondary }]}>
+                Sign in to join your art class
+              </ThemedText>
+            </View>
 
-          {/* Form */}
-          <View style={styles.form}>
-            <AuthForm
-              mode="login"
-              onSubmit={handleLogin}
-              isLoading={isLoading}
-            />
-          </View>
+            {/* Form */}
+            <View style={styles.form}>
+              <AuthForm
+                mode="login"
+                onSubmit={handleLogin}
+                isLoading={isLoading}
+              />
+            </View>
 
-          {/* Footer */}
-          <View style={styles.footer}>
-            <ThemedText type="body" style={[styles.footerText, { color: colors.textSecondary }]}>
-              Don't have an account?{' '}
-              <Link href="/(auth)/register" asChild>
-                <ThemedText type="body" style={[styles.linkText, { color: colors.accent }]}>
-                  Create Account
-                </ThemedText>
-              </Link>
-            </ThemedText>
-          </View>
+            {/* Footer */}
+            <View style={styles.footer}>
+              <ThemedText type="bodyText" style={[styles.footerText, { color: colors.textSecondary }]}>
+                Don't have an account?{' '}
+                <Link href="/(auth)/register" asChild>
+                  <ThemedText type="link" style={[styles.linkText, { color: colors.accentSage }]}>
+                    Create Account
+                  </ThemedText>
+                </Link>
+              </ThemedText>
+            </View>
+          </GlassMorphismCard>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-// Draft Design System Styles - 8px Grid with Generous Whitespace
+// Glass Morphism Design System Styles per UIDesign.md
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  backgroundGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    // Subtle gradient from #F8F8F8 to #FFFFFF per UIDesign.md
+    opacity: 0.5,
   },
   keyboardView: {
     flex: 1,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 64, // 8px × 8
-    paddingBottom: 40,
+    justifyContent: 'center',    // Center the glass card vertically
+    paddingHorizontal: 20,       // 20px screen margins per UIDesign.md
+    paddingVertical: 40,
+  },
+  loginCard: {
+    padding: 24,                 // 24px section spacing per UIDesign.md
+    marginHorizontal: 4,         // Slight margin for card shadow visibility
   },
   header: {
     alignItems: 'center',
-    marginBottom: 48, // 8px × 6
-    gap: 8,
+    marginBottom: 24,            // 24px section spacing per UIDesign.md
+    gap: 8,                      // 8px base unit spacing
   },
   title: {
     textAlign: 'center',
+    // Instrument Serif 28pt per UIDesign.md applied via ThemedText type="screenTitle"
   },
   subtitle: {
     textAlign: 'center',
+    // Montserrat 16pt per UIDesign.md applied via ThemedText type="bodyText"
   },
   form: {
-    flex: 1,
+    marginBottom: 24,            // 24px section spacing
   },
   footer: {
     alignItems: 'center',
-    marginTop: 24,
   },
   footerText: {
     textAlign: 'center',
+    // Montserrat 16pt per UIDesign.md applied via ThemedText type="bodyText"
   },
   linkText: {
-    // Typography handled by ThemedText
+    // Warm sage color applied via color prop
+    // Montserrat 16pt Medium per UIDesign.md applied via ThemedText type="link"
   },
 }); 

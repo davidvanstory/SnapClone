@@ -1,34 +1,35 @@
 /**
- * Registration Screen Component
+ * Registration Screen Component - Glass Morphism Implementation
  * 
- * This screen provides user registration interface including:
- * - Email and password input fields with validation
- * - Password confirmation and strength validation
- * - User registration with error handling
- * - Navigation to login screen
- * - Loading states and user feedback
+ * This screen implements the registration interface using UIDesign.md specifications:
+ * - Clean white background with subtle paper texture
+ * - Glass morphism container (Primary Glass Card specs)
+ * - "Join EphemeralArt" header in Instrument Serif 28pt
+ * - Email/password/confirm password inputs with glass morphism styling
+ * - Warm sage accent color for focus states and submit button
+ * - Typography hierarchy per UIDesign.md exact specifications
  */
 
 import { Link, router } from 'expo-router';
 import React from 'react';
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  View,
 } from 'react-native';
 import AuthForm, { type AuthFormData } from '../../components/auth/AuthForm';
 import { ThemedText } from '../../components/ThemedText';
+import GlassMorphismCard from '../../components/ui/GlassMorphismCard';
 import { Colors } from '../../constants/Colors';
 import { useColorScheme } from '../../hooks/useColorScheme';
 import { useAuthStore } from '../../store/authStore';
 
 export default function RegisterScreen() {
-  console.log('📝 Register Screen - Rendering registration interface');
+  console.log('📝 Register Screen - Rendering glass morphism registration interface');
 
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
@@ -81,6 +82,9 @@ export default function RegisterScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Soft gradient background per UIDesign.md */}
+      <View style={[styles.backgroundGradient, { backgroundColor: colors.surface }]} />
+      
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -91,36 +95,39 @@ export default function RegisterScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.content}>
-            {/* Header - Draft Branding */}
-            <View style={styles.header}>
-              <ThemedText type="title" style={[styles.title, { color: colors.text }]}>
-                Join Draft
-              </ThemedText>
-              <ThemedText type="body" style={[styles.subtitle, { color: colors.textSecondary }]}>
-                Create your account to start sharing artwork
-              </ThemedText>
-            </View>
+            {/* Glass Morphism Card Container per UIDesign.md */}
+            <GlassMorphismCard type="primary" style={styles.registerCard}>
+              {/* Header - EphemeralArt Branding per UIDesign.md */}
+              <View style={styles.header}>
+                <ThemedText type="screenTitle" style={[styles.title, { color: colors.text }]}>
+                  Join EphemeralArt
+                </ThemedText>
+                <ThemedText type="bodyText" style={[styles.subtitle, { color: colors.textSecondary }]}>
+                  Create your account to start sharing artwork
+                </ThemedText>
+              </View>
 
-            {/* Form */}
-            <View style={styles.form}>
-              <AuthForm
-                mode="register"
-                onSubmit={handleRegister}
-                isLoading={isLoading}
-              />
-            </View>
+              {/* Form */}
+              <View style={styles.form}>
+                <AuthForm
+                  mode="register"
+                  onSubmit={handleRegister}
+                  isLoading={isLoading}
+                />
+              </View>
 
-            {/* Footer */}
-            <View style={styles.footer}>
-              <Text style={[styles.footerText, { color: colors.text }]}>
-                Already have an account?{' '}
-                <Link href="/(auth)/login" asChild>
-                  <Text style={[styles.linkText, { color: colors.tint }]}>
-                    Sign In
-                  </Text>
-                </Link>
-              </Text>
-            </View>
+              {/* Footer */}
+              <View style={styles.footer}>
+                <ThemedText type="bodyText" style={[styles.footerText, { color: colors.textSecondary }]}>
+                  Already have an account?{' '}
+                  <Link href="/(auth)/login" asChild>
+                    <ThemedText type="link" style={[styles.linkText, { color: colors.accentSage }]}>
+                      Sign In
+                    </ThemedText>
+                  </Link>
+                </ThemedText>
+              </View>
+            </GlassMorphismCard>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -128,9 +135,19 @@ export default function RegisterScreen() {
   );
 }
 
+// Glass Morphism Design System Styles per UIDesign.md
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  backgroundGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    // Subtle gradient from #F8F8F8 to #FFFFFF per UIDesign.md
+    opacity: 0.5,
   },
   keyboardView: {
     flex: 1,
@@ -140,77 +157,41 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
+    justifyContent: 'center',    // Center the glass card vertically
+    paddingVertical: 40,
   },
   content: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 60,
-    paddingBottom: 40,
+    paddingHorizontal: 20,       // 20px screen margins per UIDesign.md
+  },
+  registerCard: {
+    padding: 24,                 // 24px section spacing per UIDesign.md
+    marginHorizontal: 4,         // Slight margin for card shadow visibility
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 24,            // 24px section spacing per UIDesign.md
+    gap: 8,                      // 8px base unit spacing
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 8,
+    textAlign: 'center',
+    // Instrument Serif 28pt per UIDesign.md applied via ThemedText type="screenTitle"
   },
   subtitle: {
-    fontSize: 16,
-    opacity: 0.7,
+    textAlign: 'center',
+    // Montserrat 16pt per UIDesign.md applied via ThemedText type="bodyText"
   },
   form: {
-    flex: 1,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  input: {
-    height: 50,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    fontSize: 16,
-  },
-  errorContainer: {
-    marginTop: 4,
-  },
-  errorText: {
-    color: '#FF6B6B',
-    fontSize: 14,
-    marginTop: 4,
-  },
-  registerButton: {
-    height: 50,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  buttonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
+    marginBottom: 24,            // 24px section spacing
   },
   footer: {
     alignItems: 'center',
-    marginTop: 20,
   },
   footerText: {
-    fontSize: 16,
+    textAlign: 'center',
+    // Montserrat 16pt per UIDesign.md applied via ThemedText type="bodyText"
   },
   linkText: {
-    fontWeight: '600',
+    // Warm sage color applied via color prop
+    // Montserrat 16pt Medium per UIDesign.md applied via ThemedText type="link"
   },
 }); 

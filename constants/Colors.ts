@@ -4,72 +4,123 @@
  */
 
 /**
- * Draft Design System Colors
+ * EphemeralArt Glass Morphism Design System Colors
  * 
- * Implements the monochromatic elegance specified in the PRD:
- * - White backgrounds with charcoal text (#2C2C2C)
- * - Single accent color for critical actions
- * - Soft gray surfaces for subtle differentiation
- * - Anxiety-reducing, clean visual hierarchy
+ * Implements the complete glass morphism color system from UIDesign.md:
+ * - Pure white backgrounds with charcoal text
+ * - Glass morphism colors with specific rgba values and opacity levels
+ * - Warm accent colors used sparingly for encouraging actions
+ * - Monochromatic + accent system for anxiety-reducing visual hierarchy
  */
 
-// Draft Primary Colors - Monochromatic Elegance
-const draftCharcoal = '#2C2C2C';      // Primary text color
-const draftWhite = '#FFFFFF';         // Primary background
-const draftAccent = '#4A90E2';        // Single accent for critical actions (calming blue)
+// Primary Neutrals (Per UIDesign.md)
+const pureWhite = '#FFFFFF';           // Primary text, key UI elements
+const charcoalText = '#2C2C2C';        // High contrast text when needed
+const softGraySurfaces = '#F8F8F8';    // Background cards, subtle separators
+const mediumGray = '#E5E5E5';          // Inactive states, borders
 
-// Draft Grayscale Palette
-const draftGray100 = '#F8F9FA';       // Subtle background surfaces
-const draftGray200 = '#E9ECEF';       // Borders and dividers
-const draftGray300 = '#DEE2E6';       // Disabled states
-const draftGray400 = '#CED4DA';       // Placeholder text
-const draftGray500 = '#ADB5BD';       // Secondary text
-const draftGray600 = '#6C757D';       // Metadata text
-const draftGray700 = '#495057';       // Emphasized secondary text
+// Glass Morphism Colors (Per UIDesign.md - Exact RGBA Values)
+const primaryGlass = 'rgba(255, 255, 255, 0.15)';      // Main card backgrounds
+const secondaryGlass = 'rgba(255, 255, 255, 0.25)';    // Active/hover states
+const textGlass = 'rgba(255, 255, 255, 0.9)';          // Primary white text
+const secondaryTextGlass = 'rgba(255, 255, 255, 0.7)'; // Metadata, timestamps
+const subtleTextGlass = 'rgba(255, 255, 255, 0.5)';    // Disabled states
+
+// Glass Morphism Input Colors (Per UIDesign.md)
+const inputGlass = 'rgba(255, 255, 255, 0.2)';         // Input backgrounds
+const inputBorderGlass = 'rgba(255, 255, 255, 0.3)';   // Input borders
+const placeholderGlass = 'rgba(255, 255, 255, 0.5)';   // Placeholder text
+
+// Accent Colors - Used Sparingly (Per UIDesign.md)
+const warmSage = '#8B9D83';            // Encouraging actions (AI feedback, positive states)
+const softCoral = '#E67E50';           // Critical actions (delete, warnings)
+const warmTan = '#B8956A';             // Special moments (first post, achievements)
+
+// Glass Morphism Border Colors (Per UIDesign.md)
+const primaryBorder = 'rgba(255, 255, 255, 0.2)';      // Primary glass card borders
+const secondaryBorder = 'rgba(255, 255, 255, 0.15)';   // Secondary glass element borders
 
 export const Colors = {
   light: {
-    // Draft Light Mode (Primary)
-    text: draftCharcoal,              // #2C2C2C - Primary text
-    background: draftWhite,           // #FFFFFF - Primary background
-    tint: draftAccent,                // #4A90E2 - Accent for critical actions
+    // Primary Neutrals
+    text: charcoalText,                 // #2C2C2C - Primary text for solid backgrounds
+    background: pureWhite,              // #FFFFFF - Primary background
+    surface: softGraySurfaces,          // #F8F8F8 - Subtle surface backgrounds
+    border: mediumGray,                 // #E5E5E5 - Standard borders
     
-    // UI Elements
-    icon: draftGray600,               // Icons and symbols
-    tabIconDefault: draftGray500,     // Inactive tab icons
-    tabIconSelected: draftAccent,     // Active tab icons
-    border: draftGray200,             // Borders and dividers
-    card: draftGray100,               // Card/surface backgrounds
+    // Glass Morphism Colors
+    glassPrimary: primaryGlass,         // rgba(255,255,255,0.15) - Primary glass cards
+    glassSecondary: secondaryGlass,     // rgba(255,255,255,0.25) - Secondary glass/hover states
+    glassText: textGlass,               // rgba(255,255,255,0.9) - Text over glass/artwork
+    glassTextSecondary: secondaryTextGlass, // rgba(255,255,255,0.7) - Secondary text over glass
+    glassTextSubtle: subtleTextGlass,   // rgba(255,255,255,0.5) - Subtle text over glass
     
-    // Draft-specific semantic colors
-    surface: draftGray100,            // Subtle surface backgrounds
-    surfaceElevated: draftWhite,      // Elevated card backgrounds
-    textSecondary: draftGray600,      // Secondary text (metadata, timestamps)
-    textTertiary: draftGray500,       // Tertiary text (placeholders, hints)
-    textDisabled: draftGray400,       // Disabled text
-    accent: draftAccent,              // Single accent color for CTAs
-    accentSoft: '#EBF4FD',           // Soft accent background
+    // Glass Morphism Input Colors
+    glassInput: inputGlass,             // rgba(255,255,255,0.2) - Input backgrounds
+    glassInputBorder: inputBorderGlass, // rgba(255,255,255,0.3) - Input borders
+    glassPlaceholder: placeholderGlass, // rgba(255,255,255,0.5) - Placeholder text
+    
+    // Glass Morphism Borders
+    glassBorderPrimary: primaryBorder,  // rgba(255,255,255,0.2) - Primary glass borders
+    glassBorderSecondary: secondaryBorder, // rgba(255,255,255,0.15) - Secondary glass borders
+    
+    // Accent Colors (Sparingly Used)
+    accentSage: warmSage,              // #8B9D83 - Encouraging actions
+    accentCoral: softCoral,            // #E67E50 - Critical actions
+    accentTan: warmTan,                // #B8956A - Special moments
+    
+    // Legacy Theme Colors (Maintain compatibility)
+    tint: warmSage,                    // Primary accent
+    icon: charcoalText,                // Icons and symbols
+    tabIconDefault: mediumGray,        // Inactive tab icons
+    tabIconSelected: warmSage,         // Active tab icons
+    card: softGraySurfaces,            // Card backgrounds
+    
+    // Semantic Colors
+    textSecondary: 'rgba(44, 44, 44, 0.7)',    // Secondary text on solid backgrounds
+    textTertiary: 'rgba(44, 44, 44, 0.5)',     // Tertiary text on solid backgrounds
+    textDisabled: 'rgba(44, 44, 44, 0.3)',     // Disabled text
+    accent: warmSage,                           // Primary accent for CTAs
   },
   dark: {
-    // Draft Dark Mode (Maintains monochromatic approach)
-    text: '#F1F3F4',                 // Light text on dark
-    background: '#1A1D21',           // Dark background
-    tint: '#6AB7FF',                 // Brighter accent for dark mode
+    // Dark Mode Glass Morphism (Maintains same glass morphism approach)
+    text: textGlass,                    // Light text on dark
+    background: '#1A1D21',              // Dark background
+    surface: '#242831',                 // Dark surface backgrounds
+    border: '#2F3339',                  // Dark borders
     
-    // UI Elements
-    icon: '#8F959E',                 // Icons and symbols
-    tabIconDefault: '#70787F',       // Inactive tab icons
-    tabIconSelected: '#6AB7FF',      // Active tab icons
-    border: '#2F3339',              // Borders and dividers
-    card: '#242831',                // Card/surface backgrounds
+    // Glass Morphism Colors (Same as light - overlay on dark artwork)
+    glassPrimary: primaryGlass,         // rgba(255,255,255,0.15) - Works on dark backgrounds
+    glassSecondary: secondaryGlass,     // rgba(255,255,255,0.25) - Works on dark backgrounds
+    glassText: textGlass,               // rgba(255,255,255,0.9) - Text over glass/artwork
+    glassTextSecondary: secondaryTextGlass, // rgba(255,255,255,0.7) - Secondary text
+    glassTextSubtle: subtleTextGlass,   // rgba(255,255,255,0.5) - Subtle text
     
-    // Draft-specific semantic colors
-    surface: '#242831',              // Subtle surface backgrounds
-    surfaceElevated: '#2A2F38',      // Elevated card backgrounds
-    textSecondary: '#A1A7B0',        // Secondary text
-    textTertiary: '#8F959E',         // Tertiary text
-    textDisabled: '#5F666D',         // Disabled text
-    accent: '#6AB7FF',               // Accent for CTAs
-    accentSoft: '#1A2B3D',          // Soft accent background
+    // Glass Morphism Input Colors (Same - designed for overlay)
+    glassInput: inputGlass,             // rgba(255,255,255,0.2)
+    glassInputBorder: inputBorderGlass, // rgba(255,255,255,0.3)
+    glassPlaceholder: placeholderGlass, // rgba(255,255,255,0.5)
+    
+    // Glass Morphism Borders (Same - designed for overlay)
+    glassBorderPrimary: primaryBorder,  // rgba(255,255,255,0.2)
+    glassBorderSecondary: secondaryBorder, // rgba(255,255,255,0.15)
+    
+    // Accent Colors (Same - work on both backgrounds)
+    accentSage: warmSage,              // #8B9D83
+    accentCoral: softCoral,            // #E67E50
+    accentTan: warmTan,                // #B8956A
+    
+    // Legacy Theme Colors
+    tint: warmSage,                    // Primary accent
+    icon: textGlass,                   // Icons and symbols
+    tabIconDefault: subtleTextGlass,   // Inactive tab icons
+    tabIconSelected: warmSage,         // Active tab icons
+    card: '#242831',                   // Card backgrounds
+    
+    // Semantic Colors
+    textSecondary: secondaryTextGlass, // Secondary text
+    textTertiary: subtleTextGlass,     // Tertiary text
+    textDisabled: 'rgba(255, 255, 255, 0.3)', // Disabled text
+    accent: warmSage,                  // Primary accent for CTAs
   },
 };

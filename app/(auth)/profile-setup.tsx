@@ -1,17 +1,18 @@
 /**
- * Profile Setup Screen Component
+ * Profile Setup Screen Component - Simplified for EphemeralArt
  * 
- * This screen allows new users to complete their profile for Draft:
- * - Simple name entry (optional)
- * - Quick setup for art class participation
+ * This screen implements the welcome screen from UIDesign.md specifications:
+ * - Centered content with generous whitespace
+ * - "Welcome, [Name]!" in Instrument Serif 32pt
+ * - Simplified optional name entry for EphemeralArt
+ * - "Join a Class" button with warm sage background
+ * - Glass morphism styling consistent with auth flow
  * - Streamlined onboarding for anxiety-reducing experience
  */
 
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
@@ -22,19 +23,21 @@ import {
   View
 } from 'react-native';
 import { ThemedText } from '../../components/ThemedText';
+import GlassMorphismCard from '../../components/ui/GlassMorphismCard';
 import { Colors } from '../../constants/Colors';
 import { useColorScheme } from '../../hooks/useColorScheme';
 import { useAuthStore } from '../../store/authStore';
 
 export default function ProfileSetupScreen() {
-  console.log('👤 Profile Setup Screen - Rendering simplified profile setup for Draft');
+  console.log('👤 Profile Setup Screen - Rendering simplified EphemeralArt welcome setup');
 
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
-  // Form state - simplified for Draft
+  // Form state - simplified for EphemeralArt
   const [displayName, setDisplayName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [nameFocused, setNameFocused] = useState(false);
 
   // Auth store
   const { user, updateProfile, isLoading } = useAuthStore();
@@ -48,7 +51,7 @@ export default function ProfileSetupScreen() {
   }, [user]);
 
   /**
-   * Handle profile setup completion
+   * Handle profile setup completion (optional step)
    */
   const handleCompleteProfile = async () => {
     console.log('🚀 Profile Setup Screen - Starting simplified profile completion');
@@ -56,7 +59,7 @@ export default function ProfileSetupScreen() {
     setIsSubmitting(true);
 
     try {
-      // For Draft, we'll use a simple approach - either the display name or email prefix
+      // For EphemeralArt, we'll use a simple approach - either the display name or email prefix
       const profileName = displayName.trim() || user?.email?.split('@')[0] || 'Artist';
       
       const result = await updateProfile({
@@ -64,52 +67,18 @@ export default function ProfileSetupScreen() {
       });
 
       if (result.success) {
-        console.log('✅ Profile Setup Screen - Profile completed successfully');
-        Alert.alert(
-          'Welcome to Draft!',
-          'You\'re ready to start sharing your artwork in a supportive, ephemeral environment.',
-          [
-            {
-              text: 'Get Started',
-              onPress: () => {
-                console.log('🎉 Profile Setup Screen - Redirecting to main app');
-                router.replace('/(tabs)');
-              },
-            },
-          ]
-        );
+        console.log('✅ Profile Setup Screen - Profile completed successfully, proceeding to class selection');
+        // Go directly to main app where they can join a class
+        router.replace('/(tabs)');
       } else {
-        console.error('❌ Profile Setup Screen - Profile update failed:', result.error);
-        Alert.alert(
-          'Setup Error',
-          'There was an issue setting up your profile. Let\'s continue anyway!',
-          [
-            {
-              text: 'Continue',
-              onPress: () => {
-                console.log('🎉 Profile Setup Screen - Continuing to main app despite error');
-                router.replace('/(tabs)');
-              },
-            },
-          ]
-        );
+        console.log('⚠️ Profile Setup Screen - Profile update failed, continuing anyway');
+        // For EphemeralArt, we'll be forgiving and let users continue
+        router.replace('/(tabs)');
       }
     } catch (error) {
       console.error('❌ Profile Setup Screen - Unexpected profile update error:', error);
-      // For Draft, we'll be forgiving and let users continue
-      Alert.alert(
-        'Setup Complete',
-        'Welcome to Draft! You can update your name later if needed.',
-        [
-          {
-            text: 'Continue',
-            onPress: () => {
-              console.log('🎉 Profile Setup Screen - Continuing to main app');
-              router.replace('/(tabs)');
-            },
-          },
-        ]
-      );
+      // For EphemeralArt, we'll be forgiving and let users continue
+      router.replace('/(tabs)');
     } finally {
       setIsSubmitting(false);
     }
@@ -119,7 +88,7 @@ export default function ProfileSetupScreen() {
    * Handle skip profile setup (go directly to app)
    */
   const handleSkipSetup = () => {
-    console.log('⏭️ Profile Setup Screen - User skipping profile setup');
+    console.log('⏭️ Profile Setup Screen - User skipping profile setup, proceeding to class selection');
     router.replace('/(tabs)');
   };
 
@@ -130,14 +99,22 @@ export default function ProfileSetupScreen() {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.tint} />
+          <ThemedText type="bodyText" style={[styles.loadingText, { color: colors.textSecondary }]}>
+            Loading...
+          </ThemedText>
         </View>
       </SafeAreaView>
     );
   }
 
+  // Get user's name for welcome message
+  const userName = user.email?.split('@')[0] || 'Artist';
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Soft gradient background per UIDesign.md */}
+      <View style={[styles.backgroundGradient, { backgroundColor: colors.surface }]} />
+      
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -148,86 +125,89 @@ export default function ProfileSetupScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.content}>
-            {/* Header */}
-            <View style={styles.header}>
-              <ThemedText type="title" style={[styles.title, { color: colors.text }]}>
-                Welcome to Draft
-              </ThemedText>
-              <ThemedText type="body" style={[styles.subtitle, { color: colors.textSecondary }]}>
-                Set up your profile to get started
-              </ThemedText>
-            </View>
-
-            {/* Form */}
-            <View style={styles.form}>
-              {/* Display Name Input - Optional */}
-              <View style={styles.inputGroup}>
-                <ThemedText type="label" style={[styles.label, { color: colors.text }]}>
-                  Display Name (Optional)
+            {/* Glass Morphism Card Container per UIDesign.md */}
+            <GlassMorphismCard type="primary" style={styles.welcomeCard}>
+              {/* Welcome Header per UIDesign.md */}
+              <View style={styles.header}>
+                <ThemedText type="appName" style={[styles.welcomeTitle, { color: colors.text }]}>
+                  Welcome to EphemeralArt!
                 </ThemedText>
-                <TextInput
-                  style={[
-                    styles.input,
-                    { 
-                      borderColor: colors.border,
-                      backgroundColor: colors.card,
-                      color: colors.text,
-                      fontFamily: 'Montserrat_400Regular',
-                    }
-                  ]}
-                  value={displayName}
-                  onChangeText={setDisplayName}
-                  placeholder="How would you like to be known?"
-                  placeholderTextColor={colors.textTertiary}
-                  autoCapitalize="words"
-                  autoCorrect={false}
-                  editable={!isFormDisabled}
-                />
-                <ThemedText type="caption" style={[styles.helperText, { color: colors.textTertiary }]}>
-                  If left blank, we'll use your email prefix
+                <ThemedText type="bodyText" style={[styles.welcomeSubtitle, { color: colors.textSecondary }]}>
+                  You're ready to start sharing your artwork in a supportive, ephemeral environment.
                 </ThemedText>
               </View>
 
-              {/* Complete Profile Button */}
-              <TouchableOpacity
-                style={[
-                  styles.completeButton,
-                  { 
-                    backgroundColor: colors.accent,
-                    opacity: isFormDisabled ? 0.6 : 1,
-                  }
-                ]}
-                onPress={handleCompleteProfile}
-                disabled={isFormDisabled}
-              >
-                {isSubmitting ? (
-                  <View style={styles.buttonContent}>
-                    <ActivityIndicator size="small" color="white" />
-                    <ThemedText type="button" style={[styles.buttonText, { marginLeft: 8 }]}>Setting Up...</ThemedText>
-                  </View>
-                ) : (
-                  <ThemedText type="button" style={styles.buttonText}>Complete Setup</ThemedText>
-                )}
-              </TouchableOpacity>
+              {/* Optional Name Entry */}
+              <View style={styles.form}>
+                <View style={styles.inputGroup}>
+                  <ThemedText type="label" style={[styles.label, { color: colors.text }]}>
+                    Display Name (Optional)
+                  </ThemedText>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      { 
+                        borderColor: nameFocused ? colors.accentSage : colors.border,
+                        backgroundColor: nameFocused ? colors.surface : colors.background,
+                        color: colors.text,
+                        fontFamily: 'Montserrat_400Regular',
+                      }
+                    ]}
+                    value={displayName}
+                    onChangeText={setDisplayName}
+                    onFocus={() => setNameFocused(true)}
+                    onBlur={() => setNameFocused(false)}
+                    placeholder={`${userName} (default)`}
+                    placeholderTextColor={colors.textTertiary}
+                    autoCapitalize="words"
+                    autoCorrect={false}
+                    editable={!isFormDisabled}
+                  />
+                  <ThemedText type="caption" style={[styles.helperText, { color: colors.textTertiary }]}>
+                    How would you like classmates to see your name?
+                  </ThemedText>
+                </View>
+              </View>
 
-              {/* Skip Button */}
-              <TouchableOpacity
-                style={[styles.skipButton, { borderColor: colors.border }]}
-                onPress={handleSkipSetup}
-                disabled={isFormDisabled}
-              >
-                <ThemedText type="body" style={[styles.skipButtonText, { color: colors.textSecondary }]}>
-                  Skip for Now
-                </ThemedText>
-              </TouchableOpacity>
-            </View>
+              {/* Action Buttons */}
+              <View style={styles.buttonContainer}>
+                {/* Primary Action - Join a Class */}
+                <TouchableOpacity
+                  style={[
+                    styles.primaryButton,
+                    { 
+                      backgroundColor: colors.accentSage,
+                      opacity: isFormDisabled ? 0.6 : 1,
+                    }
+                  ]}
+                  onPress={handleCompleteProfile}
+                  disabled={isFormDisabled}
+                  activeOpacity={0.8}
+                >
+                  <ThemedText type="button" style={styles.primaryButtonText}>
+                    {isFormDisabled ? 'Setting Up...' : 'Join a Class'}
+                  </ThemedText>
+                </TouchableOpacity>
 
-            {/* Footer Info */}
-            <View style={styles.footer}>
-              <ThemedText type="caption" style={[styles.footerText, { color: colors.textTertiary }]}>
-                You can update your profile anytime later
-              </ThemedText>
-            </View>
+                {/* Secondary Action - Skip Setup */}
+                <TouchableOpacity
+                  style={[
+                    styles.secondaryButton,
+                    { 
+                      borderColor: colors.accentSage,
+                      opacity: isFormDisabled ? 0.6 : 1,
+                    }
+                  ]}
+                  onPress={handleSkipSetup}
+                  disabled={isFormDisabled}
+                  activeOpacity={0.8}
+                >
+                  <ThemedText type="button" style={[styles.secondaryButtonText, { color: colors.accentSage }]}>
+                    Continue as {userName}
+                  </ThemedText>
+                </TouchableOpacity>
+              </View>
+            </GlassMorphismCard>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -235,9 +215,27 @@ export default function ProfileSetupScreen() {
   );
 }
 
+// Glass Morphism Design System Styles per UIDesign.md
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  backgroundGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    // Subtle gradient from #F8F8F8 to #FFFFFF per UIDesign.md
+    opacity: 0.5,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    // Montserrat 16pt per UIDesign.md applied via ThemedText type="bodyText"
   },
   keyboardView: {
     flex: 1,
@@ -247,114 +245,84 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'center',    // Center the glass card vertically
+    paddingVertical: 40,
   },
   content: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 64, // 8px × 8
-    paddingBottom: 40,
+    paddingHorizontal: 20,       // 20px screen margins per UIDesign.md
+  },
+  welcomeCard: {
+    padding: 24,                 // 24px section spacing per UIDesign.md
+    marginHorizontal: 4,         // Slight margin for card shadow visibility
   },
   header: {
     alignItems: 'center',
-    marginBottom: 48, // 8px × 6
+    marginBottom: 24,            // 24px section spacing per UIDesign.md
+    gap: 12,                     // Generous spacing for welcome message
   },
-  title: {
-    marginBottom: 8,
+  welcomeTitle: {
     textAlign: 'center',
+    // Instrument Serif 42pt per UIDesign.md applied via ThemedText type="appName"
   },
-  subtitle: {
+  welcomeSubtitle: {
     textAlign: 'center',
+    paddingHorizontal: 8,        // Additional padding for readability
+    // Montserrat 16pt per UIDesign.md applied via ThemedText type="bodyText"
   },
   form: {
-    flex: 1,
-    gap: 24, // 8px × 3
+    marginBottom: 24,            // 24px section spacing
   },
   inputGroup: {
-    gap: 8,
+    gap: 8,                      // 8px base unit between label and input
   },
   label: {
-    // Typography handled by ThemedText
+    // Montserrat 14pt Medium per UIDesign.md applied via ThemedText type="label"
   },
   input: {
-    height: 56, // Thumb-friendly touch target
+    height: 50,                  // 44px+ touch target per UIDesign.md
     borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    // Typography handled via fontFamily prop
-  },
-  inputIcon: {
-    position: 'absolute',
-    right: 16,
-    top: 0,
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkmark: {
-    color: '#4CAF50',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  errorText: {
-    color: '#FF6B6B',
-    fontSize: 14,
-    marginTop: 4,
-  },
-  successText: {
-    color: '#4CAF50',
-    fontSize: 14,
-    marginTop: 4,
+    borderRadius: 16,            // 16px border radius per UIDesign.md
+    paddingHorizontal: 16,       // 16px padding per UIDesign.md
+    fontSize: 14,                // 14pt per UIDesign.md
+    fontFamily: 'Montserrat_400Regular',
   },
   helperText: {
-    fontSize: 12,
     marginTop: 4,
+    // Montserrat 11pt per UIDesign.md applied via ThemedText type="caption"
   },
-  completeButton: {
-    height: 56,
-    borderRadius: 12,
+  buttonContainer: {
+    gap: 12,                     // 12px gap between buttons
+  },
+  primaryButton: {
+    height: 50,                  // 44px+ touch target
+    borderRadius: 28,            // 28px fully rounded per UIDesign.md
     justifyContent: 'center',
     alignItems: 'center',
-    // Subtle shadow for elevation
+    
+    // Glass morphism button shadow per UIDesign.md
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 16,
+    elevation: 6,
   },
-  skipButton: {
-    height: 56,
-    borderWidth: 1,
-    borderRadius: 12,
+  primaryButtonText: {
+    color: 'white',              // White text on warm sage background
+    // Montserrat 16pt Medium per UIDesign.md applied via ThemedText type="button"
+  },
+  secondaryButton: {
+    height: 50,                  // 44px+ touch target
+    borderRadius: 28,            // 28px fully rounded per UIDesign.md
+    borderWidth: 2,              // Border button style
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'transparent',
   },
-  buttonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    // Typography handled by ThemedText
-  },
-  skipButtonText: {
-    // Typography handled by ThemedText
-  },
-  footer: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  footerText: {
-    fontSize: 14,
-    textAlign: 'center',
+  secondaryButtonText: {
+    // Warm sage color applied via color prop
+    // Montserrat 16pt Medium per UIDesign.md applied via ThemedText type="button"
   },
 }); 
