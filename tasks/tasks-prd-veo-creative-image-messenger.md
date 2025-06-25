@@ -49,16 +49,16 @@ Based on PRD: `prd-veo-creative-image-messenger.md`
 
 ## Tasks
 
-- [ ] 1.0 Authentication & User Management System
+- [x] 1.0 Authentication & User Management System
   - [x] 1.1 Configure Supabase Auth settings and policies in Supabase dashboard
   - [x] 1.2 Create auth navigation stack with login/register/profile-setup screens
-  - [ ] 1.3 Build reusable AuthForm component with email/password validation
-  - [ ] 1.4 Implement user registration with email verification and error handling
-  - [ ] 1.5 Create login functionality with session persistence
-  - [ ] 1.6 Build profile setup screen for username and optional avatar
-  - [ ] 1.7 Set up Zustand auth store for global authentication state
-  - [ ] 1.8 Implement automatic session restoration on app launch
-  - [ ] 1.9 Create user database migration and RLS policies
+  - [x] 1.3 Build reusable AuthForm component with email/password validation
+  - [x] 1.4 Implement user registration with email verification and error handling
+  - [x] 1.5 Create login functionality with session persistence
+  - [x] 1.6 Build profile setup screen for username and optional avatar
+  - [x] 1.7 Set up Zustand auth store for global authentication state
+  - [x] 1.8 Implement automatic session restoration on app launch
+  - [x] 1.9 Create user database migration and RLS policies
 
 - [ ] 2.0 Group Management & Navigation
   - [ ] 2.1 Create groups database migration with proper relationships
