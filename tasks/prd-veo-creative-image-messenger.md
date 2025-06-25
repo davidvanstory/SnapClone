@@ -26,7 +26,7 @@ VEO Creative Image Messenger is an ephemeral messaging platform designed for Gen
 ## User Stories
 
 ### Authentication & Onboarding
-- **US-1**: As a new user, I want to register with email and password so I can create my account and start using the app
+- **US-1**: As a new user, I want to register with email and password so I can create my account and start using. If email is to hard to set up suggest other options.
 - **US-2**: As a returning user, I want to login with my credentials so I can access my groups and message history
 - **US-3**: As a user, I want a simple onboarding flow so I understand how to create AI images from text prompts
 
@@ -52,7 +52,7 @@ VEO Creative Image Messenger is an ephemeral messaging platform designed for Gen
 ## Functional Requirements
 
 ### Authentication System
-1. The system must provide email/password registration with basic validation
+1. The system must provide email/password registration with basic validation. 
 2. The system must provide secure login/logout functionality via Supabase Auth
 3. The system must maintain user session state across app restarts
 4. The system must allow users to create a simple profile with username and optional avatar
@@ -255,8 +255,6 @@ ai_messages (
 
 1. **Prompt Optimization**: Should we implement prompt enhancement suggestions to improve generation success rates?
 2. **Storage Costs**: With 24-hour ephemeral content, what's the optimal storage cleanup frequency?
-3. **User Feedback**: Should we collect user ratings on generated images to improve prompt suggestions?
-4. **Offline Experience**: How much functionality should be available when users are offline?
 5. **Group Discovery**: Do we need any mechanism for users to discover and join public groups?
 6. **Image Quality Settings**: Should users have options for generation speed vs. quality trade-offs?
 7. **Notification Strategy**: What notifications should users receive for new AI images in their groups?
@@ -265,19 +263,19 @@ ai_messages (
 
 ## Implementation Priority
 
-### Phase 1 (MVP - Weeks 1-2)
+### Phase 1 
 - User authentication and basic profiles
 - Simple group creation and joining
 - Basic text prompt input and AI generation
 - Core messaging interface
 
-### Phase 2 (Enhanced Features - Weeks 3-4)
+### Phase 2 
 - Prompt categories and suggestions
 - Real-time processing status
 - Ephemeral content deletion
 - Error handling and retry logic
 
-### Phase 3 (Polish & Testing - Week 5)
+### Phase 3 
 - UI/UX refinements
 - Performance optimization
 - Comprehensive testing

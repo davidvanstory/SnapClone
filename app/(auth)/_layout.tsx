@@ -8,33 +8,14 @@
  * - Seamless navigation between auth screens
  */
 
-import { router, Stack } from 'expo-router';
-import { useEffect } from 'react';
-import { useAuthStore } from '../../store/authStore';
+import { Stack } from 'expo-router';
 
 export default function AuthLayout() {
-  const { user, isInitialized, initialize } = useAuthStore();
-
   console.log('🔐 Auth Layout - Rendering auth navigation stack');
-
-  // Initialize auth state when component mounts
-  useEffect(() => {
-    console.log('🚀 Auth Layout - Initializing auth state');
-    if (!isInitialized) {
-      initialize();
-    }
-  }, [isInitialized, initialize]);
-
-  // Redirect to main app if user is authenticated
-  useEffect(() => {
-    if (isInitialized && user) {
-      console.log('✅ Auth Layout - User authenticated, redirecting to main app');
-      router.replace('/(tabs)');
-    }
-  }, [user, isInitialized]);
 
   return (
     <Stack
+      initialRouteName="login"
       screenOptions={{
         headerShown: false,
         gestureEnabled: false,
