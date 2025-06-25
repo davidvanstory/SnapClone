@@ -5,21 +5,22 @@
  * - Email and password input fields with validation
  * - Sign in functionality with error handling
  * - Navigation to registration screen
+ * - Draft design system with elegant typography and spacing
  * - Loading states and user feedback
  */
 
 import { Link, router } from 'expo-router';
 import React from 'react';
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    View,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  StyleSheet,
+  View,
 } from 'react-native';
 import AuthForm, { type AuthFormData } from '../../components/auth/AuthForm';
+import { ThemedText } from '../../components/ThemedText';
 import { Colors } from '../../constants/Colors';
 import { useColorScheme } from '../../hooks/useColorScheme';
 import { useAuthStore } from '../../store/authStore';
@@ -71,14 +72,14 @@ export default function LoginScreen() {
         style={styles.keyboardView}
       >
         <View style={styles.content}>
-          {/* Header */}
+          {/* Header - Draft Branding */}
           <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.text }]}>
-              Welcome Back
-            </Text>
-            <Text style={[styles.subtitle, { color: colors.text }]}>
-              Sign in to your account
-            </Text>
+            <ThemedText type="title" style={[styles.title, { color: colors.text }]}>
+              Welcome to Draft
+            </ThemedText>
+            <ThemedText type="body" style={[styles.subtitle, { color: colors.textSecondary }]}>
+              Sign in to join your art class
+            </ThemedText>
           </View>
 
           {/* Form */}
@@ -92,14 +93,14 @@ export default function LoginScreen() {
 
           {/* Footer */}
           <View style={styles.footer}>
-            <Text style={[styles.footerText, { color: colors.text }]}>
+            <ThemedText type="body" style={[styles.footerText, { color: colors.textSecondary }]}>
               Don't have an account?{' '}
               <Link href="/(auth)/register" asChild>
-                <Text style={[styles.linkText, { color: colors.tint }]}>
+                <ThemedText type="body" style={[styles.linkText, { color: colors.accent }]}>
                   Create Account
-                </Text>
+                </ThemedText>
               </Link>
-            </Text>
+            </ThemedText>
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -107,6 +108,7 @@ export default function LoginScreen() {
   );
 }
 
+// Draft Design System Styles - 8px Grid with Generous Whitespace
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -117,70 +119,31 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingTop: 60,
+    paddingTop: 64, // 8px × 8
     paddingBottom: 40,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 48, // 8px × 6
+    gap: 8,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
-    fontSize: 16,
-    opacity: 0.7,
+    textAlign: 'center',
   },
   form: {
     flex: 1,
   },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  input: {
-    height: 50,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    fontSize: 16,
-  },
-  errorText: {
-    color: '#FF6B6B',
-    fontSize: 14,
-    marginTop: 4,
-  },
-  loginButton: {
-    height: 50,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  buttonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   footer: {
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 24,
   },
   footerText: {
-    fontSize: 16,
+    textAlign: 'center',
   },
   linkText: {
-    fontWeight: '600',
+    // Typography handled by ThemedText
   },
 }); 

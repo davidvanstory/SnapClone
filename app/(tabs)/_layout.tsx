@@ -10,11 +10,13 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: colors.accent,        // Draft accent color
+        tabBarInactiveTintColor: colors.textTertiary,  // Subtle inactive color
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
@@ -22,29 +24,46 @@ export default function TabLayout() {
           ios: {
             // Use a transparent background on iOS to show the blur effect
             position: 'absolute',
+            backgroundColor: colorScheme === 'dark' ? 'rgba(26, 29, 33, 0.8)' : 'rgba(255, 255, 255, 0.8)',
           },
-          default: {},
+          default: {
+            backgroundColor: colors.background,
+            borderTopColor: colors.border,
+            borderTopWidth: 1,
+          },
         }),
+        tabBarLabelStyle: {
+          fontFamily: 'Montserrat_500Medium',
+          fontSize: 12,
+          marginTop: -4,
+        },
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Class Feed',
+          tabBarIcon: ({ color, focused }) => (
+            <IconSymbol 
+              size={focused ? 30 : 28} 
+              name="house.fill" 
+              color={color}
+              weight={focused ? 'semibold' : 'regular'}
+            />
+          ),
         }}
       />
       <Tabs.Screen
         name="camera"
         options={{
           title: 'Camera',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="camera.fill" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <IconSymbol 
+              size={focused ? 30 : 28} 
+              name="camera.fill" 
+              color={color}
+              weight={focused ? 'semibold' : 'regular'}
+            />
+          ),
         }}
       />
     </Tabs>

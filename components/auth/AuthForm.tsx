@@ -5,6 +5,8 @@
  * login and registration flows. It includes:
  * - Email and password input fields with validation
  * - Optional password confirmation for registration
+ * - Draft design system with Instrument Serif + Montserrat typography
+ * - Monochromatic color scheme and elegant spacing
  * - Consistent styling and error handling
  * - Loading states and form submission
  * - Configurable mode (login vs register)
@@ -12,16 +14,16 @@
 
 import React, { useState } from 'react';
 import {
-    ActivityIndicator,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { Colors } from '../../constants/Colors';
 import { useColorScheme } from '../../hooks/useColorScheme';
 import { validateEmail, validatePassword } from '../../lib/auth';
+import { ThemedText } from '../ThemedText';
 
 // Form mode type
 export type AuthFormMode = 'login' | 'register';
@@ -64,7 +66,7 @@ export default function AuthForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Default button texts based on mode
-  const defaultSubmitText = mode === 'login' ? 'Sign In' : 'Create Account';
+  const defaultSubmitText = mode === 'login' ? 'Sign In to Draft' : 'Join Draft';
   const defaultLoadingText = mode === 'login' ? 'Signing In...' : 'Creating Account...';
   
   const finalSubmitText = submitButtonText || defaultSubmitText;
@@ -181,16 +183,17 @@ export default function AuthForm({
     <View style={styles.container}>
       {/* Email Input */}
       <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: colors.text }]}>
+        <ThemedText type="label" style={[styles.label, { color: colors.text }]}>
           Email Address
-        </Text>
+        </ThemedText>
         <TextInput
           style={[
             styles.input,
             { 
               borderColor: emailError ? '#FF6B6B' : colors.border,
-              backgroundColor: colors.card,
+              backgroundColor: colors.surface,
               color: colors.text,
+              fontFamily: 'Montserrat_400Regular',
             }
           ]}
           value={email}
@@ -199,7 +202,7 @@ export default function AuthForm({
             clearFieldError('email');
           }}
           placeholder="Enter your email"
-          placeholderTextColor={colors.tabIconDefault}
+          placeholderTextColor={colors.textTertiary}
           keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
@@ -207,22 +210,23 @@ export default function AuthForm({
           testID="auth-form-email-input"
         />
         {emailError ? (
-          <Text style={styles.errorText}>{emailError}</Text>
+          <ThemedText type="caption" style={styles.errorText}>{emailError}</ThemedText>
         ) : null}
       </View>
 
       {/* Password Input */}
       <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: colors.text }]}>
+        <ThemedText type="label" style={[styles.label, { color: colors.text }]}>
           Password
-        </Text>
+        </ThemedText>
         <TextInput
           style={[
             styles.input,
             { 
               borderColor: passwordErrors.length > 0 ? '#FF6B6B' : colors.border,
-              backgroundColor: colors.card,
+              backgroundColor: colors.surface,
               color: colors.text,
+              fontFamily: 'Montserrat_400Regular',
             }
           ]}
           value={password}
@@ -231,7 +235,7 @@ export default function AuthForm({
             clearFieldError('password');
           }}
           placeholder="Enter your password"
-          placeholderTextColor={colors.tabIconDefault}
+          placeholderTextColor={colors.textTertiary}
           secureTextEntry
           editable={!isFormDisabled}
           testID="auth-form-password-input"
@@ -239,9 +243,9 @@ export default function AuthForm({
         {passwordErrors.length > 0 ? (
           <View style={styles.errorContainer}>
             {passwordErrors.map((error, index) => (
-              <Text key={index} style={styles.errorText}>
+              <ThemedText key={index} type="caption" style={styles.errorText}>
                 • {error}
-              </Text>
+              </ThemedText>
             ))}
           </View>
         ) : null}
@@ -250,16 +254,17 @@ export default function AuthForm({
       {/* Confirm Password Input (Register mode only) */}
       {mode === 'register' && (
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: colors.text }]}>
+          <ThemedText type="label" style={[styles.label, { color: colors.text }]}>
             Confirm Password
-          </Text>
+          </ThemedText>
           <TextInput
             style={[
               styles.input,
               { 
                 borderColor: confirmPasswordError ? '#FF6B6B' : colors.border,
-                backgroundColor: colors.card,
+                backgroundColor: colors.surface,
                 color: colors.text,
+                fontFamily: 'Montserrat_400Regular',
               }
             ]}
             value={confirmPassword}
@@ -268,13 +273,13 @@ export default function AuthForm({
               clearFieldError('confirmPassword');
             }}
             placeholder="Confirm your password"
-            placeholderTextColor={colors.tabIconDefault}
+            placeholderTextColor={colors.textTertiary}
             secureTextEntry
             editable={!isFormDisabled}
             testID="auth-form-confirm-password-input"
           />
           {confirmPasswordError ? (
-            <Text style={styles.errorText}>{confirmPasswordError}</Text>
+            <ThemedText type="caption" style={styles.errorText}>{confirmPasswordError}</ThemedText>
           ) : null}
         </View>
       )}
@@ -284,7 +289,7 @@ export default function AuthForm({
         style={[
           styles.submitButton,
           { 
-            backgroundColor: isFormDisabled ? colors.tabIconDefault : colors.tint,
+            backgroundColor: isFormDisabled ? colors.textDisabled : colors.accent,
             opacity: isFormDisabled ? 0.6 : 1,
           }
         ]}
@@ -295,58 +300,67 @@ export default function AuthForm({
         {isFormDisabled ? (
           <View style={styles.buttonContent}>
             <ActivityIndicator size="small" color="white" />
-            <Text style={styles.buttonText}>{finalLoadingText}</Text>
+            <ThemedText type="button" style={[styles.buttonText, { marginLeft: 8 }]}>
+              {finalLoadingText}
+            </ThemedText>
           </View>
         ) : (
-          <Text style={styles.buttonText}>{finalSubmitText}</Text>
+          <ThemedText type="button" style={styles.buttonText}>
+            {finalSubmitText}
+          </ThemedText>
         )}
       </TouchableOpacity>
     </View>
   );
 }
 
+// Draft Design System Styles - 8px Grid
 const styles = StyleSheet.create({
   container: {
     width: '100%',
+    gap: 24, // 8px × 3
   },
   inputGroup: {
-    marginBottom: 20,
+    gap: 8,
   },
   label: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
+    // Typography handled by ThemedText
   },
   input: {
-    height: 50,
+    height: 56, // Thumb-friendly touch target
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 16,
+    // Draft design with generous spacing
   },
   errorContainer: {
-    marginTop: 4,
+    gap: 4,
   },
   errorText: {
     color: '#FF6B6B',
-    fontSize: 14,
-    marginTop: 4,
   },
   submitButton: {
-    height: 50,
-    borderRadius: 8,
+    height: 56,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 8,
+    // Subtle shadow for elevation
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   buttonContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
   },
   buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
+    color: '#FFFFFF',
   },
 }); 

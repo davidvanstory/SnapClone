@@ -1,50 +1,45 @@
 /**
  * Profile Setup Screen Component
  * 
- * This screen allows new users to complete their profile including:
- * - Username selection with availability checking
- * - Optional avatar upload functionality
- * - Profile completion with validation
- * - Onboarding completion and navigation to main app
+ * This screen allows new users to complete their profile for Draft:
+ * - Simple name entry (optional)
+ * - Quick setup for art class participation
+ * - Streamlined onboarding for anxiety-reducing experience
  */
 
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
+import { ThemedText } from '../../components/ThemedText';
 import { Colors } from '../../constants/Colors';
 import { useColorScheme } from '../../hooks/useColorScheme';
-import { checkUsernameAvailability, validateUsername } from '../../lib/auth';
 import { useAuthStore } from '../../store/authStore';
 
 export default function ProfileSetupScreen() {
-  console.log('👤 Profile Setup Screen - Rendering profile setup interface');
+  console.log('👤 Profile Setup Screen - Rendering simplified profile setup for Draft');
 
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
-  // Form state
-  const [username, setUsername] = useState('');
-  const [usernameError, setUsernameError] = useState('');
-  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  // Form state - simplified for Draft
+  const [displayName, setDisplayName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
 
   // Auth store
   const { user, updateProfile, isLoading } = useAuthStore();
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated  
   useEffect(() => {
     if (!user) {
       console.log('❌ Profile Setup Screen - User not authenticated, redirecting to login');
@@ -53,80 +48,26 @@ export default function ProfileSetupScreen() {
   }, [user]);
 
   /**
-   * Check username availability with debouncing
-   */
-  useEffect(() => {
-    const checkUsername = async () => {
-      if (!username.trim()) {
-        setUsernameAvailable(null);
-        return;
-      }
-
-      const validation = validateUsername(username);
-      if (!validation.isValid) {
-        setUsernameError(validation.error || '');
-        setUsernameAvailable(null);
-        return;
-      }
-
-      setIsCheckingUsername(true);
-      setUsernameError('');
-
-      try {
-        const result = await checkUsernameAvailability(username);
-        if (result.error) {
-          setUsernameError(result.error);
-          setUsernameAvailable(null);
-        } else {
-          setUsernameAvailable(result.isAvailable);
-          if (!result.isAvailable) {
-            setUsernameError('Username is already taken');
-          }
-        }
-      } catch (error) {
-        console.error('❌ Profile Setup Screen - Username check error:', error);
-        setUsernameError('Failed to check username availability');
-        setUsernameAvailable(null);
-      } finally {
-        setIsCheckingUsername(false);
-      }
-    };
-
-    // Debounce username checking
-    const timeoutId = setTimeout(checkUsername, 500);
-    return () => clearTimeout(timeoutId);
-  }, [username]);
-
-  /**
    * Handle profile setup completion
    */
   const handleCompleteProfile = async () => {
-    console.log('🚀 Profile Setup Screen - Starting profile completion');
-
-    // Validate username
-    const validation = validateUsername(username);
-    if (!validation.isValid) {
-      setUsernameError(validation.error || '');
-      return;
-    }
-
-    if (!usernameAvailable) {
-      setUsernameError('Please choose an available username');
-      return;
-    }
+    console.log('🚀 Profile Setup Screen - Starting simplified profile completion');
 
     setIsSubmitting(true);
 
     try {
+      // For Draft, we'll use a simple approach - either the display name or email prefix
+      const profileName = displayName.trim() || user?.email?.split('@')[0] || 'Artist';
+      
       const result = await updateProfile({
-        username: username.toLowerCase().trim(),
+        username: profileName.toLowerCase().replace(/[^a-zA-Z0-9]/g, ''),
       });
 
       if (result.success) {
         console.log('✅ Profile Setup Screen - Profile completed successfully');
         Alert.alert(
-          'Profile Complete!',
-          'Welcome to VEO Creative Image Messenger! You can now start creating and sharing AI-generated images with your groups.',
+          'Welcome to Draft!',
+          'You\'re ready to start sharing your artwork in a supportive, ephemeral environment.',
           [
             {
               text: 'Get Started',
@@ -140,17 +81,34 @@ export default function ProfileSetupScreen() {
       } else {
         console.error('❌ Profile Setup Screen - Profile update failed:', result.error);
         Alert.alert(
-          'Profile Update Failed',
-          result.error || 'An error occurred while updating your profile. Please try again.',
-          [{ text: 'OK' }]
+          'Setup Error',
+          'There was an issue setting up your profile. Let\'s continue anyway!',
+          [
+            {
+              text: 'Continue',
+              onPress: () => {
+                console.log('🎉 Profile Setup Screen - Continuing to main app despite error');
+                router.replace('/(tabs)');
+              },
+            },
+          ]
         );
       }
     } catch (error) {
       console.error('❌ Profile Setup Screen - Unexpected profile update error:', error);
+      // For Draft, we'll be forgiving and let users continue
       Alert.alert(
-        'Profile Update Error',
-        'An unexpected error occurred. Please try again.',
-        [{ text: 'OK' }]
+        'Setup Complete',
+        'Welcome to Draft! You can update your name later if needed.',
+        [
+          {
+            text: 'Continue',
+            onPress: () => {
+              console.log('🎉 Profile Setup Screen - Continuing to main app');
+              router.replace('/(tabs)');
+            },
+          },
+        ]
       );
     } finally {
       setIsSubmitting(false);
@@ -158,28 +116,14 @@ export default function ProfileSetupScreen() {
   };
 
   /**
-   * Handle skip profile setup (complete later)
+   * Handle skip profile setup (go directly to app)
    */
   const handleSkipSetup = () => {
     console.log('⏭️ Profile Setup Screen - User skipping profile setup');
-    Alert.alert(
-      'Skip Profile Setup?',
-      'You can complete your profile later in Settings. Would you like to continue?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Skip',
-          onPress: () => {
-            console.log('✅ Profile Setup Screen - Skipping to main app');
-            router.replace('/(tabs)');
-          },
-        },
-      ]
-    );
+    router.replace('/(tabs)');
   };
 
-  const isFormDisabled = isLoading || isSubmitting || isCheckingUsername;
-  const canSubmit = username.trim() && usernameAvailable && !isFormDisabled;
+  const isFormDisabled = isLoading || isSubmitting;
 
   // Show loading if user is not loaded yet
   if (!user) {
@@ -206,62 +150,42 @@ export default function ProfileSetupScreen() {
           <View style={styles.content}>
             {/* Header */}
             <View style={styles.header}>
-              <Text style={[styles.title, { color: colors.text }]}>
-                Complete Your Profile
-              </Text>
-              <Text style={[styles.subtitle, { color: colors.text }]}>
-                Choose a username to get started
-              </Text>
+              <ThemedText type="title" style={[styles.title, { color: colors.text }]}>
+                Welcome to Draft
+              </ThemedText>
+              <ThemedText type="body" style={[styles.subtitle, { color: colors.textSecondary }]}>
+                Set up your profile to get started
+              </ThemedText>
             </View>
 
             {/* Form */}
             <View style={styles.form}>
-              {/* Username Input */}
+              {/* Display Name Input - Optional */}
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.text }]}>
-                  Username
-                </Text>
-                <View style={styles.inputContainer}>
-                  <TextInput
-                    style={[
-                      styles.input,
-                      { 
-                        borderColor: usernameError ? '#FF6B6B' : usernameAvailable ? '#4CAF50' : colors.border,
-                        backgroundColor: colors.card,
-                        color: colors.text,
-                      }
-                    ]}
-                    value={username}
-                    onChangeText={(text) => {
-                      setUsername(text);
-                      setUsernameError('');
-                      setUsernameAvailable(null);
-                    }}
-                    placeholder="Enter your username"
-                    placeholderTextColor={colors.tabIconDefault}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    editable={!isFormDisabled}
-                  />
-                  {isCheckingUsername && (
-                    <View style={styles.inputIcon}>
-                      <ActivityIndicator size="small" color={colors.tint} />
-                    </View>
-                  )}
-                  {!isCheckingUsername && usernameAvailable === true && (
-                    <View style={styles.inputIcon}>
-                      <Text style={styles.checkmark}>✓</Text>
-                    </View>
-                  )}
-                </View>
-                {usernameError ? (
-                  <Text style={styles.errorText}>{usernameError}</Text>
-                ) : usernameAvailable === true ? (
-                  <Text style={styles.successText}>Username is available!</Text>
-                ) : null}
-                <Text style={[styles.helperText, { color: colors.tabIconDefault }]}>
-                  3-20 characters, letters, numbers, and underscores only
-                </Text>
+                <ThemedText type="label" style={[styles.label, { color: colors.text }]}>
+                  Display Name (Optional)
+                </ThemedText>
+                <TextInput
+                  style={[
+                    styles.input,
+                    { 
+                      borderColor: colors.border,
+                      backgroundColor: colors.card,
+                      color: colors.text,
+                      fontFamily: 'Montserrat_400Regular',
+                    }
+                  ]}
+                  value={displayName}
+                  onChangeText={setDisplayName}
+                  placeholder="How would you like to be known?"
+                  placeholderTextColor={colors.textTertiary}
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                  editable={!isFormDisabled}
+                />
+                <ThemedText type="caption" style={[styles.helperText, { color: colors.textTertiary }]}>
+                  If left blank, we'll use your email prefix
+                </ThemedText>
               </View>
 
               {/* Complete Profile Button */}
@@ -269,20 +193,20 @@ export default function ProfileSetupScreen() {
                 style={[
                   styles.completeButton,
                   { 
-                    backgroundColor: canSubmit ? colors.tint : colors.tabIconDefault,
-                    opacity: canSubmit ? 1 : 0.6,
+                    backgroundColor: colors.accent,
+                    opacity: isFormDisabled ? 0.6 : 1,
                   }
                 ]}
                 onPress={handleCompleteProfile}
-                disabled={!canSubmit}
+                disabled={isFormDisabled}
               >
                 {isSubmitting ? (
                   <View style={styles.buttonContent}>
                     <ActivityIndicator size="small" color="white" />
-                    <Text style={styles.buttonText}>Completing Profile...</Text>
+                    <ThemedText type="button" style={[styles.buttonText, { marginLeft: 8 }]}>Setting Up...</ThemedText>
                   </View>
                 ) : (
-                  <Text style={styles.buttonText}>Complete Profile</Text>
+                  <ThemedText type="button" style={styles.buttonText}>Complete Setup</ThemedText>
                 )}
               </TouchableOpacity>
 
@@ -292,17 +216,17 @@ export default function ProfileSetupScreen() {
                 onPress={handleSkipSetup}
                 disabled={isFormDisabled}
               >
-                <Text style={[styles.skipButtonText, { color: colors.text }]}>
+                <ThemedText type="body" style={[styles.skipButtonText, { color: colors.textSecondary }]}>
                   Skip for Now
-                </Text>
+                </ThemedText>
               </TouchableOpacity>
             </View>
 
             {/* Footer Info */}
             <View style={styles.footer}>
-              <Text style={[styles.footerText, { color: colors.tabIconDefault }]}>
-                You can update your profile anytime in Settings
-              </Text>
+              <ThemedText type="caption" style={[styles.footerText, { color: colors.textTertiary }]}>
+                You can update your profile anytime later
+              </ThemedText>
             </View>
           </View>
         </ScrollView>
@@ -332,44 +256,37 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingTop: 60,
+    paddingTop: 64, // 8px × 8
     paddingBottom: 40,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 48, // 8px × 6
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
     marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
-    fontSize: 16,
-    opacity: 0.7,
     textAlign: 'center',
   },
   form: {
     flex: 1,
+    gap: 24, // 8px × 3
   },
   inputGroup: {
-    marginBottom: 20,
+    gap: 8,
   },
   label: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  inputContainer: {
-    position: 'relative',
+    // Typography handled by ThemedText
   },
   input: {
-    height: 50,
+    height: 56, // Thumb-friendly touch target
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 12,
     paddingHorizontal: 16,
-    paddingRight: 50,
     fontSize: 16,
+    // Typography handled via fontFamily prop
   },
   inputIcon: {
     position: 'absolute',
@@ -399,19 +316,26 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   completeButton: {
-    height: 50,
-    borderRadius: 8,
+    height: 56,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 20,
+    // Subtle shadow for elevation
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   skipButton: {
-    height: 50,
+    height: 56,
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 12,
   },
   buttonContent: {
     flexDirection: 'row',
@@ -419,13 +343,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
+    color: '#FFFFFF',
+    // Typography handled by ThemedText
   },
   skipButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    // Typography handled by ThemedText
   },
   footer: {
     alignItems: 'center',

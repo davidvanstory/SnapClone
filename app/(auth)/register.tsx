@@ -22,6 +22,7 @@ import {
     View,
 } from 'react-native';
 import AuthForm, { type AuthFormData } from '../../components/auth/AuthForm';
+import { ThemedText } from '../../components/ThemedText';
 import { Colors } from '../../constants/Colors';
 import { useColorScheme } from '../../hooks/useColorScheme';
 import { useAuthStore } from '../../store/authStore';
@@ -90,14 +91,14 @@ export default function RegisterScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.content}>
-            {/* Header */}
+            {/* Header - Draft Branding */}
             <View style={styles.header}>
-              <Text style={[styles.title, { color: colors.text }]}>
-                Create Account
-              </Text>
-              <Text style={[styles.subtitle, { color: colors.text }]}>
-                Join VEO Creative Image Messenger
-              </Text>
+              <ThemedText type="title" style={[styles.title, { color: colors.text }]}>
+                Join Draft
+              </ThemedText>
+              <ThemedText type="body" style={[styles.subtitle, { color: colors.textSecondary }]}>
+                Create your account to start sharing artwork
+              </ThemedText>
             </View>
 
             {/* Form */}

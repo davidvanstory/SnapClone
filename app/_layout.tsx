@@ -1,5 +1,15 @@
 import 'react-native-url-polyfill/auto';
 
+import {
+  InstrumentSerif_400Regular,
+  InstrumentSerif_400Regular_Italic
+} from '@expo-google-fonts/instrument-serif';
+import {
+  Montserrat_400Regular,
+  Montserrat_500Medium,
+  Montserrat_600SemiBold,
+  Montserrat_700Bold
+} from '@expo-google-fonts/montserrat';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
@@ -15,10 +25,21 @@ export default function RootLayout() {
   const { initialize, isInitialized } = useAuthStore();
   
   const [loaded] = useFonts({
+    // Draft Typography System - Instrument Serif for headers/emphasis
+    InstrumentSerif_400Regular,
+    InstrumentSerif_400Regular_Italic,
+    
+    // Draft Typography System - Montserrat for UI/body text
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+    
+    // Keep SpaceMono as fallback for development
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
-  console.log('🚀 Root Layout - Initializing app');
+  console.log('🚀 Root Layout - Initializing Draft app with proper typography');
 
   // Initialize auth store when app starts
   useEffect(() => {
