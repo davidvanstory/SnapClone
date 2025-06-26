@@ -45,24 +45,24 @@ Draft is a mobile application designed to reduce anxiety and pressure for art st
 #### Sharing Artwork
 - **US-6**: As Alex, I want a large, prominent camera button so I can easily capture my artwork without hunting for features
 - **US-7**: As Alex, I want a clean camera interface with subtle guides so I can focus on photographing my work properly
-- **US-8**: As Alex, I want to optionally add a gallery frame to my artwork so I can present it more professionally if desired
-- **US-9**: As Alex, I want simple sharing controls (viewer limit, duration) so I can maintain control over who sees my work and for how long
-- **US-10**: As Alex, I want clear confirmation when I post so I know my artwork has been shared successfully
+
+- **US-8**: As Alex, I want simple sharing controls (viewer limit, duration) so I can maintain control over who sees my work and for how long
+- **US-9**: As Alex, I want clear confirmation when I post so I know my artwork has been shared successfully
 
 #### Receiving & Giving Feedback
-- **US-11**: As Alex, I want to tap on classmates' artwork to view it full-screen so I can appreciate the details and provide thoughtful feedback
-- **US-12**: As Alex, I want a simple comment box with character limits so I can leave encouraging feedback without overthinking length
-- **US-13**: As Alex, I want to see my comments appear immediately so I know my support has been shared
-- **US-14**: As Alex, I want to receive peer comments on my work so I get the validation and feedback I'm seeking
+- **US-10**: As Alex, I want to tap on classmates' artwork to view it full-screen so I can appreciate the details and provide thoughtful feedback
+- **US-11**: As Alex, I want a simple comment box with character limits so I can leave encouraging feedback without overthinking length
+- **US-12**: As Alex, I want to see my comments appear immediately so I know my support has been shared
+- **US-13**: As Alex, I want to receive peer comments on my work so I get the validation and feedback I'm seeking
 
 #### AI-Powered Learning
-- **US-15**: As Alex, I want an "AI Feedback" button on my own posts so I can get personalized guidance whenever I need it
-- **US-16**: As Alex, I want encouraging, actionable AI advice so I can improve my technique without feeling criticized
-- **US-17**: As Alex, I want unlimited AI feedback so I can learn and iterate without artificial constraints
+- **US-14**: As Alex, I want an "AI Feedback" button on my own posts so I can get personalized guidance whenever I need it
+- **US-15**: As Alex, I want encouraging, actionable AI advice so I can improve my technique without feeling criticized
+- **US-16**: As Alex, I want unlimited AI feedback so I can learn and iterate without artificial constraints
 
 #### Ephemeral Experience
-- **US-18**: As Alex, I want to watch posts naturally disappear after their timer expires so I experience the anxiety-reducing nature of temporary sharing
-- **US-19**: As Alex, I want smooth animations when content expires so the ephemeral nature feels intentional and peaceful rather than jarring
+- **US-17**: As Alex, I want to watch posts naturally disappear after their timer expires so I experience the anxiety-reducing nature of temporary sharing
+- **US-18**: As Alex, I want smooth animations when content expires so the ephemeral nature feels intentional and peaceful rather than jarring
 
 ---
 
@@ -85,17 +85,17 @@ Draft is a mobile application designed to reduce anxiety and pressure for art st
 9. **Quality Capture Settings**: The system must capture photos with appropriate quality for artwork sharing (optimized file size vs. detail)
 10. **Haptic Feedback**: The system must provide gentle haptic feedback during photo capture for tactile confirmation
 
-### Optional Frame System
-11. **Frame Selection Interface**: The system must offer an optional "Add Frame" button after photo capture
-12. **Frame Variety**: The system must provide 2-3 gallery-style frame options via horizontal swipe carousel
-13. **Live Preview**: The system must show real-time preview of frames applied to the user's artwork
-14. **Default No Frame**: The system must default to no frame, making framing purely optional enhancement
+### Camera to Feed Connection & Post Creation
+11. **Post Creation Service**: The system must provide a service to create posts from captured photos with ephemeral properties
+12. **Post-Capture Sharing Flow**: The system must display sharing controls immediately after photo capture without intermediate screens
+13. **Seamless Integration**: The system must connect photo upload to post creation to feed display as a single unified flow
 
 ### Sharing Controls & Post Creation
-15. **Viewer Limit Control**: The system must provide a slider interface allowing users to set maximum viewers from 1-20 (default: 5)
-16. **Duration Selection**: The system must offer preset duration options ("10 seconds", "1 minute", "30 minutes", "2 hours", "Until tomorrow")
-17. **Clear Posting Confirmation**: The system must provide clear success feedback when posts are created
-18. **Immediate Feed Update**: The system must display new posts at the top of the feed immediately after creation
+14. **Viewer Limit Control**: The system must provide a slider interface allowing users to set maximum viewers from 1-20 (default: 5)
+15. **Duration Selection**: The system must offer preset duration options ("30 minutes", "2 hours", "Until tomorrow")
+16. **Clear Posting Confirmation**: The system must provide clear success feedback when posts are created
+17. **Immediate Feed Update**: The system must display new posts at the top of the feed immediately after creation
+18. **Navigation After Posting**: The system must automatically redirect users to the feed tab after successful post creation
 
 ### Social Features & Commenting
 19. **Full-screen Artwork View**: The system must allow users to tap posts for full-screen viewing and detailed examination
@@ -136,7 +136,7 @@ Draft is a mobile application designed to reduce anxiety and pressure for art st
 - **Offline Functionality**: No offline photo capture, comment drafting, or data synchronization capabilities
 - **Multi-Class Management**: No ability for users to join multiple classes or switch between class contexts
 - **Direct Messaging**: No private messaging between individual users outside of class feed
-- **Advanced Frame Features**: No custom frame uploads, frame editing, or professional publishing tools
+
 - **Social Discovery**: No mechanisms to find other classes, users, or public content beyond assigned class
 - **Analytics & Reporting**: No usage tracking, learning outcome measurement, or progress reporting features
 - **Monetization Features**: No paid features, premium content, or in-app purchases
@@ -192,15 +192,15 @@ The design must implement the complete glass morphism elegance system from UIDes
 #### Camera & Capture Experience (Per UIDesign.md)
 - **Full-Screen Viewfinder**: No UI chrome during capture, optional subtle white grid lines
 - **Glass Morphism Controls**: Bottom glass card slides up from edge, large 80px centered capture button with subtle shadow
-- **Post-Capture Flow**: Artwork displayed full-screen, optional "Add Frame" button with horizontal carousel preview
+- **Post-Capture Flow**: Artwork displayed full-screen with immediate sharing controls
 - **Sharing Controls**: Large glass morphism card centered over artwork with viewer slider and duration selection
 
 ### Animation & Interaction Design (Per UIDesign.md - Exact Specifications)
 - **Screen Transitions**: 400ms duration with cubic-bezier(0.25, 0.46, 0.45, 0.94) easing, crossfade for artwork backgrounds, slide for overlays
 - **Element Animations**: Cards appearing with scale from 0.95 to 1.0 plus opacity fade-in (300ms), button interactions scale to 0.98 (150ms), input focus border color transition (200ms) with subtle scale (1.02)
 - **Deletion Animations**: Post expiration with 2-second fade-out plus scale to 0.95, comment removal slide up and fade (300ms), gentle shake animation before deletion
-- **Haptic Feedback**: Light impact for button taps/selection changes, medium impact for post creation/successful actions, heavy impact for deletions/errors, selection feedback for slider adjustments/frame selection
-- **Progressive Disclosure**: Advanced features (framing, detailed controls) revealed only when requested to avoid overwhelming new users
+- **Haptic Feedback**: Light impact for button taps/selection changes, medium impact for post creation/successful actions, heavy impact for deletions/errors, selection feedback for slider adjustments
+- **Progressive Disclosure**: Advanced features revealed only when requested to avoid overwhelming new users
 - **Glass Morphism Animations**: Smooth backdrop blur transitions, hover states increase background opacity to 0.25, interactive states with slight scale (0.98) and increased shadow
 - **Countdown Animations**: Visual countdown warnings for last 60 seconds with subtle effects, 5-second "undo" option with glass morphism popup after deletion
 
@@ -218,7 +218,7 @@ The design must implement the complete glass morphism elegance system from UIDes
 - **Frontend Framework**: React Native with Expo for cross-platform mobile development
 - **Backend Services**: Supabase for authentication, database, storage, and real-time features
 - **AI Integration**: OpenAI GPT-4V API via Supabase Edge Functions for artwork analysis and feedback
-- **Image Processing**: Expo ImageManipulator for frame overlay compositing and photo optimization
+- **Image Processing**: Expo ImageManipulator for photo optimization
 - **State Management**: Zustand for lightweight, scalable app state management
 - **Styling System**: React Native StyleSheet with complete glass morphism design system implementation
 - **Typography**: Expo Google Fonts for Instrument Serif and Montserrat font families with exact font sizes per UIDesign.md
@@ -255,7 +255,7 @@ posts (
   user_id UUID REFERENCES users(id),
   class_id UUID REFERENCES classes(id),
   image_url TEXT NOT NULL,
-  frame_style TEXT, -- Optional frame selection
+
   max_viewers INTEGER DEFAULT 5,
   view_count INTEGER DEFAULT 0,
   duration_minutes INTEGER NOT NULL,
@@ -330,7 +330,7 @@ ai_feedback (
 ### User Experience Refinements
 1. **Optimal Timer Granularity**: Should countdown displays show minutes/seconds for short durations, or keep format consistent? **Answer**: If it is not too technically difficult I would like a seconds timer.
 2. **Comment Notification Strategy**: How should users be notified of new comments on their posts without creating pressure to respond immediately? **Answer**: Don't worry about notifications right now
-3. **Frame Selection UX**: Should frame preview be mandatory after photo capture, or truly optional with easy skip? **Answer**: Easy skip
+
 
 ### Technical Implementation Details
 4. **AI Feedback Personalization**: Should AI responses consider user's skill level or previous work, or maintain general encouraging tone? **Answer**: If possible, this can be refined later
@@ -382,9 +382,8 @@ ai_feedback (
 - Smooth expiration animations
 - Storage and database cleanup
 
-### Phase 6: Polish & Frames 
+### Phase 6: Polish & Refinement
 **Optional Enhancements & Refinement**
-- Gallery frame system with live preview
 - UI polish and animation refinement
 - Performance optimization
 - Comprehensive demo testing
