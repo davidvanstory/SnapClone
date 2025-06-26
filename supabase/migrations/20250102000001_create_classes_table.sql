@@ -132,17 +132,11 @@ ALTER TABLE public.class_members ENABLE ROW LEVEL SECURITY;
 
 -- RLS policies for class_members
 
--- Class members can view other members in their classes
-CREATE POLICY "Class members can view class membership" ON public.class_members
+-- Users can view their own membership records only (non-recursive)
+CREATE POLICY "Users can view own membership only" ON public.class_members
 FOR SELECT 
 TO authenticated
-USING (
-  class_id IN (
-    SELECT class_id 
-    FROM public.class_members 
-    WHERE user_id = auth.uid() AND is_active = true
-  )
-);
+USING (auth.uid() = user_id);
 
 -- Users can join classes (insert their own membership)
 CREATE POLICY "Users can join classes" ON public.class_members
@@ -157,21 +151,8 @@ TO authenticated
 USING (auth.uid() = user_id)
 WITH CHECK (auth.uid() = user_id);
 
--- Class creators and admins can manage memberships
-CREATE POLICY "Class admins can manage memberships" ON public.class_members
-FOR ALL
-TO authenticated
-USING (
-  class_id IN (
-    SELECT id FROM public.classes 
-    WHERE created_by = auth.uid()
-  )
-  OR
-  (class_id, auth.uid()) IN (
-    SELECT class_id, user_id FROM public.class_members 
-    WHERE role IN ('teacher', 'admin') AND is_active = true
-  )
-);
+-- Note: Advanced admin features for managing memberships have been removed
+-- to prevent RLS recursion issues. Basic functionality (join/leave) still works.
 
 -- Grant permissions
 GRANT SELECT ON public.classes TO anon, authenticated;
