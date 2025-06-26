@@ -13,12 +13,12 @@
 import { Link, router } from 'expo-router';
 import React from 'react';
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  SafeAreaView,
-  StyleSheet,
-  View,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    SafeAreaView,
+    StyleSheet,
+    View,
 } from 'react-native';
 import AuthForm, { type AuthFormData } from '../../components/auth/AuthForm';
 import { ThemedText } from '../../components/ThemedText';
@@ -46,8 +46,8 @@ export default function LoginScreen() {
       const result = await signIn(formData.email, formData.password);
 
       if (result.success) {
-        console.log('✅ Login Screen - Login successful, redirecting');
-        router.replace('/(tabs)');
+        console.log('✅ Login Screen - Login successful, redirecting to camera');
+        router.replace('/(tabs)/camera');
       } else {
         console.error('❌ Login Screen - Login failed:', result.error);
         Alert.alert(

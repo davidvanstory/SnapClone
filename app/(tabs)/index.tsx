@@ -1,36 +1,41 @@
 /**
- * Class Feed Screen - Main Draft App Screen
+ * Class Feed Screen - Glass Morphism Artwork-as-Background System
  * 
  * This screen displays the ephemeral art sharing feed where students can:
- * - View classmates' artwork posts with countdown timers
+ * - View classmates' artwork posts as full-screen backgrounds with glass morphism overlays
+ * - Swipe vertically between posts with smooth artwork crossfades
  * - Access camera to share their own artwork
  * - Engage with posts through comments and interactions
  * - Experience anxiety-reducing, ephemeral content sharing
  * 
- * Design System: Draft monochromatic elegance with Instrument Serif + Montserrat
+ * Design System: Glass morphism elegance per UIDesign.md specifications
  */
 
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    Platform,
-    RefreshControl,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    TouchableOpacity,
-    View
+  Animated,
+  Dimensions,
+  ImageBackground,
+  Platform,
+  SafeAreaView,
+  StyleSheet,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import ClassJoinModal from '@/components/feed/ClassJoinModal';
+import GlassMorphismCard from '@/components/ui/GlassMorphismCard';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useAuthStore } from '@/store/authStore';
 import { useClassStore } from '@/store/classStore';
 
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
 export default function ClassFeedScreen() {
-  console.log('🎨 Class Feed Screen - Rendering main feed');
+  console.log('🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed');
   
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
@@ -52,7 +57,8 @@ export default function ClassFeedScreen() {
   
   // Local state
   const [showJoinModal, setShowJoinModal] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [currentPostIndex, setCurrentPostIndex] = useState(0);
+  const [backgroundOpacity] = useState(new Animated.Value(1));
 
   /**
    * Load user's classes on mount and when user changes
@@ -90,7 +96,7 @@ export default function ClassFeedScreen() {
    */
   const handleCameraPress = () => {
     console.log('📸 Class Feed Screen - Opening camera');
-    router.push('/(tabs)/camera');
+    router.push('/camera');
   };
 
   /**
@@ -102,236 +108,381 @@ export default function ClassFeedScreen() {
   };
 
   /**
-   * Handle pull to refresh
-   */
-  const handleRefresh = async () => {
-    console.log('🔄 Class Feed Screen - Refreshing feed');
-    setIsRefreshing(true);
-    
-    try {
-      if (user?.id) {
-        await loadUserClasses(user.id);
-        if (currentClass) {
-          await loadClassPosts(currentClass.id, user.id);
-        }
-      }
-      refreshFeed();
-    } catch (error) {
-      console.error('❌ Class Feed Screen - Error refreshing:', error);
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-
-  /**
    * Get current user display name
    */
   const getUserDisplayName = () => {
     return profile?.username || user?.email?.split('@')[0] || 'Artist';
   };
 
-  return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header with class context - Task 3.8 */}
-      <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <View style={styles.headerContent}>
-          <ThemedText type="title" style={[styles.appTitle, { color: colors.text }]}>
-            Draft
-          </ThemedText>
-          {currentClass ? (
-            <ThemedText type="metadata" style={[styles.classTitle, { color: colors.textSecondary }]}>
-              {currentClass.name}
-            </ThemedText>
-          ) : (
-            <ThemedText type="metadata" style={[styles.classTitle, { color: colors.textTertiary }]}>
-              No class joined
-            </ThemedText>
-          )}
-        </View>
-      </View>
+  /**
+   * Handle vertical swipe navigation between posts
+   */
+  const handleSwipeToNext = () => {
+    if (currentPostIndex < classPosts.length - 1) {
+      console.log('👆 Swiping to next post');
+      // Crossfade animation (400ms ease-out per UIDesign.md)
+      Animated.timing(backgroundOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start(() => {
+        setCurrentPostIndex(currentPostIndex + 1);
+        Animated.timing(backgroundOpacity, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }).start();
+      });
+    }
+  };
 
-      {/* Feed Content */}
-      <ScrollView 
-        style={styles.feedContainer} 
-        contentContainerStyle={styles.feedContent}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={handleRefresh}
-            tintColor={colors.accent}
-            title="Pull to refresh"
-            titleColor={colors.textSecondary}
-          />
-        }
-      >
-        {currentClass ? (
-          // User is in a class - show feed content
-          <>
-            {/* Welcome Card */}
-            <View style={[styles.welcomeCard, { backgroundColor: colors.surface }]}>
-              <ThemedText type="heading" style={[styles.welcomeTitle, { color: colors.text }]}>
-                Welcome to {currentClass.name}
-              </ThemedText>
-              <ThemedText type="body" style={[styles.welcomeText, { color: colors.textSecondary }]}>
-                Share your artwork with classmates in this anxiety-free, ephemeral environment. 
-                Posts automatically disappear after their timer expires.
-              </ThemedText>
-            </View>
+  const handleSwipeToPrevious = () => {
+    if (currentPostIndex > 0) {
+      console.log('👇 Swiping to previous post');
+      // Crossfade animation (400ms ease-out per UIDesign.md)
+      Animated.timing(backgroundOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start(() => {
+        setCurrentPostIndex(currentPostIndex - 1);
+        Animated.timing(backgroundOpacity, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }).start();
+      });
+    }
+  };
 
-            {/* Feed Posts */}
-            {isLoadingPosts ? (
-              <View style={[styles.loadingCard, { backgroundColor: colors.surface }]}>
-                <ThemedText type="body" style={[styles.loadingText, { color: colors.textSecondary }]}>
-                  Loading class feed...
-                </ThemedText>
-              </View>
-            ) : classPosts.length > 0 ? (
-              <View style={[styles.postsContainer, { backgroundColor: colors.surface }]}>
-                <ThemedText type="subheading" style={[styles.postsTitle, { color: colors.text }]}>
-                  Recent Artwork ({classPosts.length})
-                </ThemedText>
-                <ThemedText type="body" style={[styles.postsDescription, { color: colors.textSecondary }]}>
-                  Your classmates have shared {classPosts.length} piece{classPosts.length !== 1 ? 's' : ''} of artwork. 
-                  Tap the camera below to add your own!
-                </ThemedText>
-              </View>
+  /**
+   * Format time remaining for display
+   */
+  const formatTimeRemaining = (expiresAt: string) => {
+    const now = new Date().getTime();
+    const expiry = new Date(expiresAt).getTime();
+    const diff = expiry - now;
+    
+    if (diff <= 0) return 'Expired';
+    
+    const minutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    
+    if (days > 0) return `${days}d ${hours % 24}h`;
+    if (hours > 0) return `${hours}h ${minutes % 60}m`;
+    return `${minutes}m`;
+  };
+
+  // If no class or no posts, show traditional layout for join/empty states
+  if (!currentClass || classPosts.length === 0) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        {/* Header with class context */}
+        <View style={[styles.header, { borderBottomColor: colors.border }]}>
+          <View style={styles.headerContent}>
+            <ThemedText type="title" style={[styles.appTitle, { color: colors.text }]}>
+              Draft
+            </ThemedText>
+            {currentClass ? (
+              <ThemedText type="metadata" style={[styles.classTitle, { color: colors.textSecondary }]}>
+                {currentClass.name}
+              </ThemedText>
             ) : (
-              <View style={[styles.emptyCard, { backgroundColor: colors.surface }]}>
-                <ThemedText type="subheading" style={[styles.emptyTitle, { color: colors.text }]}>
-                  No Posts Yet
-                </ThemedText>
-                <ThemedText type="body" style={[styles.emptyText, { color: colors.textSecondary }]}>
-                  Be the first to share artwork in {currentClass.name}! Your classmates will see your 
-                  post appear here with a live countdown timer.
-                </ThemedText>
-              </View>
+              <ThemedText type="metadata" style={[styles.classTitle, { color: colors.textTertiary }]}>
+                No class joined
+              </ThemedText>
             )}
+          </View>
+        </View>
 
-            {/* Quick Start Guide */}
-            <View style={[styles.quickStartCard, { backgroundColor: colors.surface }]}>
-              <ThemedText type="username" style={[styles.quickStartTitle, { color: colors.accent }]}>
-                Ready to share?
-              </ThemedText>
-              <ThemedText type="body" style={[styles.quickStartText, { color: colors.text }]}>
-                Tap the camera button below to capture your artwork. You'll be able to add 
-                frames, set viewing limits, and choose how long it stays visible.
-              </ThemedText>
-            </View>
-          </>
-        ) : (
-          // User has no class - show placeholder content
-          <>
-            {/* Welcome Card */}
-            <View style={[styles.welcomeCard, { backgroundColor: colors.surface }]}>
-              <ThemedText type="heading" style={[styles.welcomeTitle, { color: colors.text }]}>
+        {/* Empty/Loading State Content */}
+        <View style={styles.emptyStateContainer}>
+          {!currentClass ? (
+            // No class joined
+            <GlassMorphismCard type="primary" style={styles.emptyStateCard}>
+              <ThemedText type="screenTitle" style={[styles.emptyStateTitle, { color: colors.text }]}>
                 Welcome, {getUserDisplayName()}
               </ThemedText>
-              <ThemedText type="body" style={[styles.welcomeText, { color: colors.textSecondary }]}>
+              <ThemedText type="bodyText" style={[styles.emptyStateText, { color: colors.textSecondary }]}>
                 Join a class to start sharing your artwork with classmates in a supportive, 
                 ephemeral environment where posts disappear after their timer expires.
               </ThemedText>
-            </View>
-
-            {/* Join Class Prompt */}
-            <View style={[styles.joinPromptCard, { backgroundColor: colors.surface, borderColor: colors.accent }]}>
-              <ThemedText type="subheading" style={[styles.joinPromptTitle, { color: colors.accent }]}>
-                Join Your First Class
-              </ThemedText>
-              <ThemedText type="body" style={[styles.joinPromptText, { color: colors.textSecondary }]}>
-                Ask your instructor for a class join code to get started. You'll be able to 
-                share artwork and see your classmates' posts.
-              </ThemedText>
               <TouchableOpacity
-                style={[styles.joinPromptButton, { backgroundColor: colors.accent }]}
+                style={[styles.primaryButton, { backgroundColor: colors.accentSage }]}
                 onPress={() => setShowJoinModal(true)}
                 activeOpacity={0.8}
               >
-                <ThemedText type="button" style={styles.joinPromptButtonText}>
-                  Enter Join Code
+                <ThemedText type="button" style={styles.primaryButtonText}>
+                  Join a Class
                 </ThemedText>
               </TouchableOpacity>
-            </View>
-
-            {/* Feature Highlights */}
-            <View style={[styles.featuresCard, { backgroundColor: colors.surface }]}>
-              <ThemedText type="subheading" style={[styles.featuresTitle, { color: colors.text }]}>
-                What You Can Do
+            </GlassMorphismCard>
+          ) : isLoadingPosts ? (
+            // Loading posts
+            <GlassMorphismCard type="primary" style={styles.emptyStateCard}>
+              <ThemedText type="screenTitle" style={[styles.emptyStateTitle, { color: colors.text }]}>
+                Loading Feed...
               </ThemedText>
-              <View style={styles.featureList}>
-                <View style={styles.featureItem}>
-                  <ThemedText type="body" style={{ color: colors.accent }}>📸</ThemedText>
-                  <ThemedText type="caption" style={[styles.featureText, { color: colors.textSecondary }]}>
-                    Share artwork with optional frames
-                  </ThemedText>
-                </View>
-                <View style={styles.featureItem}>
-                  <ThemedText type="body" style={{ color: colors.accent }}>⏰</ThemedText>
-                  <ThemedText type="caption" style={[styles.featureText, { color: colors.textSecondary }]}>
-                    Set timers for anxiety-free sharing
-                  </ThemedText>
-                </View>
-                <View style={styles.featureItem}>
-                  <ThemedText type="body" style={{ color: colors.accent }}>💬</ThemedText>
-                  <ThemedText type="caption" style={[styles.featureText, { color: colors.textSecondary }]}>
-                    Receive supportive peer feedback
-                  </ThemedText>
-                </View>
-                <View style={styles.featureItem}>
-                  <ThemedText type="body" style={{ color: colors.accent }}>🤖</ThemedText>
-                  <ThemedText type="caption" style={[styles.featureText, { color: colors.textSecondary }]}>
-                    Get AI feedback when you need it
-                  </ThemedText>
-                </View>
-              </View>
-            </View>
-          </>
-        )}
-      </ScrollView>
+              <ThemedText type="bodyText" style={[styles.emptyStateText, { color: colors.textSecondary }]}>
+                Discovering artwork shared by your classmates.
+              </ThemedText>
+            </GlassMorphismCard>
+          ) : (
+            // No posts in class
+            <GlassMorphismCard type="primary" style={styles.emptyStateCard}>
+              <ThemedText type="screenTitle" style={[styles.emptyStateTitle, { color: colors.text }]}>
+                No Posts Yet
+              </ThemedText>
+              <ThemedText type="bodyText" style={[styles.emptyStateText, { color: colors.textSecondary }]}>
+                Be the first to share artwork in {currentClass.name}! Your classmates will see your 
+                post appear here with a live countdown timer.
+              </ThemedText>
+              <TouchableOpacity
+                style={[styles.primaryButton, { backgroundColor: colors.accentSage }]}
+                onPress={handleCameraPress}
+                activeOpacity={0.8}
+              >
+                <ThemedText type="button" style={styles.primaryButtonText}>
+                  📸 Share First Artwork
+                </ThemedText>
+              </TouchableOpacity>
+            </GlassMorphismCard>
+          )}
+        </View>
 
-      {/* Camera Button */}
-      <View style={[styles.cameraSection, { backgroundColor: colors.background }]}>
-        <TouchableOpacity 
-          style={[
-            styles.cameraButton, 
-            { 
-              backgroundColor: currentClass ? colors.accent : colors.surface,
-              opacity: currentClass ? 1 : 0.6,
-            }
-          ]}
-          onPress={handleCameraPress}
-          disabled={!currentClass}
-          activeOpacity={0.8}
+        {/* Class Join Modal */}
+        <ClassJoinModal
+          visible={showJoinModal}
+          onClose={() => setShowJoinModal(false)}
+          onSuccess={handleJoinSuccess}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  // Glass Morphism Artwork-as-Background Feed
+  const currentPost = classPosts[currentPostIndex];
+  
+  return (
+    <View style={styles.feedContainer}>
+      {/* Full-Screen Artwork Background with Dark Gradient Overlay */}
+      <Animated.View style={[styles.artworkBackground, { opacity: backgroundOpacity }]}>
+        <ImageBackground
+          source={{ uri: currentPost.image_url }}
+          style={styles.backgroundImage}
+          resizeMode="cover"
         >
-          <ThemedText type="button" style={[
-            styles.cameraButtonText,
-            { color: currentClass ? '#FFFFFF' : colors.textSecondary }
-          ]}>
-            📸 {currentClass ? 'Capture Artwork' : 'Join Class to Share'}
-          </ThemedText>
-        </TouchableOpacity>
-        <ThemedText type="caption" style={[styles.cameraHint, { color: colors.textTertiary }]}>
-          {currentClass ? 'Full-screen camera with optional framing' : 'Join a class to start sharing'}
-        </ThemedText>
-      </View>
+          {/* Dark gradient overlay (rgba(0,0,0,0.3) to transparent per UIDesign.md) */}
+          <View style={styles.gradientOverlay} />
+        </ImageBackground>
+      </Animated.View>
 
-      {/* Class Join Modal - Task 3.5 */}
-      <ClassJoinModal
-        visible={showJoinModal}
-        onClose={() => setShowJoinModal(false)}
-        onSuccess={handleJoinSuccess}
-      />
-    </SafeAreaView>
+      {/* Safe Area for glass morphism overlays */}
+      <SafeAreaView style={styles.overlayContainer}>
+        {/* Top Card - Post Information (20px margins per UIDesign.md) */}
+        <GlassMorphismCard type="primary" style={styles.topCard}>
+          <ThemedText 
+            type="username" 
+            glassText={true} 
+            style={styles.artistName}
+          >
+            {currentPost.user?.username || 'Unknown Artist'}
+          </ThemedText>
+          <ThemedText 
+            type="metadata" 
+            glassText={true} 
+            style={styles.className}
+          >
+            {currentClass.name}
+          </ThemedText>
+          
+          {/* View Count and Expiration Side by Side */}
+          <View style={styles.statsRow}>
+            <ThemedText 
+              type="metadata" 
+              glassText={true} 
+              style={styles.viewCountTop}
+            >
+              {currentPost.view_count}/{currentPost.max_viewers} views
+            </ThemedText>
+            <ThemedText 
+              type="label" 
+              glassText={true} 
+              style={styles.timerTop}
+            >
+              Expires in {formatTimeRemaining(currentPost.expires_at)}
+            </ThemedText>
+          </View>
+        </GlassMorphismCard>
+
+        {/* Bottom Right - Actions Card (Always visible) */}
+        <View style={styles.bottomActions}>
+          <GlassMorphismCard type="secondary" style={styles.actionsCard}>
+            <TouchableOpacity 
+              style={styles.actionButton}
+              activeOpacity={0.7}
+            >
+              <View style={styles.commentButtonContainer}>
+                <ThemedText style={styles.actionIcon}>💬</ThemedText>
+                {/* Comment count would go here */}
+              </View>
+            </TouchableOpacity>
+            
+            {/* Next Photo Button - Always visible for cycling through photos */}
+            <TouchableOpacity 
+              style={styles.nextButton}
+              onPress={handleSwipeToNext}
+              activeOpacity={0.8}
+            >
+              <ThemedText type="caption" glassText={true} style={styles.nextLabel}>
+                Next
+              </ThemedText>
+            </TouchableOpacity>
+          </GlassMorphismCard>
+        </View>
+      </SafeAreaView>
+    </View>
   );
 }
 
-// Draft Design System - 8px Grid with Generous Whitespace
+// Glass Morphism Design System Styles per UIDesign.md
 const styles = StyleSheet.create({
+  // Base Container
   container: {
     flex: 1,
   },
   
-  // Header Section
+  // Feed Container - Full Screen
+  feedContainer: {
+    flex: 1,
+  },
+  
+  // Artwork Background System
+  artworkBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  backgroundImage: {
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT,
+    flex: 1,
+  },
+  gradientOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)', // Dark gradient overlay per UIDesign.md
+  },
+  
+  // Glass Morphism Overlay Container
+  overlayContainer: {
+    flex: 1,
+    justifyContent: 'space-between',
+    paddingHorizontal: 20, // 20px screen margins per UIDesign.md
+    paddingTop: 20,
+    paddingBottom: 20,
+  },
+  
+  // Top Card - Post Information (Primary Glass Card specs)
+  topCard: {
+    padding: 20,
+    gap: 8,
+    alignSelf: 'stretch',
+  },
+  artistName: {
+    fontSize: 18,        // 18pt per UIDesign.md
+    fontWeight: '400',   // Regular weight for Instrument Serif
+  },
+  className: {
+    fontSize: 12,        // 12pt per UIDesign.md
+    opacity: 0.7,        // rgba(255,255,255,0.7) applied via glassTextSecondary
+  },
+  timer: {
+    fontSize: 14,        // 14pt per UIDesign.md
+    fontWeight: '500',   // Medium weight for emphasis
+  },
+  
+  // Stats Row in Top Card (Side by Side)
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8, // Space below class name
+  },
+  
+  // Bottom Actions Container (Above tab bar)
+  bottomActions: {
+    position: 'absolute',
+    bottom: 100, // Space above tab bar (88px tab bar + 12px margin)
+    right: 20, // 20px from edge per UIDesign.md
+    left: 20,
+    alignItems: 'flex-end', // Align to right side
+  },
+  
+  // Next Button (beside comments)
+  nextButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)', // Subtle button background
+    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  
+  nextLabel: {
+    fontSize: 12,
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  
+  // Bottom Left - Stats Card (Secondary Glass specs)
+  statsCard: {
+    padding: 16,
+    gap: 4,
+    flex: 0,
+    minWidth: 120,
+  },
+  viewCount: {
+    fontSize: 12,        // 12pt per UIDesign.md
+  },
+  viewCountTop: {
+    fontSize: 12,        // 12pt per UIDesign.md
+  },
+  timerTop: {
+    fontSize: 12,        // 12pt per UIDesign.md
+  },
+  
+  // Bottom Right - Actions Card (Secondary Glass specs)  
+  actionsCard: {
+    flexDirection: 'row',
+    padding: 12,
+    gap: 12,             // 12px gaps between buttons per UIDesign.md
+    alignItems: 'center',
+  },
+  actionButton: {
+    width: 44,           // 44px minimum touch target
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)', // Subtle button background
+  },
+  actionIcon: {
+    fontSize: 24,        // 24px icons per UIDesign.md
+    color: 'white',
+  },
+  commentButtonContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  
+  // Empty State Styles (Traditional layout)
   header: {
     borderBottomWidth: 1,
     paddingTop: Platform.OS === 'ios' ? 0 : 24,
@@ -348,159 +499,42 @@ const styles = StyleSheet.create({
   classTitle: {
     textAlign: 'center',
   },
-  
-  // Feed Container - 8px Grid System
-  feedContainer: {
+  emptyStateContainer: {
     flex: 1,
-  },
-  feedContent: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 16,
-    gap: 24, // 8px × 3 = consistent spacing
-  },
-  
-  // Welcome Card
-  welcomeCard: {
-    padding: 24,
-    borderRadius: 16,
-    gap: 16,
-  },
-  welcomeTitle: {
-    marginBottom: 4,
-  },
-  welcomeText: {
-    marginBottom: 8,
-  },
-  
-  // Loading State
-  loadingCard: {
-    padding: 24,
-    borderRadius: 16,
-    alignItems: 'center',
-  },
-  loadingText: {
-    textAlign: 'center',
-  },
-  
-  // Posts Container
-  postsContainer: {
-    padding: 24,
-    borderRadius: 16,
-    gap: 12,
-  },
-  postsTitle: {
-    marginBottom: 4,
-  },
-  postsDescription: {
-    lineHeight: 22,
-  },
-  
-  // Empty State
-  emptyCard: {
-    padding: 24,
-    borderRadius: 16,
-    gap: 12,
-    alignItems: 'center',
-  },
-  emptyTitle: {
-    textAlign: 'center',
-  },
-  emptyText: {
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  
-  // Join Prompt Card
-  joinPromptCard: {
-    padding: 24,
-    borderRadius: 16,
-    borderWidth: 2,
-    gap: 16,
-    alignItems: 'center',
-  },
-  joinPromptTitle: {
-    textAlign: 'center',
-  },
-  joinPromptText: {
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  joinPromptButton: {
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 24,
-    marginTop: 8,
-  },
-  joinPromptButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  
-  // Features Card
-  featuresCard: {
-    padding: 24,
-    borderRadius: 16,
-    gap: 16,
-  },
-  featuresTitle: {
-    marginBottom: 8,
-  },
-  featureList: {
-    gap: 12,
-  },
-  featureItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  featureText: {
-    flex: 1,
-  },
-  
-  // Quick Start Card
-  quickStartCard: {
-    padding: 24,
-    borderRadius: 16,
-    gap: 12,
-    alignItems: 'center',
-  },
-  quickStartTitle: {
-    textAlign: 'center',
-  },
-  quickStartText: {
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  
-  // Camera Section - Thumb-friendly Design
-  cameraSection: {
-    paddingHorizontal: 24,
-    paddingBottom: Platform.OS === 'ios' ? 34 : 24,
-    paddingTop: 16,
-    gap: 8,
-  },
-  cameraButton: {
-    height: 56, // Thumb-friendly 44px+ touch target
-    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    
-    // Subtle shadow for elevation
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    paddingHorizontal: 24,
   },
-  cameraButtonText: {
-    color: '#FFFFFF',
+  emptyStateCard: {
+    padding: 32,
+    alignItems: 'center',
+    gap: 20,
+    maxWidth: 400,
   },
-  cameraHint: {
+  emptyStateTitle: {
     textAlign: 'center',
-    marginTop: 4,
+  },
+  emptyStateText: {
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  primaryButton: {
+    height: 50,
+    paddingHorizontal: 32,
+    borderRadius: 28,        // 28px fully rounded per UIDesign.md
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16,
+    
+    // Glass morphism button shadow per UIDesign.md
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    elevation: 6,
+  },
+  primaryButtonText: {
+    color: 'white',
+    fontWeight: '500',
   },
 });

@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
   },
   cameraOverlay: {
     position: 'absolute',
-    bottom: 0,
+    bottom: 100, // Raised above tab bar (88px + 12px margin)
     left: 0,
     right: 0,
     height: 120,

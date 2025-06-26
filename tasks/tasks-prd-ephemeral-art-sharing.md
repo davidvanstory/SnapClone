@@ -126,13 +126,13 @@
   - [x] 3.12 Create demo refresh system: build script to reset demo data with fresh timestamps (NOW() + intervals) for reliable multi-session demos
   - [x] 3.13 Implement single-device testing architecture: update demo seed to use relative timestamps instead of fixed dates to prevent timer display issues
 
-- [ ] **4.0 Glass Morphism Feed Display (Artwork-as-Background System)**
-  - [ ] 4.1 Replace current solid card UI with artwork-as-background feed: each post artwork fills entire screen with dark gradient overlay (rgba(0,0,0,0.3) to transparent) - uses existing GlassMorphismCard component and Colors.ts system
-  - [ ] 4.2 Create glass morphism feed card components: Top card (post info), Bottom-left card (stats), Bottom-right card (actions) with exact UIDesign.md positioning (20px margins) - leverages existing Primary/Secondary Glass Card specs
-  - [ ] 4.3 Implement vertical swipe navigation between posts with smooth artwork crossfades (400ms ease-out transitions)
-  - [ ] 4.4 Build FeedPost component with Primary Glass Card specs for post info: artist name (Instrument Serif 18pt white), class name (Montserrat 12pt rgba(255,255,255,0.7)), timer (Montserrat 14pt white) - uses existing ThemedText typography system
-  - [ ] 4.5 Create bottom-left stats card with Secondary Glass specs: view count "3 of 5 viewers" (Montserrat 12pt), time remaining "Expires in 18 min" (Montserrat 11pt)
-  - [ ] 4.6 Build bottom-right actions card with Secondary Glass specs: camera icon (24px white), AI feedback icon, comment icon with count, 12px gaps between buttons
+- [x] **4.0 Glass Morphism Feed Display (Artwork-as-Background System)**
+  - [x] 4.1 Replace current solid card UI with artwork-as-background feed: each post artwork fills entire screen with dark gradient overlay (rgba(0,0,0,0.3) to transparent) - uses existing GlassMorphismCard component and Colors.ts system
+  - [x] 4.2 Create glass morphism feed card components: Top card (post info), Bottom-left card (stats), Bottom-right card (actions) with exact UIDesign.md positioning (20px margins) - leverages existing Primary/Secondary Glass Card specs
+  - [x] 4.3 Implement vertical navigation between posts with smooth artwork crossfades (400ms ease-out transitions) - Updated to use intentional engagement buttons instead of passive swipe areas
+  - [x] 4.4 Build FeedPost component with Primary Glass Card specs for post info: artist name (Instrument Serif 18pt white), class name (Montserrat 12pt rgba(255,255,255,0.7)), timer (Montserrat 14pt white) - uses existing ThemedText typography system
+  - [x] 4.5 Create bottom-left stats card with Secondary Glass specs: view count "3 of 5 viewers" (Montserrat 12pt), time remaining "Expires in 18 min" (Montserrat 11pt)
+  - [x] 4.6 Build bottom-right actions card with Secondary Glass specs: comment icon with "Next" navigation button beside it - Updated to remove camera/AI icons and add intentional navigation
   - [ ] 4.7 Replace current sharing controls with glass morphism card centered over artwork: viewer limit slider (warm sage accent), duration pills (30min/2hrs/tomorrow), "Share with Class" button (warm sage background)
   - [ ] 4.8 Implement glass morphism typography hierarchy: Instrument Serif for artist names/headers, Montserrat for all UI elements with exact UIDesign.md font sizes - typography system already complete in ThemedText.tsx
   - [ ] 4.9 Build skeleton screens maintaining glass morphism aesthetic: animated gradients from rgba(255,255,255,0.1) to rgba(255,255,255,0.2) with backdrop blur
