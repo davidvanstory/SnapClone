@@ -26,6 +26,7 @@ import {
 
 import { ThemedText } from '@/components/ThemedText';
 import ClassJoinModal from '@/components/feed/ClassJoinModal';
+import ClassListScreen from '@/components/feed/ClassListScreen';
 import GlassMorphismCard from '@/components/ui/GlassMorphismCard';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -52,11 +53,13 @@ export default function ClassFeedScreen() {
     isLoadingPosts,
     loadUserClasses, 
     loadClassPosts,
+    setCurrentClass,
     refreshFeed 
   } = useClassStore();
   
   // Local state
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [showClassList, setShowClassList] = useState(true); // New state for class selection
   const [currentPostIndex, setCurrentPostIndex] = useState(0);
   const [backgroundOpacity] = useState(new Animated.Value(1));
 
@@ -77,19 +80,47 @@ export default function ClassFeedScreen() {
     console.log('📰 Class Feed Screen - Current class changed:', currentClass?.name);
     if (currentClass && user?.id) {
       loadClassPosts(currentClass.id, user.id);
+      // Don't automatically hide class list - let user navigation control this
     }
   }, [currentClass?.id, user?.id, loadClassPosts]);
 
   /**
-   * Check if user needs to join a class
+   * Check if user should see class list vs feed
    */
   useEffect(() => {
     console.log('🔍 Class Feed Screen - Checking class membership status');
-    if (user && !isLoading && userClasses.length === 0) {
-      console.log('⚠️ Class Feed Screen - User has no classes, showing join modal');
-      setShowJoinModal(true);
+    
+    // Always show class list first when user loads the feed tab
+    if (user && !isLoading) {
+      if (!currentClass) {
+        console.log('📚 Class Feed Screen - No class selected, showing class list');
+        setShowClassList(true);
+        setShowJoinModal(false);
+      } else {
+        console.log('🎨 Class Feed Screen - Class selected, showing feed');
+        setShowClassList(false);
+      }
     }
-  }, [user, isLoading, userClasses.length]);
+  }, [user, isLoading, currentClass]);
+
+  /**
+   * Handle class selection from class list
+   */
+  const handleClassSelect = (classId: string) => {
+    console.log('🎯 Class Feed Screen - Class selected from list:', classId);
+    const selectedClass = userClasses.find(c => c.id === classId);
+    if (selectedClass) {
+      setCurrentClass(selectedClass);
+    }
+  };
+
+  /**
+   * Handle join class button from class list
+   */
+  const handleJoinClassFromList = () => {
+    console.log('➕ Class Feed Screen - Opening join modal from class list');
+    setShowJoinModal(true);
+  };
 
   /**
    * Handle camera navigation
@@ -104,6 +135,7 @@ export default function ClassFeedScreen() {
    */
   const handleJoinSuccess = () => {
     console.log('🎉 Class Feed Screen - Successfully joined class');
+    setShowJoinModal(false);
     // The class store will automatically update and load posts
   };
 
@@ -173,6 +205,25 @@ export default function ClassFeedScreen() {
     if (hours > 0) return `${hours}h ${minutes % 60}m`;
     return `${minutes}m`;
   };
+
+  // Show class selection screen when showClassList is true (for all users)
+  if (showClassList) {
+    return (
+      <>
+        <ClassListScreen 
+          onClassSelect={handleClassSelect}
+          onJoinClass={handleJoinClassFromList}
+        />
+        
+        {/* Join Class Modal */}
+        <ClassJoinModal
+          visible={showJoinModal}
+          onClose={() => setShowJoinModal(false)}
+          onSuccess={handleJoinSuccess}
+        />
+      </>
+    );
+  }
 
   // If no class or no posts, show traditional layout for join/empty states
   if (!currentClass || classPosts.length === 0) {

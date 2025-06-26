@@ -94,12 +94,7 @@ export const useClassStore = create<ClassState>((set, get) => ({
         isLoading: false 
       });
 
-      // Auto-select first class if none is selected
-      const { currentClass } = get();
-      if (!currentClass && classes.length > 0) {
-        console.log('🎯 Class Store - Auto-selecting first class:', classes[0].name);
-        set({ currentClass: classes[0] });
-      }
+      // Don't auto-select any class - let user choose from ClassListScreen
 
     } catch (error) {
       console.error('❌ Class Store - Error loading user classes:', error);

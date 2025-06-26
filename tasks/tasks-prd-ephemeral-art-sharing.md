@@ -133,10 +133,11 @@
   - [x] 4.4 Build FeedPost component with Primary Glass Card specs for post info: artist name (Instrument Serif 18pt white), class name (Montserrat 12pt rgba(255,255,255,0.7)), timer (Montserrat 14pt white) - uses existing ThemedText typography system
   - [x] 4.5 Create bottom-left stats card with Secondary Glass specs: view count "3 of 5 viewers" (Montserrat 12pt), time remaining "Expires in 18 min" (Montserrat 11pt)
   - [x] 4.6 Build bottom-right actions card with Secondary Glass specs: comment icon with "Next" navigation button beside it - Updated to remove camera/AI icons and add intentional navigation
-  - [ ] 4.7 Replace current sharing controls with glass morphism card centered over artwork: viewer limit slider (warm sage accent), duration pills (30min/2hrs/tomorrow), "Share with Class" button (warm sage background)
-  - [ ] 4.8 Implement glass morphism typography hierarchy: Instrument Serif for artist names/headers, Montserrat for all UI elements with exact UIDesign.md font sizes - typography system already complete in ThemedText.tsx
-  - [ ] 4.9 Build skeleton screens maintaining glass morphism aesthetic: animated gradients from rgba(255,255,255,0.1) to rgba(255,255,255,0.2) with backdrop blur
-  - [ ] 4.10 Create smooth loading states with glass morphism cards appearing (scale 0.95->1.0 with 300ms opacity fade-in)
+  - [x] 4.7 Create intermediate class selection screen: "Your Classes" page between Class Feed tab and feed content with glass morphism list of enrolled classes and "Join a Class +" button for better app orientation and mental breathing room
+  - [ ] 4.8 Replace current sharing controls with glass morphism card centered over artwork: viewer limit slider (warm sage accent), duration pills (30min/2hrs/tomorrow), "Share with Class" button (warm sage background)
+  - [ ] 4.9 Implement glass morphism typography hierarchy: Instrument Serif for artist names/headers, Montserrat for all UI elements with exact UIDesign.md font sizes - typography system already complete in ThemedText.tsx
+  - [ ] 4.10 Build skeleton screens maintaining glass morphism aesthetic: animated gradients from rgba(255,255,255,0.1) to rgba(255,255,255,0.2) with backdrop blur
+  - [ ] 4.11 Create smooth loading states with glass morphism cards appearing (scale 0.95->1.0 with 300ms opacity fade-in)
 
 - [ ] **5.0 Glass Morphism Camera Interface & Post Creation System**
   - [ ] 5.1 Update camera controls to glass morphism specs: implement bottom glass card that slides up from edge with backdrop blur, replace current overlay with Primary Glass Card styling per UIDesign.md
