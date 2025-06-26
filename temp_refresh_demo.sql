@@ -1,29 +1,62 @@
--- Demo data seed migration - Task 3.10
--- This migration creates pre-populated demo content for Draft's ephemeral art sharing:
--- - 5 realistic fake classmate profiles
--- - High-quality sample artwork posts with varied engagement
--- - Encouraging, supportive demo comments
--- - Realistic timer states and expiration times
+-- Demo data refresh - Generated at 2025-06-26T18:32:38.493Z
+-- This script deletes existing demo data and recreates it with fresh timestamps
 
--- Create demo users (these will be fake students in the demo class)
-INSERT INTO auth.users (id, email, email_confirmed_at, created_at, updated_at) VALUES 
-  ('11111111-1111-1111-1111-111111111111', 'maya@demouser.local', NOW(), NOW(), NOW()),
-  ('22222222-2222-2222-2222-222222222222', 'jordan@demouser.local', NOW(), NOW(), NOW()),
-  ('33333333-3333-3333-3333-333333333333', 'sam@demouser.local', NOW(), NOW(), NOW()),
-  ('44444444-4444-4444-4444-444444444444', 'casey@demouser.local', NOW(), NOW(), NOW()),
-  ('55555555-5555-5555-5555-555555555555', 'riley@demouser.local', NOW(), NOW(), NOW())
-ON CONFLICT (id) DO NOTHING;
+-- Begin transaction for atomic refresh
+BEGIN;
 
--- Create corresponding user profiles
-INSERT INTO public.users (id, email, username, avatar_url, created_at, updated_at) VALUES 
-  ('11111111-1111-1111-1111-111111111111', 'maya@demouser.local', 'maya_sketches', NULL, NOW(), NOW()),
-  ('22222222-2222-2222-2222-222222222222', 'jordan@demouser.local', 'jordan_art', NULL, NOW(), NOW()),
-  ('33333333-3333-3333-3333-333333333333', 'sam@demouser.local', 'sam_draws', NULL, NOW(), NOW()),
-  ('44444444-4444-4444-4444-444444444444', 'casey@demouser.local', 'casey_creates', NULL, NOW(), NOW()),
-  ('55555555-5555-5555-5555-555555555555', 'riley@demouser.local', 'riley_paints', NULL, NOW(), NOW())
-ON CONFLICT (id) DO NOTHING;
+-- Log refresh start
+DO $$ BEGIN RAISE NOTICE 'Starting demo data refresh at %', NOW(); END $$;
 
--- Get the demo class ID
+-- Delete existing demo data in correct order (respecting foreign keys)
+DELETE FROM public.ai_feedback WHERE post_id IN (
+  SELECT id FROM public.posts WHERE user_id IN (
+    '11111111-1111-1111-1111-111111111111',
+    '22222222-2222-2222-2222-222222222222', 
+    '33333333-3333-3333-3333-333333333333',
+    '44444444-4444-4444-4444-444444444444',
+    '55555555-5555-5555-5555-555555555555'
+  )
+);
+
+DELETE FROM public.comments WHERE post_id IN (
+  SELECT id FROM public.posts WHERE user_id IN (
+    '11111111-1111-1111-1111-111111111111',
+    '22222222-2222-2222-2222-222222222222',
+    '33333333-3333-3333-3333-333333333333', 
+    '44444444-4444-4444-4444-444444444444',
+    '55555555-5555-5555-5555-555555555555'
+  )
+);
+
+DELETE FROM public.post_views WHERE post_id IN (
+  SELECT id FROM public.posts WHERE user_id IN (
+    '11111111-1111-1111-1111-111111111111',
+    '22222222-2222-2222-2222-222222222222',
+    '33333333-3333-3333-3333-333333333333',
+    '44444444-4444-4444-4444-444444444444', 
+    '55555555-5555-5555-5555-555555555555'
+  )
+);
+
+DELETE FROM public.posts WHERE user_id IN (
+  '11111111-1111-1111-1111-111111111111',
+  '22222222-2222-2222-2222-222222222222',
+  '33333333-3333-3333-3333-333333333333',
+  '44444444-4444-4444-4444-444444444444',
+  '55555555-5555-5555-5555-555555555555'
+);
+
+DELETE FROM public.class_members WHERE user_id IN (
+  '11111111-1111-1111-1111-111111111111',
+  '22222222-2222-2222-2222-222222222222',
+  '33333333-3333-3333-3333-333333333333',
+  '44444444-4444-4444-4444-444444444444',
+  '55555555-5555-5555-5555-555555555555'
+);
+
+-- Note: Keep demo users in auth.users and public.users for consistency
+
+-- Recreate demo data with fresh timestamps
 DO $$
 DECLARE
   demo_class_id UUID;
@@ -43,20 +76,18 @@ BEGIN
   SELECT id INTO demo_class_id FROM public.classes WHERE join_code = 'DRAW01';
   
   IF demo_class_id IS NULL THEN
-    RAISE EXCEPTION 'Demo class DRAW01 not found. Please run the classes migration first.';
+    RAISE EXCEPTION 'Demo class DRAW01 not found. Cannot refresh demo data.';
   END IF;
   
-  -- Add demo users as class members
+  -- Re-add demo users as class members with fresh timestamps
   INSERT INTO public.class_members (id, class_id, user_id, role, joined_at, is_active) VALUES 
     (gen_random_uuid(), demo_class_id, maya_id, 'student', NOW() - INTERVAL '2 days', true),
     (gen_random_uuid(), demo_class_id, jordan_id, 'student', NOW() - INTERVAL '2 days', true),
     (gen_random_uuid(), demo_class_id, sam_id, 'student', NOW() - INTERVAL '1 day', true),
     (gen_random_uuid(), demo_class_id, casey_id, 'student', NOW() - INTERVAL '1 day', true),
-    (gen_random_uuid(), demo_class_id, riley_id, 'student', NOW() - INTERVAL '4 hours', true)
-  ON CONFLICT DO NOTHING;
+    (gen_random_uuid(), demo_class_id, riley_id, 'student', NOW() - INTERVAL '4 hours', true);
   
-  -- Create sample artwork posts with realistic timing
-  -- Updated with working image URLs using consistent Picsum seeds
+  -- Create fresh posts with realistic relative timing
   
   -- Maya's post (expires in 45 minutes, 3 of 5 viewers)
   INSERT INTO public.posts (
@@ -74,7 +105,7 @@ BEGIN
     false,
     NOW() - INTERVAL '15 minutes',
     NOW() - INTERVAL '15 minutes'
-  ) ON CONFLICT (id) DO NOTHING;
+  );
   
   -- Jordan's post (expires in 2 hours 20 minutes, 2 of 4 viewers)
   INSERT INTO public.posts (
@@ -92,7 +123,7 @@ BEGIN
     false,
     NOW() - INTERVAL '40 minutes',
     NOW() - INTERVAL '40 minutes'
-  ) ON CONFLICT (id) DO NOTHING;
+  );
   
   -- Sam's post (expires in 18 minutes, 5 of 5 viewers - max reached)
   INSERT INTO public.posts (
@@ -110,7 +141,7 @@ BEGIN
     false,
     NOW() - INTERVAL '12 minutes',
     NOW() - INTERVAL '12 minutes'
-  ) ON CONFLICT (id) DO NOTHING;
+  );
   
   -- Casey's post (expires tomorrow, 1 of 3 viewers, fresh post)
   INSERT INTO public.posts (
@@ -128,9 +159,9 @@ BEGIN
     false,
     NOW() - INTERVAL '15 minutes',
     NOW() - INTERVAL '15 minutes'
-  ) ON CONFLICT (id) DO NOTHING;
+  );
   
-  -- Record some post views to make the engagement realistic
+  -- Record fresh post views to make engagement realistic
   INSERT INTO public.post_views (post_id, user_id, viewed_at) VALUES 
     -- Maya's post viewers
     (maya_post_id, jordan_id, NOW() - INTERVAL '10 minutes'),
@@ -146,13 +177,11 @@ BEGIN
     (sam_post_id, jordan_id, NOW() - INTERVAL '8 minutes'),
     (sam_post_id, casey_id, NOW() - INTERVAL '6 minutes'),
     (sam_post_id, riley_id, NOW() - INTERVAL '4 minutes'),
-    (sam_post_id, maya_id, NOW() - INTERVAL '2 minutes'), -- Duplicate view (should be ignored)
     
     -- Casey's post viewer
-    (casey_post_id, riley_id, NOW() - INTERVAL '12 minutes')
-  ON CONFLICT (post_id, user_id) DO NOTHING;
+    (casey_post_id, riley_id, NOW() - INTERVAL '12 minutes');
   
-  -- Create encouraging, supportive demo comments
+  -- Create fresh encouraging comments
   INSERT INTO public.comments (post_id, user_id, content, created_at, updated_at) VALUES 
     -- Comments on Maya's post
     (maya_post_id, jordan_id, 'Wow, the shading on the cheekbone is really well done! You captured the light beautifully.', NOW() - INTERVAL '8 minutes', NOW() - INTERVAL '8 minutes'),
@@ -170,10 +199,9 @@ BEGIN
     (sam_post_id, riley_id, 'The anatomy looks spot on. This gives me motivation to practice hands more!', NOW() - INTERVAL '2 minutes', NOW() - INTERVAL '2 minutes'),
     
     -- Comments on Casey's post
-    (casey_post_id, riley_id, 'Love seeing you explore digital! The character design has so much personality. 🎨', NOW() - INTERVAL '10 minutes', NOW() - INTERVAL '10 minutes')
-  ON CONFLICT DO NOTHING;
+    (casey_post_id, riley_id, 'Love seeing you explore digital! The character design has so much personality. 🎨', NOW() - INTERVAL '10 minutes', NOW() - INTERVAL '10 minutes');
   
-  -- Add some AI feedback for demonstration (only on posts where user "requested" it)
+  -- Add fresh AI feedback for demonstration
   INSERT INTO public.ai_feedback (post_id, user_id, feedback_text, feedback_status, processing_time_ms, ai_model, created_at, updated_at) VALUES 
     (maya_post_id, maya_id, 
      'Your charcoal portrait demonstrates excellent understanding of light and shadow. The contrast you''ve achieved creates strong dimensionality, particularly in the facial structure. The way you''ve handled the transition from light to shadow on the cheekbone shows developing technical skill.
@@ -206,11 +234,16 @@ Suggestions for development:
 • Practice gesture drawings to capture hand movement and expression
 
 Your improvement through practice is evident. Hands become much easier with continued observation - you''re on the right track!',
-     'completed', 3156, 'gpt-4v', NOW() - INTERVAL '3 minutes', NOW() - INTERVAL '3 minutes')
-  ON CONFLICT (post_id) DO NOTHING;
+     'completed', 3156, 'gpt-4v', NOW() - INTERVAL '3 minutes', NOW() - INTERVAL '3 minutes');
   
-  RAISE NOTICE 'Demo data successfully created for class: %', demo_class_id;
-  RAISE NOTICE 'Created 5 demo users, 4 sample posts, realistic view counts, and encouraging comments';
-  RAISE NOTICE 'Post expiration times: Maya (45min), Jordan (2h20m), Sam (18min), Casey (23h45m)';
+  RAISE NOTICE 'Demo data refresh completed successfully at %', NOW();
+  RAISE NOTICE 'Created 5 demo users, 4 sample posts with fresh timers, realistic views, and encouraging comments';
+  RAISE NOTICE 'Post expiration times refreshed: Maya (+45min), Jordan (+2h20m), Sam (+18min), Casey (+23h45m)';
 END;
-$$; 
+$$;
+
+-- Commit the refresh
+COMMIT;
+
+-- Final log
+DO $$ BEGIN RAISE NOTICE 'Demo data refresh transaction completed at %', NOW(); END $$;

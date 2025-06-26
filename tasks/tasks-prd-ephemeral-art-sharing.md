@@ -124,9 +124,9 @@
   - [x] 3.8 Implement class context display in app header
   - [x] 3.9 Set up RLS policies for class-based content isolation
   - [x] 3.10 Create demo data seed with 5 fake classmates and sample posts
-  - [ ] 3.11 Validate demo content quality: ensure image URLs work, comments display properly, and timer states are realistic for consistent demo experience
-  - [ ] 3.12 Create demo refresh system: build script to reset demo data with fresh timestamps (NOW() + intervals) for reliable multi-session demos
-  - [ ] 3.13 Implement single-device testing architecture: update demo seed to use relative timestamps instead of fixed dates to prevent timer display issues
+  - [x] 3.11 Validate demo content quality: ensure image URLs work, comments display properly, and timer states are realistic for consistent demo experience
+  - [x] 3.12 Create demo refresh system: build script to reset demo data with fresh timestamps (NOW() + intervals) for reliable multi-session demos
+  - [x] 3.13 Implement single-device testing architecture: update demo seed to use relative timestamps instead of fixed dates to prevent timer display issues
 
 - [ ] **4.0 Glass Morphism Feed Display (Artwork-as-Background System)**
   - [ ] 4.1 Replace current solid card UI with artwork-as-background feed: each post artwork fills entire screen with dark gradient overlay (rgba(0,0,0,0.3) to transparent) - uses existing GlassMorphismCard component and Colors.ts system

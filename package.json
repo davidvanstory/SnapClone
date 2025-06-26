@@ -12,7 +12,9 @@
     "db:reset-local": "node scripts/migrate-both.js reset-local",
     "db:push-cloud": "node scripts/migrate-both.js push-cloud",
     "db:reset-both": "node scripts/migrate-both.js reset-both",
-    "db:status": "node scripts/migrate-both.js status"
+    "db:status": "node scripts/migrate-both.js status",
+    "demo:reset": "node scripts/reset-demo.js",
+    "demo:validate": "node scripts/validate-demo.js"
   },
   "dependencies": {
     "@expo-google-fonts/instrument-serif": "^0.4.0",
@@ -23,6 +25,7 @@
     "@react-navigation/native": "^7.1.6",
     "@supabase/supabase-js": "^2.50.0",
     "base64-arraybuffer": "^1.0.2",
+    "dotenv": "^16.5.0",
     "expo": "~53.0.12",
     "expo-av": "~15.1.6",
     "expo-blur": "~14.1.5",
