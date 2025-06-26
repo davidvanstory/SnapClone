@@ -13,13 +13,13 @@
 import { Link, router } from 'expo-router';
 import React from 'react';
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  View,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    View,
 } from 'react-native';
 import AuthForm, { type AuthFormData } from '../../components/auth/AuthForm';
 import { ThemedText } from '../../components/ThemedText';
@@ -47,16 +47,18 @@ export default function RegisterScreen() {
       const result = await signUp(formData.email, formData.password);
 
       if (result.success) {
-        console.log('✅ Register Screen - Registration successful');
+        console.log('✅ Register Screen - Registration successful, user automatically signed in');
+        // User is automatically signed in after registration (no email verification needed)
+        // The auth state listener will redirect them to the main app
         Alert.alert(
-          'Registration Successful',
-          'Please check your email for a verification link before signing in.',
+          'Welcome to EphemeralArt!',
+          'Your account has been created successfully. Let\'s get you started!',
           [
             {
-              text: 'OK',
+              text: 'Get Started',
               onPress: () => {
-                console.log('📧 Register Screen - Redirecting to login for verification');
-                router.replace('/(auth)/login');
+                console.log('🎉 Register Screen - User ready to start, redirecting to camera');
+                router.replace('/(tabs)/camera');
               },
             },
           ]

@@ -9,13 +9,17 @@
  * - Photo upload to Supabase Storage
  * - Themed styling that adapts to light/dark mode
  * - Error handling and loading states
+ * - Logout functionality for easy user testing
  */
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { uploadPhoto } from '@/lib/photoService';
+import { useAuthStore } from '@/store/authStore';
+import { useClassStore } from '@/store/classStore';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { router } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -38,6 +42,10 @@ export default function CameraScreen() {
   // Camera permissions hook
   const [permission, requestPermission] = useCameraPermissions();
   
+  // Auth store for logout functionality
+  const { signOut } = useAuthStore();
+  const { clearClassData } = useClassStore();
+  
   // Themed colors
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
@@ -46,6 +54,44 @@ export default function CameraScreen() {
   console.log('🎥 Camera Screen - Rendering with permission:', permission?.granted);
   console.log('📷 Camera Screen - Captured photo:', capturedPhoto ? 'Photo captured' : 'No photo');
   console.log('⏫ Camera Screen - Upload state:', { isUploading, uploadSuccess });
+
+  /**
+   * Handle logout for easy user testing
+   */
+  const handleLogout = async () => {
+    console.log('👋 Camera Screen - User logout requested');
+    
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            console.log('🚪 Camera Screen - Logging out user');
+            try {
+              // Clear class data first
+              clearClassData();
+              
+              // Sign out user
+              await signOut();
+              
+              console.log('✅ Camera Screen - Logout successful, redirecting to login');
+              router.replace('/(auth)/login');
+            } catch (error) {
+              console.error('❌ Camera Screen - Logout error:', error);
+              Alert.alert('Error', 'Failed to logout. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  };
 
   /**
    * Handle camera permission request
@@ -201,6 +247,15 @@ export default function CameraScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor }]}>
+      {/* Logout Button - positioned in top-right corner */}
+      <TouchableOpacity
+        style={[styles.logoutButton, { backgroundColor: 'rgba(0, 0, 0, 0.6)' }]}
+        onPress={handleLogout}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.logoutButtonText}>Logout</Text>
+      </TouchableOpacity>
+
       {capturedPhoto ? (
         // Photo preview mode
         <>
@@ -286,6 +341,22 @@ export default function CameraScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  
+  // Logout button
+  logoutButton: {
+    position: 'absolute',
+    top: 60, // Below status bar
+    right: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    zIndex: 1000, // Ensure it's above other elements
+  },
+  logoutButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
   },
   
   // Loading state

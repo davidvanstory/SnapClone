@@ -136,7 +136,12 @@ export default function ClassFeedScreen() {
   const handleJoinSuccess = () => {
     console.log('🎉 Class Feed Screen - Successfully joined class');
     setShowJoinModal(false);
-    // The class store will automatically update and load posts
+    
+    // Force refresh of user classes to ensure UI updates
+    if (user?.id) {
+      console.log('🔄 Class Feed Screen - Refreshing user classes after join');
+      loadUserClasses(user.id);
+    }
   };
 
   /**
@@ -331,39 +336,56 @@ export default function ClassFeedScreen() {
 
       {/* Safe Area for glass morphism overlays */}
       <SafeAreaView style={styles.overlayContainer}>
-        {/* Top Card - Post Information (20px margins per UIDesign.md) */}
+        {/* Top Card - Post Information with Back Button (20px margins per UIDesign.md) */}
         <GlassMorphismCard type="primary" style={styles.topCard}>
-          <ThemedText 
-            type="username" 
-            glassText={true} 
-            style={styles.artistName}
-          >
-            {currentPost.user?.username || 'Unknown Artist'}
-          </ThemedText>
-          <ThemedText 
-            type="metadata" 
-            glassText={true} 
-            style={styles.className}
-          >
-            {currentClass.name}
-          </ThemedText>
-          
-          {/* View Count and Expiration Side by Side */}
-          <View style={styles.statsRow}>
-            <ThemedText 
-              type="metadata" 
-              glassText={true} 
-              style={styles.viewCountTop}
+          <View style={styles.topCardHeader}>
+            {/* Back Button */}
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => {
+                console.log('🔙 Class Feed Screen - Back button pressed, returning to class list');
+                setShowClassList(true);
+              }}
+              activeOpacity={0.7}
             >
-              {currentPost.view_count}/{currentPost.max_viewers} views
-            </ThemedText>
-            <ThemedText 
-              type="label" 
-              glassText={true} 
-              style={styles.timerTop}
-            >
-              Expires in {formatTimeRemaining(currentPost.expires_at)}
-            </ThemedText>
+              <ThemedText style={styles.backButtonIcon}>‹</ThemedText>
+            </TouchableOpacity>
+            
+            {/* Post Info */}
+            <View style={styles.postInfo}>
+              <ThemedText 
+                type="username" 
+                glassText={true} 
+                style={styles.artistName}
+              >
+                {currentPost.user?.username || 'Unknown Artist'}
+              </ThemedText>
+              <ThemedText 
+                type="metadata" 
+                glassText={true} 
+                style={styles.className}
+              >
+                {currentClass.name}
+              </ThemedText>
+              
+              {/* View Count and Expiration Side by Side */}
+              <View style={styles.statsRow}>
+                <ThemedText 
+                  type="metadata" 
+                  glassText={true} 
+                  style={styles.viewCountTop}
+                >
+                  {currentPost.view_count}/{currentPost.max_viewers} views
+                </ThemedText>
+                <ThemedText 
+                  type="label" 
+                  glassText={true} 
+                  style={styles.timerTop}
+                >
+                  Expires in {formatTimeRemaining(currentPost.expires_at)}
+                </ThemedText>
+              </View>
+            </View>
           </View>
         </GlassMorphismCard>
 
@@ -440,11 +462,28 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   
-  // Top Card - Post Information (Primary Glass Card specs)
+  // Top Card - Post Information with Back Button (Primary Glass Card specs)
   topCard: {
     padding: 20,
     gap: 8,
     alignSelf: 'stretch',
+  },
+  topCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backButton: {
+    padding: 8,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginRight: 8,
+  },
+  backButtonIcon: {
+    fontSize: 24,
+    color: 'white',
+  },
+  postInfo: {
+    flex: 1,
   },
   artistName: {
     fontSize: 18,        // 18pt per UIDesign.md

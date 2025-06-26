@@ -124,14 +124,23 @@ export const useClassStore = create<ClassState>((set, get) => ({
       if (result.success && result.class && result.membership) {
         console.log('🎉 Class Store - Successfully joined class:', result.class.name);
         
-        // Add to user classes
+        // Check if user is already a member of this class
         const { userClasses } = get();
+        const existingClass = userClasses.find(c => c.id === result.class!.id);
+        
+        if (existingClass) {
+          console.log('ℹ️ Class Store - User already member of class, not adding duplicate');
+          set({ isLoading: false });
+          return { success: true };
+        }
+        
+        // Add to user classes (only if not already a member)
         const newClass = { ...result.class, membership: result.membership };
         const updatedClasses = [...userClasses, newClass];
         
         set({ 
           userClasses: updatedClasses,
-          currentClass: newClass, // Auto-select the newly joined class
+          // Don't auto-select - let user choose from class list
           isLoading: false 
         });
 
