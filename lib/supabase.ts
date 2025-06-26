@@ -66,6 +66,74 @@ export interface Photo {
   public_url?: string;
 }
 
+export interface Class {
+  id: string;
+  name: string;
+  join_code: string;
+  description?: string;
+  created_by?: string;
+  is_active: boolean;
+  max_students: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ClassMember {
+  id: string;
+  class_id: string;
+  user_id: string;
+  role: 'student' | 'teacher' | 'admin';
+  joined_at: string;
+  is_active: boolean;
+}
+
+export interface Post {
+  id: string;
+  user_id: string;
+  class_id: string;
+  image_url: string;
+  image_path?: string;
+  frame_style?: string;
+  title?: string;
+  description?: string;
+  max_viewers: number;
+  view_count: number;
+  duration_minutes: number;
+  expires_at: string;
+  is_expired: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PostView {
+  id: string;
+  post_id: string;
+  user_id: string;
+  viewed_at: string;
+}
+
+export interface Comment {
+  id: string;
+  post_id: string;
+  user_id: string;
+  content: string;
+  is_edited: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AIFeedback {
+  id: string;
+  post_id: string;
+  user_id: string;
+  feedback_text: string;
+  feedback_status: 'pending' | 'processing' | 'completed' | 'failed';
+  processing_time_ms?: number;
+  ai_model: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -73,6 +141,36 @@ export interface Database {
         Row: Photo;
         Insert: Omit<Photo, 'id' | 'uploaded_at'>;
         Update: Partial<Omit<Photo, 'id' | 'uploaded_at'>>;
+      };
+      classes: {
+        Row: Class;
+        Insert: Omit<Class, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<Class, 'id' | 'created_at' | 'updated_at'>>;
+      };
+      class_members: {
+        Row: ClassMember;
+        Insert: Omit<ClassMember, 'id' | 'joined_at'>;
+        Update: Partial<Omit<ClassMember, 'id' | 'joined_at'>>;
+      };
+      posts: {
+        Row: Post;
+        Insert: Omit<Post, 'id' | 'created_at' | 'updated_at' | 'is_expired' | 'view_count'>;
+        Update: Partial<Omit<Post, 'id' | 'created_at' | 'updated_at'>>;
+      };
+      post_views: {
+        Row: PostView;
+        Insert: Omit<PostView, 'id' | 'viewed_at'>;
+        Update: Partial<Omit<PostView, 'id' | 'viewed_at'>>;
+      };
+      comments: {
+        Row: Comment;
+        Insert: Omit<Comment, 'id' | 'created_at' | 'updated_at' | 'is_edited'>;
+        Update: Partial<Omit<Comment, 'id' | 'created_at' | 'updated_at'>>;
+      };
+      ai_feedback: {
+        Row: AIFeedback;
+        Insert: Omit<AIFeedback, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<AIFeedback, 'id' | 'created_at' | 'updated_at'>>;
       };
     };
   };

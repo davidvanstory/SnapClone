@@ -71,7 +71,7 @@
 - [ ] `lib/aiService.ts` - AI feedback integration with OpenAI
 - [ ] `lib/ephemeralService.ts` - Timer and auto-deletion management
 - [ ] `lib/frameService.ts` - Frame processing and overlay
-- [ ] `store/classStore.ts` - Class and feed state management
+- [x] `store/classStore.ts` - Class and feed state management
 - [ ] `store/postsStore.ts` - Posts and comments state
 - [ ] `supabase/migrations/20250102000001_create_classes_table.sql` - Classes table
 - [ ] `supabase/migrations/20250102000002_create_posts_table.sql` - Posts table
@@ -115,17 +115,17 @@
   - [ ] 2.12 Build post-capture sharing interface with glass morphism: artwork displayed full-screen with large glass morphism controls card centered over artwork
   - [ ] 2.13 Add frame assets and horizontal carousel selector with glass morphism styling matching UIDesign.md specifications
 
-- [ ] **3.0 Class Management & Social Infrastructure**
-  - [ ] 3.1 Create classes database migration with join codes
-  - [ ] 3.2 Build class validation service and join code verification
-  - [ ] 3.3 Create posts database migration with ephemeral properties
-  - [ ] 3.4 Create comments database migration with character limits
-  - [ ] 3.5 Set up class association for users after authentication
-  - [ ] 3.6 Create Zustand store for class and feed state management
-  - [ ] 3.7 Build class welcome confirmation screen
-  - [ ] 3.8 Implement class context display in app header
-  - [ ] 3.9 Set up RLS policies for class-based content isolation
-  - [ ] 3.10 Create demo data seed with 5 fake classmates and sample posts
+- [x] **3.0 Class Management & Social Infrastructure**
+  - [x] 3.1 Create classes database migration with join codes
+  - [x] 3.2 Build class validation service and join code verification
+  - [x] 3.3 Create posts database migration with ephemeral properties
+  - [x] 3.4 Create comments database migration with character limits
+  - [x] 3.5 Set up class association for users after authentication
+  - [x] 3.6 Create Zustand store for class and feed state management
+  - [x] 3.7 Build class welcome confirmation screen
+  - [x] 3.8 Implement class context display in app header
+  - [x] 3.9 Set up RLS policies for class-based content isolation
+  - [x] 3.10 Create demo data seed with 5 fake classmates and sample posts
 
 - [ ] **4.0 Glass Morphism Feed Display (Artwork-as-Background System)**
   - [ ] 4.1 Replace current home screen with artwork-as-background feed: each post artwork fills entire screen with dark gradient overlay (rgba(0,0,0,0.3) to transparent)
