@@ -98,10 +98,10 @@
   - [x] 1.7 Set up Zustand auth store for global authentication state
   - [x] 1.8 Implement automatic session restoration on app launch
   - [x] 1.9 Create user database migration and RLS policies
-  - [ ] 1.10 Create class joining modal for accessing class feed
-  - [ ] 1.11 Update profile setup to be optional/simplified for Draft requirements
+  - [x] 1.10 Create class joining modal for accessing class feed
+  - [x] 1.11 Update profile setup to be optional/simplified for Draft requirements
 
-- [x] **2.0 Camera & Photo Management System (Glass Morphism Interface)**
+- [x] **2.0 Camera & Photo Management System (Basic Implementation)**
   - [x] 2.1 Set up camera permissions handling and error states
   - [x] 2.2 Create camera interface with full-screen viewfinder
   - [x] 2.3 Implement photo capture with quality settings and haptic feedback
@@ -110,8 +110,6 @@
   - [x] 2.6 Create photo upload service with metadata storage
   - [x] 2.7 Implement file size optimization and MIME type handling
   - [x] 2.8 Add upload progress indicators and success/error states
-  - [ ] 2.9 Update camera controls to glass morphism specs: bottom glass card slides up from edge, large 80px centered capture button with subtle shadow, settings as glass morphism pills
-  - [ ] 2.10 Build post-capture sharing interface with glass morphism: artwork displayed full-screen with large glass morphism controls card centered over artwork
 
 - [x] **3.0 Class Management & Social Infrastructure**
   - [x] 3.1 Create classes database migration with join codes
@@ -140,17 +138,18 @@
   - [ ] 4.9 Build skeleton screens maintaining glass morphism aesthetic: animated gradients from rgba(255,255,255,0.1) to rgba(255,255,255,0.2) with backdrop blur
   - [ ] 4.10 Create smooth loading states with glass morphism cards appearing (scale 0.95->1.0 with 300ms opacity fade-in)
 
-- [ ] **5.0 Camera to Feed Connection & Post Creation System**
-  - [ ] 5.1 Create PostService with database integration for ephemeral posts
-  - [ ] 5.2 Build sharing controls interface with viewer limit slider and duration selection
-  - [ ] 5.3 Implement seamless photo capture to post creation flow
-  - [ ] 5.4 Add automatic navigation to feed tab after successful posting
-  - [ ] 5.5 Create post creation confirmation with success feedback
-  - [ ] 5.6 Integrate ephemeral post properties (max viewers, duration, expiration time)
-  - [ ] 5.7 Connect camera upload service to feed display system
-  - [ ] 5.8 Build post metadata collection (class association, timestamp)
-  - [ ] 5.9 Implement immediate feed refresh after new post creation
-  - [ ] 5.10 Add error handling and retry mechanism for post creation failures
+- [ ] **5.0 Glass Morphism Camera Interface & Post Creation System**
+  - [ ] 5.1 Update camera controls to glass morphism specs: implement bottom glass card that slides up from edge with backdrop blur, replace current overlay with Primary Glass Card styling per UIDesign.md
+  - [ ] 5.2 Create glass morphism capture button: large 80px centered capture button with white background and subtle shadow (box-shadow 0 4px 20px rgba(0,0,0,0.08)) maintaining current functionality
+  - [ ] 5.3 Add glass morphism settings controls: side buttons for flash, flip camera as glass morphism pills (Secondary Glass specs with 16px border radius) positioned left/right of capture button
+  - [ ] 5.4 Build post-capture sharing interface with glass morphism: artwork displayed full-screen with large Primary Glass Card centered over artwork containing sharing controls
+  - [ ] 5.5 Create PostService with database integration for ephemeral posts (classes, posts, comments tables) with expiration timestamps and viewer limits
+  - [ ] 5.6 Implement sharing controls within glass morphism card: viewer limit slider (1-20, warm sage accent #8B9D83), duration pills ("30 minutes", "2 hours", "Until tomorrow"), "Share with Class" button
+  - [ ] 5.7 Integrate ephemeral post properties: max viewers, duration selection, expiration time calculation, class association from current user context
+  - [ ] 5.8 Implement seamless photo capture to post creation flow: capture → glass morphism sharing interface → post creation → navigation to feed
+  - [ ] 5.9 Connect camera upload service to feed display system: upload to Supabase Storage, create post record, trigger feed refresh
+  - [ ] 5.10 Add automatic navigation to feed tab after successful posting with success feedback and immediate display of new post at top of feed
+  - [ ] 5.11 Add error handling and retry mechanism for post creation failures with glass morphism error states and user-friendly recovery options
 
 - [ ] **6.0 Glass Morphism Social Features & Commenting System**
   - [ ] 6.1 Create full-screen artwork view with glass morphism comments overlay that slides up from bottom: higher opacity glass card (rgba(255,255,255,0.25)) with scrollable comment list
