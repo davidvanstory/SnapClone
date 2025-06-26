@@ -23,7 +23,8 @@ module.exports = {
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
     ios: {
-      supportsTablet: true
+      supportsTablet: true,
+      bundleIdentifier: "com.davidvanstory.ephemeralart"
     },
     android: {
       adaptiveIcon: {
@@ -61,6 +62,10 @@ module.exports = {
       typedRoutes: true
     },
     extra: {
+       // EAS Configuration
+       eas: {
+        projectId: "e4bf0b5b-3aac-4935-b2a7-5ef4f32f796d"
+      },
       // Cloud Supabase Configuration
       EXPO_PUBLIC_SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL,
       EXPO_PUBLIC_SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
