@@ -28,7 +28,7 @@
   - [x] 1.5 Add RLS policies for solo_ai_messages table (users can only access messages from their own chats)
   - [x] 1.6 Run and test database migrations locally
 
-- [ ] 2.0 Supabase Edge Function with RAG Implementation
+- [x] 2.0 Supabase Edge Function with RAG Implementation
   - [x] 2.1 Create base Supabase Edge Function structure in supabase/functions/get-ai-response/
   - [x] 2.2 Implement OpenAI text-embedding-3-small integration for query embedding generation
   - [x] 2.3 Implement vector similarity search logic using pgvector for long-term memory retrieval
@@ -37,7 +37,7 @@
   - [x] 2.6 Implement OpenAI GPT-4o multimodal API integration for generating responses
   - [x] 2.7 Implement dual message persistence (user message + AI response) with embeddings
   - [x] 2.8 Add comprehensive error handling and logging for all API calls
-  - [ ] 2.9 Test Edge Function locally with curl commands
+  - [x] 2.9 Test Edge Function locally with curl commands
 
 - [ ] 3.0 Frontend Navigation & Screen Structure
   - [ ] 3.1 Add "Solo" tab to app/(tabs)/_layout.tsx with appropriate icon
