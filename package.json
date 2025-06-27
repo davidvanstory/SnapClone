@@ -25,6 +25,7 @@
     "@react-navigation/native": "^7.1.6",
     "@supabase/supabase-js": "^2.50.0",
     "base64-arraybuffer": "^1.0.2",
+    "bcryptjs": "^3.0.2",
     "dotenv": "^16.5.0",
     "expo": "~53.0.12",
     "expo-av": "~15.1.6",
