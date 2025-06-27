@@ -19,20 +19,24 @@
  * Design System: Glass morphism elegance per UIDesign.md specifications
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import {
     KeyboardAvoidingView,
     Platform,
     SafeAreaView,
     StyleSheet,
+    TouchableOpacity,
     View
 } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
+import ChatInput from '@/components/solo/ChatInput';
+import SoloChat from '@/components/solo/SoloChat';
 import GlassMorphismCard from '@/components/ui/GlassMorphismCard';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useAuthStore } from '@/store/authStore';
+import { useSoloStore } from '@/store/soloStore';
 
 export default function SoloTutorScreen() {
   console.log('🧠 Solo Tutor Screen - Rendering Solo AI chat interface');
@@ -40,28 +44,44 @@ export default function SoloTutorScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const { user } = useAuthStore();
-
-  // Local state for chat management
-  const [isLoading, setIsLoading] = useState(false);
-  const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+  const {
+    currentChat,
+    messages,
+    isLoading,
+    isLoadingMessages,
+    isSendingMessage,
+    error,
+    messageError,
+    isInitialized,
+    initialize,
+    sendMessage,
+    clearError,
+    clearMessageError,
+  } = useSoloStore();
 
   console.log('👤 Solo Tutor Screen - Current user:', user?.id ? 'Authenticated ✓' : 'Not authenticated ❌');
-  console.log('💬 Solo Tutor Screen - Current chat ID:', currentChatId || 'No active chat');
+  console.log('💬 Solo Tutor Screen - Current chat ID:', currentChat?.id || 'No active chat');
+  console.log('🔧 Solo Tutor Screen - Store state:', { 
+    isLoading, 
+    isLoadingMessages, 
+    isSendingMessage, 
+    messageCount: messages.length,
+    isInitialized 
+  });
 
   /**
-   * Initialize chat session when component mounts
+   * Initialize Solo Tutor when user is available
    */
   useEffect(() => {
     console.log('🚀 Solo Tutor Screen - Initializing chat session');
     
-    if (user?.id) {
-      // TODO: Initialize or load existing chat session
-      // This will be implemented when we create the solo store and service
-      console.log('📋 Solo Tutor Screen - User authenticated, ready to load chat history');
-    } else {
+    if (user?.id && !isInitialized) {
+      console.log('📋 Solo Tutor Screen - User authenticated, initializing Solo Tutor');
+      initialize(user.id);
+    } else if (!user?.id) {
       console.log('⚠️ Solo Tutor Screen - User not authenticated');
     }
-  }, [user?.id]);
+  }, [user?.id, isInitialized, initialize]);
 
   // Show loading state if user is not available
   if (!user) {
@@ -99,35 +119,60 @@ export default function SoloTutorScreen() {
           </View>
         </View>
 
-        {/* Chat Container - This will be replaced with actual chat components */}
+        {/* Error Display */}
+        {error && (
+          <View style={styles.errorContainer}>
+            <GlassMorphismCard type="secondary" style={styles.errorCard}>
+              <View style={styles.errorContent}>
+                <ThemedText type="bodyText" style={[styles.errorText, { color: colors.accentCoral }]}>
+                  {error}
+                </ThemedText>
+                <TouchableOpacity
+                  style={[styles.errorButton, { backgroundColor: colors.accentSage }]}
+                  onPress={clearError}
+                  activeOpacity={0.8}
+                >
+                  <ThemedText type="button" style={styles.errorButtonText}>
+                    Dismiss
+                  </ThemedText>
+                </TouchableOpacity>
+              </View>
+            </GlassMorphismCard>
+          </View>
+        )}
+
+        {/* Chat Container */}
         <View style={styles.chatContainer}>
-          <GlassMorphismCard type="primary" style={styles.welcomeCard}>
-            <View style={styles.welcomeContent}>
-              <ThemedText type="appName" style={[styles.welcomeTitle, { color: colors.accentSage }]}>
-                🎨 Welcome to Solo Tutor
-              </ThemedText>
-              <ThemedText type="bodyText" style={[styles.welcomeText, { color: colors.text }]}>
-                Hi! I'm Canvas, your personal AI art tutor. I'm here to help you improve your artistic skills through personalized guidance and feedback.
-              </ThemedText>
-              <ThemedText type="bodyText" style={[styles.welcomeText, { color: colors.textSecondary }]}>
-                You can ask me questions about art techniques, upload your artwork for analysis, or just chat about your creative journey. I'll remember our conversations to provide better, more contextual help over time.
-              </ThemedText>
-              <ThemedText type="label" style={[styles.comingSoonText, { color: colors.accentTan }]}>
-                🚧 Chat interface coming soon...
-              </ThemedText>
-            </View>
-          </GlassMorphismCard>
+          <SoloChat
+            messages={messages}
+            isLoading={isSendingMessage}
+            isError={!!messageError}
+            errorMessage={messageError || undefined}
+            onRetry={clearMessageError}
+            onRefresh={() => currentChat && initialize(user.id)}
+            isRefreshing={isLoadingMessages}
+          />
         </View>
 
-        {/* Chat Input Placeholder - This will be replaced with actual chat input component */}
+        {/* Chat Input */}
         <View style={styles.inputContainer}>
-          <GlassMorphismCard type="secondary" style={styles.inputCard}>
-            <View style={styles.inputContent}>
-              <ThemedText type="metadata" style={[styles.inputPlaceholder, { color: colors.textTertiary }]}>
-                Chat input will appear here...
-              </ThemedText>
-            </View>
-          </GlassMorphismCard>
+          <ChatInput
+            onSendMessage={async (message: string, imageUri?: string) => {
+              if (!currentChat?.id) {
+                console.error('❌ Solo Screen - No current chat available');
+                return;
+              }
+              
+              await sendMessage({
+                chatId: currentChat.id,
+                message,
+                imageUri,
+                userId: user.id,
+              });
+            }}
+            isLoading={isSendingMessage}
+            disabled={!currentChat || isLoading}
+          />
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -216,21 +261,39 @@ const styles = StyleSheet.create({
     // Montserrat 14pt Medium per UIDesign.md applied via ThemedText type="label"
   },
   
-  // Input Container (Placeholder)
+  // Error Display
+  errorContainer: {
+    paddingHorizontal: 20,       // 20px screen margins per UIDesign.md
+    paddingVertical: 8,          // Small vertical spacing
+  },
+  errorCard: {
+    padding: 16,                 // 16px padding per UIDesign.md
+  },
+  errorContent: {
+    alignItems: 'center',
+    gap: 12,                     // 12px spacing between error elements
+  },
+  errorText: {
+    textAlign: 'center',
+    // Montserrat 16pt per UIDesign.md applied via ThemedText type="bodyText"
+  },
+  errorButton: {
+    paddingHorizontal: 16,       // 16px horizontal padding
+    paddingVertical: 8,          // 8px vertical padding
+    borderRadius: 8,             // 8px border radius
+    minHeight: 44,               // 44px touch target per UIDesign.md
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorButtonText: {
+    color: 'white',
+    // Montserrat 16pt Medium per UIDesign.md applied via ThemedText type="button"
+  },
+
+  // Input Container
   inputContainer: {
     paddingHorizontal: 20,       // 20px screen margins per UIDesign.md
     paddingBottom: 20,           // Space above tab bar
     paddingTop: 8,               // Small gap from chat
-  },
-  inputCard: {
-    padding: 16,                 // 16px padding per UIDesign.md
-    minHeight: 56,               // 44px+ touch target per UIDesign.md
-  },
-  inputContent: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  inputPlaceholder: {
-    // Montserrat 12pt per UIDesign.md applied via ThemedText type="metadata"
   },
 }); 
