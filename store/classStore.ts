@@ -52,7 +52,7 @@ export interface ClassState {
   // Actions
   loadUserClasses: (userId: string) => Promise<void>;
   setCurrentClass: (classData: (Class & { membership: ClassMember }) | null) => void;
-  joinClassWithCode: (joinCode: string, userId: string) => Promise<{ success: boolean; error?: string }>;
+  joinClassWithCode: (joinCode: string, userId: string) => Promise<{ success: boolean; error?: string; isExistingMember?: boolean }>;
   leaveCurrentClass: (userId: string) => Promise<{ success: boolean; error?: string }>;
   
   // Feed actions
@@ -83,6 +83,11 @@ export const useClassStore = create<ClassState>((set, get) => ({
   // Load user's class memberships
   loadUserClasses: async (userId: string) => {
     console.log('📚 Class Store - Loading user classes:', userId);
+    console.log('🔧 DEBUG - loadUserClasses START:', {
+      currentUserClassesCount: get().userClasses.length,
+      currentClassIds: get().userClasses.map(c => c.id),
+      timestamp: Date.now()
+    });
     set({ isLoading: true });
 
     try {
@@ -92,6 +97,13 @@ export const useClassStore = create<ClassState>((set, get) => ({
       set({ 
         userClasses: classes,
         isLoading: false 
+      });
+
+      console.log('🔧 DEBUG - loadUserClasses END:', {
+        newUserClassesCount: classes.length,
+        newClassIds: classes.map(c => c.id),
+        newClassNames: classes.map(c => c.name),
+        timestamp: Date.now()
       });
 
       // Don't auto-select any class - let user choose from ClassListScreen
@@ -128,10 +140,13 @@ export const useClassStore = create<ClassState>((set, get) => ({
         const { userClasses } = get();
         const existingClass = userClasses.find(c => c.id === result.class!.id);
         
-        if (existingClass) {
+        if (existingClass || result.isExistingMember) {
           console.log('ℹ️ Class Store - User already member of class, not adding duplicate');
           set({ isLoading: false });
-          return { success: true };
+          return { 
+            success: true, 
+            isExistingMember: result.isExistingMember
+          };
         }
         
         // Add to user classes (only if not already a member)
@@ -144,11 +159,19 @@ export const useClassStore = create<ClassState>((set, get) => ({
           isLoading: false 
         });
 
-        return { success: true };
+        console.log('🔧 DEBUG - State after joinClassWithCode:', { 
+          userClassesCount: updatedClasses.length, 
+          classIds: updatedClasses.map(c => c.id),
+          classNames: updatedClasses.map(c => c.name),
+          timestamp: Date.now(),
+          newClassAdded: result.class.name
+        });
+
+        return { success: true, isExistingMember: false };
       } else {
         console.log('❌ Class Store - Failed to join class:', result.error);
         set({ isLoading: false });
-        return { success: false, error: result.error };
+        return { success: false, error: result.error, isExistingMember: false };
       }
 
     } catch (error) {
@@ -156,7 +179,8 @@ export const useClassStore = create<ClassState>((set, get) => ({
       set({ isLoading: false });
       return { 
         success: false, 
-        error: 'An unexpected error occurred while joining the class' 
+        error: 'An unexpected error occurred while joining the class',
+        isExistingMember: false
       };
     }
   },
@@ -277,6 +301,12 @@ export const useClassStore = create<ClassState>((set, get) => ({
       );
 
       console.log('✅ Class Store - Loaded', postsWithMetadata.length, 'posts');
+      console.log('🔧 DEBUG - Posts loaded successfully:', {
+        classId,
+        postsCount: postsWithMetadata.length,
+        postTitles: postsWithMetadata.map(p => p.image_url?.substring(0, 50) + '...'),
+        timestamp: Date.now()
+      });
       set({ 
         classPosts: postsWithMetadata,
         isLoadingPosts: false,

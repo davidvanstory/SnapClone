@@ -1,0 +1,330 @@
+1. Logs from Step1
+
+
+*** Upon first press of the Join Class button a "Monday Fundamentals" class is piopulated in the list. I am succussfully able to go into the class and I am taken to 4 prepopulated artwork that is outlined in demo_data_seed.sql and class Store. this is what I expect. and what I want. The logs from this event are below ***
+
+
+
+- LOG  📝 Register Screen - Rendering glass morphism registration interface
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  📝 AuthForm - Rendering glass morphism register form
+- LOG  ✅ Auth Store - User registered successfully
+- LOG  🚀 Root Layout - Initializing Draft app with proper typography
+- LOG  🔑 Login Screen - Rendering glass morphism login interface
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  📝 AuthForm - Rendering glass morphism login form
+- LOG  📝 Register Screen - Rendering glass morphism registration interface
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  📝 AuthForm - Rendering glass morphism register form
+- LOG  ✅ Register Screen - Registration successful, user automatically signed in
+- LOG  ✅ AuthForm - register form submitted successfully
+- LOG  📝 AuthForm - Rendering glass morphism register form
+- LOG  🎉 Register Screen - User ready to start, redirecting to camera
+- LOG  🎥 Camera Screen - Rendering with permission: undefined
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  ⏳ Camera Screen - Permission loading
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 0
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": [], "classNames": [], "isLoading": false, "timestamp": 1750980193896, "userClassesCount": 0}
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  📚 Class Feed Screen - Loading user classes for: a5aedeaa-02b5-4313-8bbc-9c6a798f1e13
+- LOG  📚 Class Store - Loading user classes: a5aedeaa-02b5-4313-8bbc-9c6a798f1e13
+- LOG  🔧 DEBUG - loadUserClasses START: {"currentClassIds": [], "currentUserClassesCount": 0, "timestamp": 1750980193922}
+- LOG  📋 Class Service - Fetching user classes: a5aedeaa-02b5-4313-8bbc-9c6a798f1e13
+- LOG  📰 Class Feed Screen - Current class changed: undefined
+- LOG  🔍 Class Feed Screen - Checking class membership status
+- LOG  📚 Class Feed Screen - No class selected, showing class list
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 0
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": [], "classNames": [], "isLoading": true, "timestamp": 1750980193931, "userClassesCount": 0}
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🔍 Class Feed Screen - Checking class membership status
+- LOG  ✅ Class Service - Found 0 classes for user
+- LOG  ✅ Class Store - Loaded 0 classes
+- LOG  🔧 DEBUG - loadUserClasses END: {"newClassIds": [], "newClassNames": [], "newUserClassesCount": 0, "timestamp": 1750980193993}
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 0
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": [], "classNames": [], "isLoading": false, "timestamp": 1750980193995, "userClassesCount": 0}
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🔍 Class Feed Screen - Checking class membership status
+- LOG  📚 Class Feed Screen - No class selected, showing class list
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  ➕ Class List Screen - Opening join class modal
+- LOG  ➕ Class Feed Screen - Opening join modal from class list
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 0
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": [], "classNames": [], "isLoading": false, "timestamp": 1750980205123, "userClassesCount": 0}
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🚀 Class Join Modal - Attempting to join class with code: DRAW01
+- LOG  🚀 Class Store - Joining class with code: DRAW01
+- LOG  🚀 Class Service - User attempting to join class: {"joinCode": "DRAW01", "userId": "a5aedeaa-02b5-4313-8bbc-9c6a798f1e13"}
+- LOG  🔍 Class Service - Validating class join code: DRAW01
+- LOG  🔍 Class Service - Validating join code format: DRAW01
+- LOG  ✅ Class Service - Join code format validation: true
+- LOG  📝 Class Service - Normalized join code: DRAW01
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 0
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": [], "classNames": [], "isLoading": true, "timestamp": 1750980266609, "userClassesCount": 0}
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🔍 Class Feed Screen - Checking class membership status
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  ✅ Class Service - Class found: Monday Drawing Fundamentals
+- LOG  ✅ Class Service - Join code validated for class: Monday Drawing Fundamentals
+- LOG  📊 Class Service - Current member count: 0 / 30
+- LOG  🎉 Class Service - Successfully joined class!
+- LOG  🎉 Class Store - Successfully joined class: Monday Drawing Fundamentals
+- LOG  🔧 DEBUG - State after joinClassWithCode: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "newClassAdded": "Monday Drawing Fundamentals", "timestamp": 1750980266806, "userClassesCount": 1}
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 1
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "isLoading": false, "timestamp": 1750980266809, "userClassesCount": 1}
+- LOG  🌟 GlassMorphismCard - Rendering secondary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🔍 Class Feed Screen - Checking class membership status
+- LOG  📚 Class Feed Screen - No class selected, showing class list
+- LOG  🎉 Class Join Modal - Successfully joined class
+- LOG  🎉 Class Feed Screen - Successfully joined class
+- LOG  🔧 DEBUG - handleJoinSuccess START: {"currentClassId": undefined, "currentClassName": undefined, "showClassList": true, "showJoinModal": true, "timestamp": 1750980266824, "userClassesCount": 0}
+- LOG  🔄 Class Feed Screen - Refreshing user classes after join
+- LOG  🔧 DEBUG - About to call loadUserClasses: {"timestamp": 1750980266824, "userId": "a5aedeaa-02b5-4313-8bbc-9c6a798f1e13"}
+- LOG  📚 Class Store - Loading user classes: a5aedeaa-02b5-4313-8bbc-9c6a798f1e13
+- LOG  🔧 DEBUG - loadUserClasses START: {"currentClassIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "currentUserClassesCount": 1, "timestamp": 1750980266825}
+- LOG  📋 Class Service - Fetching user classes: a5aedeaa-02b5-4313-8bbc-9c6a798f1e13
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 1
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "isLoading": true, "timestamp": 1750980266829, "userClassesCount": 1}
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🔍 Class Feed Screen - Checking class membership status
+- LOG  ✅ Class Service - Found 1 classes for user
+- LOG  ✅ Class Store - Loaded 1 classes
+- LOG  🔧 DEBUG - loadUserClasses END: {"newClassIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "newClassNames": ["Monday Drawing Fundamentals"], "newUserClassesCount": 1, "timestamp": 1750980266856}
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 1
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "isLoading": false, "timestamp": 1750980266858, "userClassesCount": 1}
+- LOG  🌟 GlassMorphismCard - Rendering secondary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🔍 Class Feed Screen - Checking class membership status
+- LOG  📚 Class Feed Screen - No class selected, showing class list
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  🎯 Class List Screen - Selected class: Monday Drawing Fundamentals
+- LOG  🔧 DEBUG - handleClassPress called: {"classId": "539c0b4e-f741-45a7-8df6-44afff8ccedc", "className": "Monday Drawing Fundamentals", "foundClass": "YES", "timestamp": 1750980287279, "userClassesCount": 1}
+- LOG  🎯 Class Feed Screen - Class selected from list: 539c0b4e-f741-45a7-8df6-44afff8ccedc
+- LOG  🔧 DEBUG - handleClassSelect called: {"availableClassIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classId": "539c0b4e-f741-45a7-8df6-44afff8ccedc", "timestamp": 1750980287280, "userClassesCount": 1}
+- LOG  🔧 DEBUG - selectedClass found: {"className": "Monday Drawing Fundamentals", "found": true, "timestamp": 1750980287280}
+- LOG  🎯 Class Store - Setting current class: Monday Drawing Fundamentals
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 1
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "isLoading": false, "timestamp": 1750980287287, "userClassesCount": 1}
+- LOG  🌟 GlassMorphismCard - Rendering secondary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  📰 Class Feed Screen - Current class changed: Monday Drawing Fundamentals
+- LOG  📰 Class Store - Loading posts for class: 539c0b4e-f741-45a7-8df6-44afff8ccedc
+- LOG  🔍 Class Feed Screen - Checking class membership status
+- LOG  🎨 Class Feed Screen - Class selected, showing feed
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  ✅ Class Store - Loaded 4 posts
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🌟 GlassMorphismCard - Rendering secondary glass card
+  
+
+2. 
+
+
+
+ *** Then I click the back button and I am successfully returned to the class list screen and can see the Monday Fundamentals button. However the moment I press the back buttton and am returned here some weirdness happens in the logs which i have recorded below. This I think is where things break down ***
+  
+  
+- LOG  🔙 Class Feed Screen - Back button pressed, returning to class list
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 1
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "isLoading": false, "timestamp": 1750980831673, "userClassesCount": 1}
+- LOG  🌟 GlassMorphismCard - Rendering secondary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+  
+3. 
+
+*** I try to click the Monday Fundamentals class button for a 2nd time - the one that says "tap to enter class", which was the last time i pressed it and took me to the classes artwork. Now when I press again to return to the artwork i get these logs. ***
+  
+- LOG  🎯 Class List Screen - Selected class: Monday Drawing Fundamentals
+- LOG  🔧 DEBUG - handleClassPress called: {"classId": "539c0b4e-f741-45a7-8df6-44afff8ccedc", "className": "Monday Drawing Fundamentals", "foundClass": "YES", "timestamp": 1750981116492, "userClassesCount": 1}
+- LOG  🎯 Class Feed Screen - Class selected from list: 539c0b4e-f741-45a7-8df6-44afff8ccedc
+- LOG  🔧 DEBUG - handleClassSelect called: {"availableClassIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classId": "539c0b4e-f741-45a7-8df6-44afff8ccedc", "timestamp": 1750981116492, "userClassesCount": 1}
+- LOG  🔧 DEBUG - selectedClass found: {"className": "Monday Drawing Fundamentals", "found": true, "timestamp": 1750981116492}
+- LOG  🎯 Class Store - Setting current class: Monday Drawing Fundamentals
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 1
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "isLoading": false, "timestamp": 1750981116500, "userClassesCount": 1}
+- LOG  🌟 GlassMorphismCard - Rendering secondary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+  
+  
+  
+3
+  *** so when I then use the Join Class button for a 2nd time and enter the code I then am automatically taken to A TOTALLY DIFFERENT PAGE that I do not expect to be at. It is a page that reads " Be the first to share artwork in Your classmates will see your post appear here with a live countdown timer". This is not where I expect to be taken, because I know there is prepopilated data in the Monday Fundamentals class. ***
+  
+- LOG  ➕ Class List Screen - Opening join class modal
+- LOG  ➕ Class Feed Screen - Opening join modal from class list
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 1
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "isLoading": false, "timestamp": 1750981165326, "userClassesCount": 1}
+- LOG  🌟 GlassMorphismCard - Rendering secondary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🚀 Class Join Modal - Attempting to join class with code: DRAW01
+- LOG  🚀 Class Store - Joining class with code: DRAW01
+- LOG  🚀 Class Service - User attempting to join class: {"joinCode": "DRAW01", "userId": "a5aedeaa-02b5-4313-8bbc-9c6a798f1e13"}
+- LOG  🔍 Class Service - Validating class join code: DRAW01
+- LOG  🔍 Class Service - Validating join code format: DRAW01
+- LOG  ✅ Class Service - Join code format validation: true
+- LOG  📝 Class Service - Normalized join code: DRAW01
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 1
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "isLoading": true, "timestamp": 1750981183868, "userClassesCount": 1}
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🔍 Class Feed Screen - Checking class membership status
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  ✅ Class Service - Class found: Monday Drawing Fundamentals
+- LOG  ✅ Class Service - Join code validated for class: Monday Drawing Fundamentals
+- LOG  ℹ️ Class Service - User is already a member
+- LOG  🎉 Class Store - Successfully joined class: Monday Drawing Fundamentals
+- LOG  ℹ️ Class Store - User already member of class, not adding duplicate
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 1
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "isLoading": false, "timestamp": 1750981184080, "userClassesCount": 1}
+- LOG  🌟 GlassMorphismCard - Rendering secondary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🔍 Class Feed Screen - Checking class membership status
+- LOG  🎨 Class Feed Screen - Class selected, showing feed
+- LOG  🎉 Class Join Modal - Successfully joined class
+- LOG  🎉 Class Feed Screen - Successfully joined class
+- LOG  🔧 DEBUG - handleJoinSuccess START: {"currentClassId": "539c0b4e-f741-45a7-8df6-44afff8ccedc", "currentClassName": "Monday Drawing Fundamentals", "showClassList": true, "showJoinModal": true, "timestamp": 1750981184099, "userClassesCount": 1}
+- LOG  🔄 Class Feed Screen - Refreshing user classes after join
+- LOG  🔧 DEBUG - About to call loadUserClasses: {"timestamp": 1750981184100, "userId": "a5aedeaa-02b5-4313-8bbc-9c6a798f1e13"}
+- LOG  📚 Class Store - Loading user classes: a5aedeaa-02b5-4313-8bbc-9c6a798f1e13
+- LOG  🔧 DEBUG - loadUserClasses START: {"currentClassIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "currentUserClassesCount": 1, "timestamp": 1750981184100}
+- LOG  📋 Class Service - Fetching user classes: a5aedeaa-02b5-4313-8bbc-9c6a798f1e13
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🔍 Class Feed Screen - Checking class membership status
+- LOG  ✅ Class Service - Found 1 classes for user
+- LOG  ✅ Class Store - Loaded 1 classes
+- LOG  🔧 DEBUG - loadUserClasses END: {"newClassIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "newClassNames": ["Monday Drawing Fundamentals"], "newUserClassesCount": 1, "timestamp": 1750981184154}
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🔍 Class Feed Screen - Checking class membership status
+- LOG  🎨 Class Feed Screen - Class selected, showing feed
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+  
+  
+ 

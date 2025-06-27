@@ -108,9 +108,27 @@ export default function ClassFeedScreen() {
    */
   const handleClassSelect = (classId: string) => {
     console.log('🎯 Class Feed Screen - Class selected from list:', classId);
+    console.log('🔧 DEBUG - handleClassSelect called:', {
+      classId,
+      userClassesCount: userClasses.length,
+      availableClassIds: userClasses.map(c => c.id),
+      timestamp: Date.now()
+    });
     const selectedClass = userClasses.find(c => c.id === classId);
+    console.log('🔧 DEBUG - selectedClass found:', {
+      found: !!selectedClass,
+      className: selectedClass?.name,
+      timestamp: Date.now()
+    });
     if (selectedClass) {
       setCurrentClass(selectedClass);
+      
+      // Force load posts immediately when selecting a class
+      // This ensures posts load even if it's the same class being selected again
+      if (user?.id) {
+        console.log('🔄 Class Feed Screen - Force loading posts for selected class');
+        loadClassPosts(selectedClass.id, user.id);
+      }
     }
   };
 
@@ -135,11 +153,23 @@ export default function ClassFeedScreen() {
    */
   const handleJoinSuccess = () => {
     console.log('🎉 Class Feed Screen - Successfully joined class');
+    console.log('🔧 DEBUG - handleJoinSuccess START:', {
+      userClassesCount: userClasses.length,
+      currentClassId: currentClass?.id,
+      currentClassName: currentClass?.name,
+      timestamp: Date.now(),
+      showClassList,
+      showJoinModal
+    });
     setShowJoinModal(false);
     
     // Force refresh of user classes to ensure UI updates
     if (user?.id) {
       console.log('🔄 Class Feed Screen - Refreshing user classes after join');
+      console.log('🔧 DEBUG - About to call loadUserClasses:', {
+        userId: user.id,
+        timestamp: Date.now()
+      });
       loadUserClasses(user.id);
     }
   };
@@ -344,6 +374,8 @@ export default function ClassFeedScreen() {
               style={styles.backButton}
               onPress={() => {
                 console.log('🔙 Class Feed Screen - Back button pressed, returning to class list');
+                // Clear current class and return to class list
+                setCurrentClass(null);
                 setShowClassList(true);
               }}
               activeOpacity={0.7}

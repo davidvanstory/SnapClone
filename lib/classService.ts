@@ -28,6 +28,7 @@ export interface ClassJoinResult {
   membership?: ClassMember;
   class?: Class;
   error?: string;
+  isExistingMember?: boolean; // Flag to indicate if user was already a member
 }
 
 /**
@@ -176,7 +177,8 @@ export async function joinClass(joinCode: string, userId: string): Promise<Class
           success: true,
           membership: existingMembership as ClassMember,
           class: classData,
-          error: 'You are already a member of this class'
+          error: 'You are already a member of this class',
+          isExistingMember: true
         };
       } else {
         // Reactivate membership
@@ -199,7 +201,8 @@ export async function joinClass(joinCode: string, userId: string): Promise<Class
         return {
           success: true,
           membership: reactivatedMembership as ClassMember,
-          class: classData
+          class: classData,
+          isExistingMember: true
         };
       }
     }
@@ -253,7 +256,8 @@ export async function joinClass(joinCode: string, userId: string): Promise<Class
     return {
       success: true,
       membership: newMembership as ClassMember,
-      class: classData
+      class: classData,
+      isExistingMember: false
     };
 
   } catch (error) {

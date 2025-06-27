@@ -87,13 +87,27 @@ export default function ClassJoinModal({ visible, onClose, onSuccess }: ClassJoi
       if (result.success) {
         console.log('🎉 Class Join Modal - Successfully joined class');
         setJoinCode('');
-        onSuccess?.();
-        onClose();
-        Alert.alert(
-          'Welcome to the Class!',
-          'You can now share artwork and view your classmates\' posts.',
-          [{ text: 'Get Started', style: 'default' }]
-        );
+        
+        if (result.isExistingMember) {
+          // User was already a member - show different message and don't trigger navigation
+          console.log('ℹ️ Class Join Modal - User was already a member, staying on class list');
+          onClose();
+          Alert.alert(
+            'Already a Member!',
+            'You are already a member of this class. You can find it in your class list.',
+            [{ text: 'Got It', style: 'default' }]
+          );
+        } else {
+          // New member - trigger success callback for navigation
+          console.log('🎉 Class Join Modal - New member joined, triggering success callback');
+          onSuccess?.();
+          onClose();
+          Alert.alert(
+            'Welcome to the Class!',
+            'You can now share artwork and view your classmates\' posts.',
+            [{ text: 'Get Started', style: 'default' }]
+          );
+        }
       } else {
         console.log('❌ Class Join Modal - Failed to join class:', result.error);
         Alert.alert('Unable to Join Class', result.error || 'Please check your join code and try again.');
