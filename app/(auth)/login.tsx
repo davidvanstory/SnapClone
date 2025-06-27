@@ -13,12 +13,12 @@
 import { Link, router } from 'expo-router';
 import React from 'react';
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    SafeAreaView,
-    StyleSheet,
-    View,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  StyleSheet,
+  View,
 } from 'react-native';
 import AuthForm, { type AuthFormData } from '../../components/auth/AuthForm';
 import { ThemedText } from '../../components/ThemedText';
@@ -41,9 +41,21 @@ export default function LoginScreen() {
    */
   const handleLogin = async (formData: AuthFormData) => {
     console.log('🚀 Login Screen - Starting login process');
+    console.log('🔍 DEBUG: Login attempt with:', {
+      email: formData.email,
+      hasPassword: !!formData.password,
+      passwordLength: formData.password.length
+    });
 
     try {
+      console.log('📡 Login Screen - Calling signIn from auth store...');
       const result = await signIn(formData.email, formData.password);
+
+      console.log('🔍 DEBUG: Sign in result:', {
+        success: result.success,
+        hasError: !!result.error,
+        errorMessage: result.error
+      });
 
       if (result.success) {
         console.log('✅ Login Screen - Login successful, redirecting to camera');
@@ -58,6 +70,11 @@ export default function LoginScreen() {
       }
     } catch (error) {
       console.error('❌ Login Screen - Unexpected login error:', error);
+      console.error('🔍 DEBUG: Unexpected login error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
       Alert.alert(
         'Login Error',
         'An unexpected error occurred. Please try again.',

@@ -14,14 +14,28 @@ import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
 export default function IndexScreen() {
-  const { user, isInitialized, isLoading } = useAuthStore();
+  const { user, isInitialized, isLoading, session } = useAuthStore();
   const colorScheme = useColorScheme();
 
   console.log('🏠 Index Screen - Checking auth state');
   console.log('👤 User:', user ? 'Authenticated' : 'Not authenticated');
   console.log('⚙️ Auth state:', { isInitialized, isLoading });
+  console.log('🔍 DEBUG: Detailed auth state:', {
+    hasUser: !!user,
+    hasSession: !!session,
+    userId: user?.id,
+    userEmail: user?.email,
+    isInitialized,
+    isLoading
+  });
 
   useEffect(() => {
+    console.log('🔄 Index Screen - useEffect triggered with:', {
+      hasUser: !!user,
+      isInitialized,
+      isLoading
+    });
+
     if (!isInitialized) {
       console.log('⏳ Index Screen - Auth not initialized yet, waiting...');
       return;
@@ -29,6 +43,10 @@ export default function IndexScreen() {
 
     if (user) {
       console.log('✅ Index Screen - User authenticated, redirecting to tabs');
+      console.log('🔍 DEBUG: Redirecting authenticated user:', {
+        id: user.id,
+        email: user.email
+      });
       router.replace('/(tabs)');
     } else {
       console.log('🔒 Index Screen - User not authenticated, redirecting to auth');

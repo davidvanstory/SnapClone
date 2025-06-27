@@ -57,20 +57,34 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   // Initialize auth state and set up listener
   initialize: async () => {
     console.log('🔐 Auth Store - Initializing authentication state');
+    console.log('🔍 DEBUG: Auth store initialize called');
     set({ isLoading: true });
 
     try {
+      console.log('📡 Auth Store - Calling supabase.auth.getSession()...');
       // Get current session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
         console.error('❌ Auth Store - Session error:', sessionError);
+        console.error('🔍 DEBUG: Session error details:', {
+          message: sessionError.message,
+          status: sessionError.status
+        });
         throw sessionError;
       }
 
       console.log('📱 Auth Store - Current session:', session ? 'Found' : 'None');
+      console.log('🔍 DEBUG: Session details:', {
+        hasSession: !!session,
+        hasUser: !!session?.user,
+        userId: session?.user?.id,
+        userEmail: session?.user?.email,
+        expiresAt: session?.expires_at
+      });
       
       if (session?.user) {
+        console.log('👤 Auth Store - Session found, fetching user profile...');
         // Fetch user profile
         const { data: profile, error: profileError } = await supabase
           .from('users')
@@ -80,22 +94,45 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
         if (profileError && profileError.code !== 'PGRST116') {
           console.error('❌ Auth Store - Profile fetch error:', profileError);
+          console.error('🔍 DEBUG: Profile error details:', {
+            code: profileError.code,
+            message: profileError.message,
+            details: profileError.details,
+            hint: profileError.hint
+          });
         }
 
         console.log('👤 Auth Store - User profile:', profile ? 'Loaded' : 'Creating...');
+        console.log('🔍 DEBUG: Profile data:', profile ? {
+          id: profile.id,
+          email: profile.email,
+          username: profile.username,
+          hasAvatar: !!profile.avatar_url
+        } : 'No profile found');
         
         set({
           user: session.user,
           session: session,
           profile: profile || null,
         });
+      } else {
+        console.log('👤 Auth Store - No session found, user not authenticated');
       }
 
       // Set up auth state change listener
+      console.log('🔄 Auth Store - Setting up auth state change listener...');
       supabase.auth.onAuthStateChange(async (event, session) => {
         console.log('🔄 Auth Store - Auth state changed:', event);
+        console.log('🔍 DEBUG: Auth state change details:', {
+          event,
+          hasSession: !!session,
+          hasUser: !!session?.user,
+          userId: session?.user?.id,
+          userEmail: session?.user?.email
+        });
         
         if (event === 'SIGNED_IN' && session?.user) {
+          console.log('✅ Auth Store - User signed in, fetching/creating profile...');
           // Fetch or create user profile
           let { data: profile, error: profileError } = await supabase
             .from('users')
@@ -106,6 +143,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           if (profileError && profileError.code === 'PGRST116') {
             // Profile doesn't exist, create it
             console.log('✨ Auth Store - Creating new user profile');
+            console.log('🔍 DEBUG: Creating profile for user:', {
+              id: session.user.id,
+              email: session.user.email
+            });
+            
             const { data: newProfile, error: createError } = await supabase
               .from('users')
               .insert({
@@ -117,11 +159,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
             if (createError) {
               console.error('❌ Auth Store - Profile creation error:', createError);
+              console.error('🔍 DEBUG: Profile creation error details:', {
+                code: createError.code,
+                message: createError.message,
+                details: createError.details,
+                hint: createError.hint
+              });
             } else {
+              console.log('✅ Auth Store - Profile created successfully');
               profile = newProfile;
             }
+          } else if (profileError) {
+            console.error('❌ Auth Store - Profile fetch error during sign in:', profileError);
           }
 
+          console.log('🔄 Auth Store - Updating state with signed in user');
           set({
             user: session.user,
             session: session,
@@ -134,12 +186,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             session: null,
             profile: null,
           });
+        } else if (event === 'TOKEN_REFRESHED') {
+          console.log('🔄 Auth Store - Token refreshed');
+          set({ session: session });
+        } else {
+          console.log('🔄 Auth Store - Other auth event:', event);
         }
       });
 
     } catch (error) {
       console.error('❌ Auth Store - Initialization error:', error);
+      console.error('🔍 DEBUG: Initialization error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
     } finally {
+      console.log('✅ Auth Store - Initialization complete, setting initialized=true');
       set({ isLoading: false, isInitialized: true });
     }
   },
@@ -176,23 +239,52 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   // Sign in existing user
   signIn: async (email: string, password: string) => {
     console.log('🔑 Auth Store - Starting user sign in');
+    console.log('🔍 DEBUG: Sign in attempt for email:', email);
     set({ isLoading: true });
 
     try {
+      console.log('📡 Auth Store - Calling supabase.auth.signInWithPassword...');
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
+      console.log('🔍 DEBUG: Sign in response:', {
+        hasData: !!data,
+        hasUser: !!data?.user,
+        hasSession: !!data?.session,
+        hasError: !!error
+      });
+
       if (error) {
         console.error('❌ Auth Store - Sign in error:', error);
+        console.error('🔍 DEBUG: Sign in error details:', {
+          message: error.message,
+          status: error.status,
+          code: error.code || 'no-code'
+        });
         return { success: false, error: error.message };
       }
 
+      if (!data?.user || !data?.session) {
+        console.error('❌ Auth Store - Sign in succeeded but no user/session returned');
+        return { success: false, error: 'Authentication failed - no user data returned' };
+      }
+
       console.log('✅ Auth Store - User signed in successfully');
+      console.log('🔍 DEBUG: Signed in user:', {
+        id: data.user.id,
+        email: data.user.email,
+        sessionExpiry: data.session.expires_at
+      });
       return { success: true };
     } catch (error) {
       console.error('❌ Auth Store - Sign in unexpected error:', error);
+      console.error('🔍 DEBUG: Unexpected error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Sign in failed' 

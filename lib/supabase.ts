@@ -13,6 +13,10 @@ import { createClient } from '@supabase/supabase-js';
 import Constants from 'expo-constants';
 
 console.log('🌐 FULL CLOUD MODE - All operations use production Supabase');
+console.log('🔍 DEBUG: Starting Supabase client initialization...');
+
+// Log the entire Constants.expoConfig.extra object for debugging
+console.log('📋 DEBUG: Full expo config extra:', JSON.stringify(Constants.expoConfig?.extra, null, 2));
 
 // SIMPLIFIED CONFIGURATION:
 // Always use production Supabase for everything
@@ -20,12 +24,24 @@ const supabaseUrl = Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
 console.log('🔧 Supabase Config - CLOUD-ONLY MODE');
-console.log('📍 Supabase URL:', supabaseUrl ? 'Set ✓' : 'Missing ❌');
-console.log('🔑 Supabase Key:', supabaseAnonKey ? 'Set ✓' : 'Missing ❌');
+console.log('📍 Supabase URL:', supabaseUrl ? `Set ✓ (${supabaseUrl.substring(0, 30)}...)` : 'Missing ❌');
+console.log('🔑 Supabase Key:', supabaseAnonKey ? `Set ✓ (${supabaseAnonKey.substring(0, 20)}...)` : 'Missing ❌');
+
+// Additional debugging for environment variables
+console.log('🔍 DEBUG: Raw environment check:');
+console.log('  - EXPO_PUBLIC_SUPABASE_URL from Constants:', !!Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_URL);
+console.log('  - EXPO_PUBLIC_SUPABASE_ANON_KEY from Constants:', !!Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_ANON_KEY);
 
 if (!supabaseUrl || !supabaseAnonKey) {
+  const missingVars = [];
+  if (!supabaseUrl) missingVars.push('EXPO_PUBLIC_SUPABASE_URL');
+  if (!supabaseAnonKey) missingVars.push('EXPO_PUBLIC_SUPABASE_ANON_KEY');
+  
+  console.error('❌ CRITICAL ERROR: Missing Supabase environment variables:', missingVars);
+  console.error('📋 Available extra config keys:', Object.keys(Constants.expoConfig?.extra || {}));
+  
   throw new Error(
-    `Missing Supabase environment variables. Please check your .env file for:
+    `Missing Supabase environment variables: ${missingVars.join(', ')}. Please check your .env file for:
     - EXPO_PUBLIC_SUPABASE_URL
     - EXPO_PUBLIC_SUPABASE_ANON_KEY`
   );
@@ -40,12 +56,26 @@ if (!supabaseUrl || !supabaseAnonKey) {
  * - Edge Functions
  * - Real-time subscriptions
  */
+console.log('🏗️ Creating Supabase client with cloud credentials...');
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
   },
+});
+
+// Test the client connection immediately
+console.log('🔍 Testing Supabase client connection...');
+supabase.auth.getSession().then(({ data, error }) => {
+  if (error) {
+    console.error('❌ Supabase client connection test failed:', error);
+  } else {
+    console.log('✅ Supabase client connection test successful');
+    console.log('📱 Current session status:', data.session ? 'Active session found' : 'No active session');
+  }
+}).catch((error) => {
+  console.error('❌ Supabase client connection test threw error:', error);
 });
 
 /**

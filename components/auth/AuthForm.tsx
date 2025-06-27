@@ -13,11 +13,11 @@
 
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { Colors } from '../../constants/Colors';
 import { useColorScheme } from '../../hooks/useColorScheme';
@@ -153,12 +153,19 @@ export default function AuthForm({
    */
   const handleSubmit = async () => {
     console.log(`🚀 AuthForm - Starting ${mode} form submission`);
+    console.log(`🔍 DEBUG: Form data:`, {
+      email: email.trim(),
+      passwordLength: password.length,
+      confirmPasswordLength: mode === 'register' ? confirmPassword.length : 'N/A',
+      mode
+    });
 
     if (!validateForm()) {
       console.log(`❌ AuthForm - ${mode} form validation failed`);
       return;
     }
 
+    console.log(`✅ AuthForm - ${mode} form validation passed, proceeding with submission`);
     setIsSubmitting(true);
 
     try {
@@ -172,10 +179,16 @@ export default function AuthForm({
         formData.confirmPassword = confirmPassword;
       }
 
+      console.log(`📡 AuthForm - Calling onSubmit for ${mode}...`);
       await onSubmit(formData);
       console.log(`✅ AuthForm - ${mode} form submitted successfully`);
     } catch (error) {
       console.error(`❌ AuthForm - ${mode} form submission error:`, error);
+      console.error(`🔍 DEBUG: Submission error details:`, {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
     } finally {
       setIsSubmitting(false);
     }
