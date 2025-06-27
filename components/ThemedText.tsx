@@ -1,5 +1,5 @@
 /**
- * EphemeralArt Typography System - ThemedText Component
+ * JUNI Typography System - ThemedText Component
  * 
  * Implements the complete typography hierarchy from UIDesign.md:
  * - Instrument Serif: App name/headers (32-42pt), screen titles (24-28pt), user names (16-18pt), decorative elements (14-16pt)

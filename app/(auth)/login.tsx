@@ -4,7 +4,7 @@
  * This screen implements the login interface from UIDesign.md specifications:
  * - Clean white background with subtle paper texture
  * - Glass morphism container (Primary Glass Card specs)
- * - "Welcome to EphemeralArt" header in Instrument Serif 28pt
+ * - "Welcome to JUNI" header in Instrument Serif 28pt
  * - Email/password inputs with glass morphism styling
  * - Warm sage accent color for focus states
  * - Typography hierarchy per UIDesign.md exact specifications
@@ -14,6 +14,7 @@ import { Link, router } from 'expo-router';
 import React from 'react';
 import {
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
@@ -96,10 +97,16 @@ export default function LoginScreen() {
         <View style={styles.content}>
           {/* Glass Morphism Card Container per UIDesign.md */}
           <GlassMorphismCard type="primary" style={styles.loginCard}>
-            {/* Header - EphemeralArt Branding per UIDesign.md */}
+            {/* Header - JUNI Branding per UIDesign.md */}
             <View style={styles.header}>
+              {/* App Icon */}
+              <Image 
+                source={require('../../assets/images/icon.png')} 
+                style={styles.appIcon}
+                resizeMode="contain"
+              />
               <ThemedText type="screenTitle" style={[styles.title, { color: colors.text }]}>
-                Welcome to EphemeralArt
+                Welcome to JUNI
               </ThemedText>
               <ThemedText type="bodyText" style={[styles.subtitle, { color: colors.textSecondary }]}>
                 Sign in to join your art class
@@ -163,7 +170,12 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     marginBottom: 24,            // 24px section spacing per UIDesign.md
-    gap: 8,                      // 8px base unit spacing
+    gap: 12,                     // 12px gap to accommodate icon
+  },
+  appIcon: {
+    width: 80,                   // Prominent but not overwhelming
+    height: 80,
+    marginBottom: 8,             // Space between icon and title
   },
   title: {
     textAlign: 'center',

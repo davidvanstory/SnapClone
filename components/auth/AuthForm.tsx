@@ -70,7 +70,7 @@ export default function AuthForm({
   const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
 
   // Default button texts based on mode
-  const defaultSubmitText = mode === 'login' ? 'Sign In to EphemeralArt' : 'Join EphemeralArt';
+  const defaultSubmitText = mode === 'login' ? 'Sign In to JUNI' : 'Join JUNI';
   const defaultLoadingText = mode === 'login' ? 'Signing In...' : 'Creating Account...';
   
   const finalSubmitText = submitButtonText || defaultSubmitText;

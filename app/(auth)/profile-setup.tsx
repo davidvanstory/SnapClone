@@ -1,10 +1,10 @@
 /**
- * Profile Setup Screen Component - Simplified for EphemeralArt
+ * Profile Setup Screen Component - Simplified for JUNI
  * 
  * This screen implements the welcome screen from UIDesign.md specifications:
  * - Centered content with generous whitespace
  * - "Welcome, [Name]!" in Instrument Serif 32pt
- * - Simplified optional name entry for EphemeralArt
+ * - Simplified optional name entry for JUNI
  * - "Join a Class" button with warm sage background
  * - Glass morphism styling consistent with auth flow
  * - Streamlined onboarding for anxiety-reducing experience
@@ -29,12 +29,12 @@ import { useColorScheme } from '../../hooks/useColorScheme';
 import { useAuthStore } from '../../store/authStore';
 
 export default function ProfileSetupScreen() {
-  console.log('👤 Profile Setup Screen - Rendering simplified EphemeralArt welcome setup');
+  console.log('👤 Profile Setup Screen - Rendering simplified JUNI welcome setup');
 
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
-  // Form state - simplified for EphemeralArt
+  // Form state - simplified for JUNI
   const [displayName, setDisplayName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [nameFocused, setNameFocused] = useState(false);
@@ -59,7 +59,7 @@ export default function ProfileSetupScreen() {
     setIsSubmitting(true);
 
     try {
-      // For EphemeralArt, we'll use a simple approach - either the display name or email prefix
+      // For JUNI, we'll use a simple approach - either the display name or email prefix
       const profileName = displayName.trim() || user?.email?.split('@')[0] || 'Artist';
       
       const result = await updateProfile({
@@ -72,12 +72,12 @@ export default function ProfileSetupScreen() {
         router.replace('/(tabs)');
       } else {
         console.log('⚠️ Profile Setup Screen - Profile update failed, continuing anyway');
-        // For EphemeralArt, we'll be forgiving and let users continue
+        // For JUNI, we'll be forgiving and let users continue
         router.replace('/(tabs)');
       }
     } catch (error) {
       console.error('❌ Profile Setup Screen - Unexpected profile update error:', error);
-      // For EphemeralArt, we'll be forgiving and let users continue
+      // For JUNI, we'll be forgiving and let users continue
       router.replace('/(tabs)');
     } finally {
       setIsSubmitting(false);
@@ -130,7 +130,7 @@ export default function ProfileSetupScreen() {
               {/* Welcome Header per UIDesign.md */}
               <View style={styles.header}>
                 <ThemedText type="appName" style={[styles.welcomeTitle, { color: colors.text }]}>
-                  Welcome to EphemeralArt!
+                  Welcome to JUNI!
                 </ThemedText>
                 <ThemedText type="bodyText" style={[styles.welcomeSubtitle, { color: colors.textSecondary }]}>
                   You're ready to start sharing your artwork in a supportive, ephemeral environment.

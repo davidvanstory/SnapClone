@@ -4,7 +4,7 @@
  */
 
 /**
- * EphemeralArt Glass Morphism Design System Colors
+ * JUNI Glass Morphism Design System Colors
  * 
  * Implements the complete glass morphism color system from UIDesign.md:
  * - Pure white backgrounds with charcoal text

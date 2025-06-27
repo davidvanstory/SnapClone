@@ -4,7 +4,7 @@
  * This screen implements the registration interface using UIDesign.md specifications:
  * - Clean white background with subtle paper texture
  * - Glass morphism container (Primary Glass Card specs)
- * - "Join EphemeralArt" header in Instrument Serif 28pt
+ * - "Join JUNI" header in Instrument Serif 28pt
  * - Email/password/confirm password inputs with glass morphism styling
  * - Warm sage accent color for focus states and submit button
  * - Typography hierarchy per UIDesign.md exact specifications
@@ -51,7 +51,7 @@ export default function RegisterScreen() {
         // User is automatically signed in after registration (no email verification needed)
         // The auth state listener will redirect them to the main app
         Alert.alert(
-          'Welcome to EphemeralArt!',
+          'Welcome to JUNI!',
           'Your account has been created successfully. Let\'s get you started!',
           [
             {
@@ -99,11 +99,11 @@ export default function RegisterScreen() {
           <View style={styles.content}>
             {/* Glass Morphism Card Container per UIDesign.md */}
             <GlassMorphismCard type="primary" style={styles.registerCard}>
-              {/* Header - EphemeralArt Branding per UIDesign.md */}
-              <View style={styles.header}>
-                <ThemedText type="screenTitle" style={[styles.title, { color: colors.text }]}>
-                  Join EphemeralArt
-                </ThemedText>
+                          {/* Header - JUNI Branding per UIDesign.md */}
+            <View style={styles.header}>
+              <ThemedText type="screenTitle" style={[styles.title, { color: colors.text }]}>
+                Join JUNI
+              </ThemedText>
                 <ThemedText type="bodyText" style={[styles.subtitle, { color: colors.textSecondary }]}>
                   Create your account to start sharing artwork
                 </ThemedText>
