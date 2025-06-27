@@ -2,8 +2,9 @@
  * Supabase Client Configuration
  * 
  * This file configures the Supabase client for the SnapClone application.
- * It automatically switches between local and cloud environments based on
- * the development mode (`__DEV__`).
+ * It uses a HYBRID approach:
+ * - Local database/API for fast development
+ * - Production edge functions for AI features (since local edge functions have issues)
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -15,38 +16,88 @@ const isDevelopment = __DEV__;
 
 console.log('Running in', isDevelopment ? 'DEVELOPMENT' : 'PRODUCTION', 'mode.');
 
-// Conditionally choose the Supabase URL and Key
-const supabaseUrl = isDevelopment
+// HYBRID CONFIGURATION:
+// - Use LOCAL database/API for fast development
+// - Use PRODUCTION edge functions (since local ones don't work)
+
+// Database client (local for dev, production for prod)
+const dbUrl = isDevelopment
   ? Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_URL_LOCAL
   : Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_URL;
 
-const supabaseAnonKey = isDevelopment
+const dbAnonKey = isDevelopment
   ? Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_ANON_KEY_LOCAL
   : Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
-console.log('🔧 Supabase Config - Initializing client for', isDevelopment ? 'Local' : 'Cloud');
-console.log('📍 Supabase URL:', supabaseUrl ? 'Set ✓' : 'Missing ❌');
-console.log('🔑 Supabase Anon Key:', supabaseAnonKey ? 'Set ✓' : 'Missing ❌');
+// Edge Functions client (ALWAYS production for working AI)
+const edgeFunctionsUrl = Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_URL;
+const edgeFunctionsAnonKey = Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  const missingVar = !supabaseUrl ? 'URL' : 'Key';
+console.log('🔧 Supabase Config - HYBRID MODE');
+console.log('📊 Database:', isDevelopment ? 'Local' : 'Production');
+console.log('⚡ Edge Functions:', 'Production (for working AI)');
+console.log('📍 DB URL:', dbUrl ? 'Set ✓' : 'Missing ❌');
+console.log('🔑 DB Key:', dbAnonKey ? 'Set ✓' : 'Missing ❌');
+console.log('⚡ Functions URL:', edgeFunctionsUrl ? 'Set ✓' : 'Missing ❌');
+console.log('🔑 Functions Key:', edgeFunctionsAnonKey ? 'Set ✓' : 'Missing ❌');
+
+if (!dbUrl || !dbAnonKey) {
+  const missingVar = !dbUrl ? 'URL' : 'Key';
   const envName = isDevelopment ? `EXPO_PUBLIC_SUPABASE_${missingVar}_LOCAL` : `EXPO_PUBLIC_SUPABASE_${missingVar}`;
   throw new Error(
     `Missing Supabase environment variable: ${envName}. Please check your .env file.`
   );
 }
 
+if (!edgeFunctionsUrl || !edgeFunctionsAnonKey) {
+  throw new Error(
+    `Missing production Supabase environment variables for edge functions. Please check EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY.`
+  );
+}
+
 /**
- * Supabase client instance
- * Configured with auto-refresh for authentication and proper URL handling
+ * Main Supabase client for database operations
+ * Uses local instance in development, production in production
  */
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient(dbUrl, dbAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
   },
 });
+
+/**
+ * Edge Functions client for AI features
+ * ALWAYS uses production (since local edge functions don't work)
+ */
+export const supabaseEdgeFunctions = createClient(edgeFunctionsUrl, edgeFunctionsAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false,
+  },
+});
+
+/**
+ * Helper function to call AI edge function
+ * Uses the production edge functions client
+ */
+export const callAIFunction = async (functionName: string, payload: any) => {
+  console.log('🤖 Calling AI function:', functionName, 'on production');
+  
+  const { data, error } = await supabaseEdgeFunctions.functions.invoke(functionName, {
+    body: payload,
+  });
+  
+  if (error) {
+    console.error('❌ AI function error:', error);
+    throw error;
+  }
+  
+  console.log('✅ AI function success:', functionName);
+  return data;
+};
 
 /**
  * Database Types for TypeScript support

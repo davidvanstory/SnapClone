@@ -48,9 +48,12 @@ Directory Structure
 _docs/
   ArtShare.md
   braindumpIMG2VID.md
+  braindumpSolo3.md
   braindumpTXT2IMG.md
   debugClassList.md
   oldArt_Share.md
+  oldbraindumpSolo.md
+  oldbraindumpSolo2.md
   repomix.md
   RLSMigrationsSQL.md
   supabase_localVcloud.md
@@ -120,6 +123,9 @@ store/
   authStore.ts
   classStore.ts
 supabase/
+  functions/
+    get-ai-response/
+      index.ts
   migrations/
     20250101000001_auth_tables.sql
     20250101000002_setup_storage.sql
@@ -131,16 +137,19 @@ supabase/
     20250102000004_create_ai_feedback_table.sql
     20250102000005_demo_data_seed.sql
     20250102000009_fix_all_recursive_policies.sql
+    20250103000001_create_solo_tables.sql
   .gitignore
   config.toml
 tasks/
   old-prd-veo-creative-image-messenger.md
   old-tasks-prd-veo-creative-image-messenger.md
   prd-ephemeral-art-sharing.md
+  tasks-braindumpSolo3.md
   tasks-prd-ephemeral-art-sharing.md
 .env.example
 .gitignore
 app.config.js
+deno.lock
 eas.json
 eslint.config.js
 package.json
@@ -313,6 +322,91 @@ image_messages (
 - Clean separation between fake user system and future real user implementation
 
 ================
+File: _docs/braindumpSolo3.md
+================
+# Project Name
+ArtCritique AI: Solo Tutor
+
+## Project Description
+An ephemeral, low-stakes mobile application for art students and hobbyists to build confidence. This project focuses on adding a **private, AI-powered "Solo Tutor"** to the existing app. This feature provides a one-on-one chat interface where a user can get personalized guidance on their art. The tutor uses a Retrieval-Augmented Generation (RAG) system to learn from the user's private chat history, offering contextual, evolving feedback that acts as a dedicated art coach.
+
+## Target Audience
+- **Primary Persona (Alex):** A busy working professional (30s) new to art. He uses the existing **Class Feed** for low-stakes peer interaction and the new **Solo Tutor** for private, in-depth learning, asking questions, and building confidence without judgment.
+
+## Desired Features
+### Core App Structure & Navigation
+- [ ] A new "Solo" tab will be added to the main tab bar in `app/(tabs)/_layout.tsx`.
+- [ ] This tab will navigate to a new `app/(tabs)/solo.tsx` screen, which will host the AI chat interface.
+
+### AI-Powered Solo Tutor (New Feature)
+- [ ] **Chat Interface:**
+    - [ ] The "Solo Feed" will be a single, continuous chat log.
+    - [ ] Users can initiate conversation by sending a text-only message or by uploading an image with an accompanying text prompt.
+    - [ ] A loading indicator will be displayed while the AI is generating a response.
+- [ ] **Multimodal AI Interaction:**
+    - [ ] The AI tutor will use a multimodal model like **OpenAI's GPT-4o** to analyze user-uploaded images.
+    - [ ] **Image Upload Workflow:** When a user uploads an image, the app will first upload the file to Supabase Storage. This is a standard industry practice that provides a secure, permanent URL for the media file, which is then used in the API call to the AI.
+
+### Backend & RAG Implementation
+- [ ] **Database Schema (Supabase):**
+    - [ ] A new Supabase migration will be created to add the following tables. The `pgvector` extension must be enabled in Supabase to support the `vector` type.
+
+      ```sql
+      -- Table to act as a container for each conversation thread
+      CREATE TABLE solo_ai_chats (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+          title TEXT, -- A user-definable title for the chat, e.g., "Hand Study Feedback"
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+
+      -- Table to store every individual message within a chat
+      CREATE TABLE solo_ai_messages (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          chat_id UUID NOT NULL REFERENCES solo_ai_chats(id) ON DELETE CASCADE,
+          role TEXT NOT NULL CHECK (role IN ('user', 'assistant')), -- Distinguishes who sent the message
+          content TEXT NOT NULL, -- The text of the message
+          image_url TEXT, -- Optional URL for an image associated with the message
+          embedding vector(1536), -- Stores the text embedding for RAG. Dimension 1536 matches 'text-embedding-3-small'
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+      ```
+- [ ] **Prompt Engineering Strategy:**
+    - [ ] A detailed **System Prompt** will be designed to instruct the AI on its persona ('Canvas', a supportive tutor). It will also instruct the AI to use specific art terminology (e.g., 'composition', 'shading', 'perspective') to ensure its responses are not only helpful to the user but also generate rich text content that is ideal for creating powerful embeddings for RAG.
+- [ ] **Supabase Edge Function (`get-ai-response`):**
+    - [ ] This function will contain the complete, self-contained RAG logic:
+        1.  **Receive Request:** The function is triggered with the user's new prompt, the `chat_id`, and an optional `image_url`.
+        2.  **Generate Query Embedding:** Call the **OpenAI `text-embedding-3-small` model** to convert the user's new text prompt into a vector embedding.
+        3.  **Retrieve Relevant History (Long-Term Memory):** Use the newly generated embedding to perform a vector similarity search within the `solo_ai_messages` table. This search will query the embeddings of **both past user questions and past AI answers**, ensuring the most contextually relevant information is found.
+        4.  **Retrieve Recent Conversation (Short-Term Memory):** Fetch the last 4-6 messages from the current `chat_id` to maintain the immediate conversational flow.
+        5.  **Augment the Prompt:** Construct a final, enhanced prompt for the LLM. This prompt will include the user's current question, the *retrieved historical messages*, and the *recent conversation messages*.
+        6.  **Generate Response (Multimodal Step):** Send the augmented prompt (and the `image_url`, if provided) to the **OpenAI `GPT-4o` API**.
+        7.  **Persist Both Sides of the Conversation:** After receiving the AI's response, the function will perform two `INSERT` operations into the `solo_ai_messages` table:
+            - **First, save the user's message:** Create a row with `role: 'user'`, the user's text, and a newly generated embedding for that text.
+            - **Second, save the AI's response:** Create a row with `role: 'assistant'`, the AI's response text, and another newly generated embedding for the AI's response. This ensures the AI's advice becomes part of its long-term memory. This includes calling the `text-embedding-3-small` model again to create and store a new embedding for each message.
+
+### Synthetic Demo Data
+- [ ] A new `seed.sql` script will be created to populate the Solo Tutor with a rich, **five-chat history** for a demo user ("Alex").
+- [ ] The synthetic chats will cover a range of topics (e.g., hand proportions, perspective, color theory, composition) and will be structured to build on each other, allowing a demo to compellingly showcase the RAG system's "memory."
+- [ ] The seed script must include pre-computed embeddings for the synthetic messages.
+
+## Design Requests
+- [ ] **Tab Bar:** The bottom tab bar will contain three items: "Class Feed," "Camera," and "Solo Feed."
+- [ ] **Solo Tutor Chat UI:**
+    - [ ] The chat interface should reuse existing components (`GlassMorphismCard`, `ThemedText`).
+    - [ ] Chat bubbles for the user and AI should be clearly distinguishable (e.g., right-aligned for the user, left-aligned for the AI).
+    - [ ] When an image is part of a message, it should be displayed in a card format within the chat log, **not** as a full-screen background.
+- [ ] **Chat Input Area:**
+    - [ ] The text input field at the bottom of the screen will be contained within a glass morphism card.
+    - [ ] This card will also feature a distinct, tappable icon to **upload a picture** from the user's gallery. The "take a picture" option will be omitted from the chat UI to keep it clean.
+
+## Other Notes
+- **Technology Stack Clarification:** Embeddings will be **created** by the `OpenAI text-embedding-3-small` model. They will be **stored and searched** within Supabase using the `pgvector` extension.
+- **Future RAG Enhancements:** While the MVP uses text-based RAG, the architecture is designed to potentially incorporate multimodal embedding models like CLIP in the future.
+- **Error Handling:** The chat UI must gracefully handle potential API errors from OpenAI or the Edge Function, displaying a user-friendly message.
+
+================
 File: _docs/braindumpTXT2IMG.md
 ================
 # VEO Creative Image Messenger
@@ -468,337 +562,6 @@ text_messages (
 ## Future Considerations
 
 ================
-File: _docs/debugClassList.md
-================
-1. Logs from Step1
-
-
-*** Upon first press of the Join Class button a "Monday Fundamentals" class is piopulated in the list. I am succussfully able to go into the class and I am taken to 4 prepopulated artwork that is outlined in demo_data_seed.sql and class Store. this is what I expect. and what I want. The logs from this event are below ***
-
-
-
-- LOG  📝 Register Screen - Rendering glass morphism registration interface
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  📝 AuthForm - Rendering glass morphism register form
-- LOG  ✅ Auth Store - User registered successfully
-- LOG  🚀 Root Layout - Initializing Draft app with proper typography
-- LOG  🔑 Login Screen - Rendering glass morphism login interface
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  📝 AuthForm - Rendering glass morphism login form
-- LOG  📝 Register Screen - Rendering glass morphism registration interface
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  📝 AuthForm - Rendering glass morphism register form
-- LOG  ✅ Register Screen - Registration successful, user automatically signed in
-- LOG  ✅ AuthForm - register form submitted successfully
-- LOG  📝 AuthForm - Rendering glass morphism register form
-- LOG  🎉 Register Screen - User ready to start, redirecting to camera
-- LOG  🎥 Camera Screen - Rendering with permission: undefined
-- LOG  📷 Camera Screen - Captured photo: No photo
-- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
-- LOG  ⏳ Camera Screen - Permission loading
-- LOG  🎥 Camera Screen - Rendering with permission: true
-- LOG  📷 Camera Screen - Captured photo: No photo
-- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
-- LOG  🎥 Camera Screen - Rendering with permission: true
-- LOG  📷 Camera Screen - Captured photo: No photo
-- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
-- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
-- LOG  📚 Class List Screen - Rendering class selection interface
-- LOG  📚 Class List Screen - User classes count: 0
-- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": [], "classNames": [], "isLoading": false, "timestamp": 1750980193896, "userClassesCount": 0}
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  📚 Class Feed Screen - Loading user classes for: a5aedeaa-02b5-4313-8bbc-9c6a798f1e13
-- LOG  📚 Class Store - Loading user classes: a5aedeaa-02b5-4313-8bbc-9c6a798f1e13
-- LOG  🔧 DEBUG - loadUserClasses START: {"currentClassIds": [], "currentUserClassesCount": 0, "timestamp": 1750980193922}
-- LOG  📋 Class Service - Fetching user classes: a5aedeaa-02b5-4313-8bbc-9c6a798f1e13
-- LOG  📰 Class Feed Screen - Current class changed: undefined
-- LOG  🔍 Class Feed Screen - Checking class membership status
-- LOG  📚 Class Feed Screen - No class selected, showing class list
-- LOG  🎥 Camera Screen - Rendering with permission: true
-- LOG  📷 Camera Screen - Captured photo: No photo
-- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
-- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
-- LOG  📚 Class List Screen - Rendering class selection interface
-- LOG  📚 Class List Screen - User classes count: 0
-- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": [], "classNames": [], "isLoading": true, "timestamp": 1750980193931, "userClassesCount": 0}
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🔍 Class Feed Screen - Checking class membership status
-- LOG  ✅ Class Service - Found 0 classes for user
-- LOG  ✅ Class Store - Loaded 0 classes
-- LOG  🔧 DEBUG - loadUserClasses END: {"newClassIds": [], "newClassNames": [], "newUserClassesCount": 0, "timestamp": 1750980193993}
-- LOG  🎥 Camera Screen - Rendering with permission: true
-- LOG  📷 Camera Screen - Captured photo: No photo
-- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
-- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
-- LOG  📚 Class List Screen - Rendering class selection interface
-- LOG  📚 Class List Screen - User classes count: 0
-- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": [], "classNames": [], "isLoading": false, "timestamp": 1750980193995, "userClassesCount": 0}
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🔍 Class Feed Screen - Checking class membership status
-- LOG  📚 Class Feed Screen - No class selected, showing class list
-- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
-- LOG  ➕ Class List Screen - Opening join class modal
-- LOG  ➕ Class Feed Screen - Opening join modal from class list
-- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
-- LOG  📚 Class List Screen - Rendering class selection interface
-- LOG  📚 Class List Screen - User classes count: 0
-- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": [], "classNames": [], "isLoading": false, "timestamp": 1750980205123, "userClassesCount": 0}
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🚀 Class Join Modal - Attempting to join class with code: DRAW01
-- LOG  🚀 Class Store - Joining class with code: DRAW01
-- LOG  🚀 Class Service - User attempting to join class: {"joinCode": "DRAW01", "userId": "a5aedeaa-02b5-4313-8bbc-9c6a798f1e13"}
-- LOG  🔍 Class Service - Validating class join code: DRAW01
-- LOG  🔍 Class Service - Validating join code format: DRAW01
-- LOG  ✅ Class Service - Join code format validation: true
-- LOG  📝 Class Service - Normalized join code: DRAW01
-- LOG  🎥 Camera Screen - Rendering with permission: true
-- LOG  📷 Camera Screen - Captured photo: No photo
-- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
-- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
-- LOG  📚 Class List Screen - Rendering class selection interface
-- LOG  📚 Class List Screen - User classes count: 0
-- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": [], "classNames": [], "isLoading": true, "timestamp": 1750980266609, "userClassesCount": 0}
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🔍 Class Feed Screen - Checking class membership status
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  ✅ Class Service - Class found: Monday Drawing Fundamentals
-- LOG  ✅ Class Service - Join code validated for class: Monday Drawing Fundamentals
-- LOG  📊 Class Service - Current member count: 0 / 30
-- LOG  🎉 Class Service - Successfully joined class!
-- LOG  🎉 Class Store - Successfully joined class: Monday Drawing Fundamentals
-- LOG  🔧 DEBUG - State after joinClassWithCode: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "newClassAdded": "Monday Drawing Fundamentals", "timestamp": 1750980266806, "userClassesCount": 1}
-- LOG  🎥 Camera Screen - Rendering with permission: true
-- LOG  📷 Camera Screen - Captured photo: No photo
-- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
-- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
-- LOG  📚 Class List Screen - Rendering class selection interface
-- LOG  📚 Class List Screen - User classes count: 1
-- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "isLoading": false, "timestamp": 1750980266809, "userClassesCount": 1}
-- LOG  🌟 GlassMorphismCard - Rendering secondary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🔍 Class Feed Screen - Checking class membership status
-- LOG  📚 Class Feed Screen - No class selected, showing class list
-- LOG  🎉 Class Join Modal - Successfully joined class
-- LOG  🎉 Class Feed Screen - Successfully joined class
-- LOG  🔧 DEBUG - handleJoinSuccess START: {"currentClassId": undefined, "currentClassName": undefined, "showClassList": true, "showJoinModal": true, "timestamp": 1750980266824, "userClassesCount": 0}
-- LOG  🔄 Class Feed Screen - Refreshing user classes after join
-- LOG  🔧 DEBUG - About to call loadUserClasses: {"timestamp": 1750980266824, "userId": "a5aedeaa-02b5-4313-8bbc-9c6a798f1e13"}
-- LOG  📚 Class Store - Loading user classes: a5aedeaa-02b5-4313-8bbc-9c6a798f1e13
-- LOG  🔧 DEBUG - loadUserClasses START: {"currentClassIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "currentUserClassesCount": 1, "timestamp": 1750980266825}
-- LOG  📋 Class Service - Fetching user classes: a5aedeaa-02b5-4313-8bbc-9c6a798f1e13
-- LOG  🎥 Camera Screen - Rendering with permission: true
-- LOG  📷 Camera Screen - Captured photo: No photo
-- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
-- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
-- LOG  📚 Class List Screen - Rendering class selection interface
-- LOG  📚 Class List Screen - User classes count: 1
-- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "isLoading": true, "timestamp": 1750980266829, "userClassesCount": 1}
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🔍 Class Feed Screen - Checking class membership status
-- LOG  ✅ Class Service - Found 1 classes for user
-- LOG  ✅ Class Store - Loaded 1 classes
-- LOG  🔧 DEBUG - loadUserClasses END: {"newClassIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "newClassNames": ["Monday Drawing Fundamentals"], "newUserClassesCount": 1, "timestamp": 1750980266856}
-- LOG  🎥 Camera Screen - Rendering with permission: true
-- LOG  📷 Camera Screen - Captured photo: No photo
-- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
-- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
-- LOG  📚 Class List Screen - Rendering class selection interface
-- LOG  📚 Class List Screen - User classes count: 1
-- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "isLoading": false, "timestamp": 1750980266858, "userClassesCount": 1}
-- LOG  🌟 GlassMorphismCard - Rendering secondary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🔍 Class Feed Screen - Checking class membership status
-- LOG  📚 Class Feed Screen - No class selected, showing class list
-- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
-- LOG  🎯 Class List Screen - Selected class: Monday Drawing Fundamentals
-- LOG  🔧 DEBUG - handleClassPress called: {"classId": "539c0b4e-f741-45a7-8df6-44afff8ccedc", "className": "Monday Drawing Fundamentals", "foundClass": "YES", "timestamp": 1750980287279, "userClassesCount": 1}
-- LOG  🎯 Class Feed Screen - Class selected from list: 539c0b4e-f741-45a7-8df6-44afff8ccedc
-- LOG  🔧 DEBUG - handleClassSelect called: {"availableClassIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classId": "539c0b4e-f741-45a7-8df6-44afff8ccedc", "timestamp": 1750980287280, "userClassesCount": 1}
-- LOG  🔧 DEBUG - selectedClass found: {"className": "Monday Drawing Fundamentals", "found": true, "timestamp": 1750980287280}
-- LOG  🎯 Class Store - Setting current class: Monday Drawing Fundamentals
-- LOG  🎥 Camera Screen - Rendering with permission: true
-- LOG  📷 Camera Screen - Captured photo: No photo
-- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
-- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
-- LOG  📚 Class List Screen - Rendering class selection interface
-- LOG  📚 Class List Screen - User classes count: 1
-- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "isLoading": false, "timestamp": 1750980287287, "userClassesCount": 1}
-- LOG  🌟 GlassMorphismCard - Rendering secondary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  📰 Class Feed Screen - Current class changed: Monday Drawing Fundamentals
-- LOG  📰 Class Store - Loading posts for class: 539c0b4e-f741-45a7-8df6-44afff8ccedc
-- LOG  🔍 Class Feed Screen - Checking class membership status
-- LOG  🎨 Class Feed Screen - Class selected, showing feed
-- LOG  🎥 Camera Screen - Rendering with permission: true
-- LOG  📷 Camera Screen - Captured photo: No photo
-- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
-- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  ✅ Class Store - Loaded 4 posts
-- LOG  🎥 Camera Screen - Rendering with permission: true
-- LOG  📷 Camera Screen - Captured photo: No photo
-- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
-- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🌟 GlassMorphismCard - Rendering secondary glass card
-  
-
-2. 
-
-
-
- *** Then I click the back button and I am successfully returned to the class list screen and can see the Monday Fundamentals button. However the moment I press the back buttton and am returned here some weirdness happens in the logs which i have recorded below. This I think is where things break down ***
-  
-  
-- LOG  🔙 Class Feed Screen - Back button pressed, returning to class list
-- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
-- LOG  📚 Class List Screen - Rendering class selection interface
-- LOG  📚 Class List Screen - User classes count: 1
-- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "isLoading": false, "timestamp": 1750980831673, "userClassesCount": 1}
-- LOG  🌟 GlassMorphismCard - Rendering secondary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-  
-3. 
-
-*** I try to click the Monday Fundamentals class button for a 2nd time - the one that says "tap to enter class", which was the last time i pressed it and took me to the classes artwork. Now when I press again to return to the artwork i get these logs. ***
-  
-- LOG  🎯 Class List Screen - Selected class: Monday Drawing Fundamentals
-- LOG  🔧 DEBUG - handleClassPress called: {"classId": "539c0b4e-f741-45a7-8df6-44afff8ccedc", "className": "Monday Drawing Fundamentals", "foundClass": "YES", "timestamp": 1750981116492, "userClassesCount": 1}
-- LOG  🎯 Class Feed Screen - Class selected from list: 539c0b4e-f741-45a7-8df6-44afff8ccedc
-- LOG  🔧 DEBUG - handleClassSelect called: {"availableClassIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classId": "539c0b4e-f741-45a7-8df6-44afff8ccedc", "timestamp": 1750981116492, "userClassesCount": 1}
-- LOG  🔧 DEBUG - selectedClass found: {"className": "Monday Drawing Fundamentals", "found": true, "timestamp": 1750981116492}
-- LOG  🎯 Class Store - Setting current class: Monday Drawing Fundamentals
-- LOG  🎥 Camera Screen - Rendering with permission: true
-- LOG  📷 Camera Screen - Captured photo: No photo
-- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
-- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
-- LOG  📚 Class List Screen - Rendering class selection interface
-- LOG  📚 Class List Screen - User classes count: 1
-- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "isLoading": false, "timestamp": 1750981116500, "userClassesCount": 1}
-- LOG  🌟 GlassMorphismCard - Rendering secondary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-  
-  
-  
-3
-  *** so when I then use the Join Class button for a 2nd time and enter the code I then am automatically taken to A TOTALLY DIFFERENT PAGE that I do not expect to be at. It is a page that reads " Be the first to share artwork in Your classmates will see your post appear here with a live countdown timer". This is not where I expect to be taken, because I know there is prepopilated data in the Monday Fundamentals class. ***
-  
-- LOG  ➕ Class List Screen - Opening join class modal
-- LOG  ➕ Class Feed Screen - Opening join modal from class list
-- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
-- LOG  📚 Class List Screen - Rendering class selection interface
-- LOG  📚 Class List Screen - User classes count: 1
-- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "isLoading": false, "timestamp": 1750981165326, "userClassesCount": 1}
-- LOG  🌟 GlassMorphismCard - Rendering secondary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🚀 Class Join Modal - Attempting to join class with code: DRAW01
-- LOG  🚀 Class Store - Joining class with code: DRAW01
-- LOG  🚀 Class Service - User attempting to join class: {"joinCode": "DRAW01", "userId": "a5aedeaa-02b5-4313-8bbc-9c6a798f1e13"}
-- LOG  🔍 Class Service - Validating class join code: DRAW01
-- LOG  🔍 Class Service - Validating join code format: DRAW01
-- LOG  ✅ Class Service - Join code format validation: true
-- LOG  📝 Class Service - Normalized join code: DRAW01
-- LOG  🎥 Camera Screen - Rendering with permission: true
-- LOG  📷 Camera Screen - Captured photo: No photo
-- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
-- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
-- LOG  📚 Class List Screen - Rendering class selection interface
-- LOG  📚 Class List Screen - User classes count: 1
-- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "isLoading": true, "timestamp": 1750981183868, "userClassesCount": 1}
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🔍 Class Feed Screen - Checking class membership status
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  ✅ Class Service - Class found: Monday Drawing Fundamentals
-- LOG  ✅ Class Service - Join code validated for class: Monday Drawing Fundamentals
-- LOG  ℹ️ Class Service - User is already a member
-- LOG  🎉 Class Store - Successfully joined class: Monday Drawing Fundamentals
-- LOG  ℹ️ Class Store - User already member of class, not adding duplicate
-- LOG  🎥 Camera Screen - Rendering with permission: true
-- LOG  📷 Camera Screen - Captured photo: No photo
-- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
-- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
-- LOG  📚 Class List Screen - Rendering class selection interface
-- LOG  📚 Class List Screen - User classes count: 1
-- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "isLoading": false, "timestamp": 1750981184080, "userClassesCount": 1}
-- LOG  🌟 GlassMorphismCard - Rendering secondary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🔍 Class Feed Screen - Checking class membership status
-- LOG  🎨 Class Feed Screen - Class selected, showing feed
-- LOG  🎉 Class Join Modal - Successfully joined class
-- LOG  🎉 Class Feed Screen - Successfully joined class
-- LOG  🔧 DEBUG - handleJoinSuccess START: {"currentClassId": "539c0b4e-f741-45a7-8df6-44afff8ccedc", "currentClassName": "Monday Drawing Fundamentals", "showClassList": true, "showJoinModal": true, "timestamp": 1750981184099, "userClassesCount": 1}
-- LOG  🔄 Class Feed Screen - Refreshing user classes after join
-- LOG  🔧 DEBUG - About to call loadUserClasses: {"timestamp": 1750981184100, "userId": "a5aedeaa-02b5-4313-8bbc-9c6a798f1e13"}
-- LOG  📚 Class Store - Loading user classes: a5aedeaa-02b5-4313-8bbc-9c6a798f1e13
-- LOG  🔧 DEBUG - loadUserClasses START: {"currentClassIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "currentUserClassesCount": 1, "timestamp": 1750981184100}
-- LOG  📋 Class Service - Fetching user classes: a5aedeaa-02b5-4313-8bbc-9c6a798f1e13
-- LOG  🎥 Camera Screen - Rendering with permission: true
-- LOG  📷 Camera Screen - Captured photo: No photo
-- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
-- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🔍 Class Feed Screen - Checking class membership status
-- LOG  ✅ Class Service - Found 1 classes for user
-- LOG  ✅ Class Store - Loaded 1 classes
-- LOG  🔧 DEBUG - loadUserClasses END: {"newClassIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "newClassNames": ["Monday Drawing Fundamentals"], "newUserClassesCount": 1, "timestamp": 1750981184154}
-- LOG  🎥 Camera Screen - Rendering with permission: true
-- LOG  📷 Camera Screen - Captured photo: No photo
-- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
-- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
-- LOG  🌟 GlassMorphismCard - Rendering primary glass card
-- LOG  🏫 Class Join Modal - Rendering class join modal
-- LOG  🔍 Class Feed Screen - Checking class membership status
-- LOG  🎨 Class Feed Screen - Class selected, showing feed
-- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
-
-================
 File: _docs/oldArt_Share.md
 ================
 # EphemeralArt - Temporary Art Sharing Platform
@@ -862,6 +625,154 @@ A mobile app for art students to share works-in-progress in low-pressure, epheme
 - Teachers create classes and distribute join codes
 - Completely ephemeral - no private saving options
 - No user profiles or skill levels
+
+================
+File: _docs/oldbraindumpSolo.md
+================
+# Project Name
+ArtCritique AI: Solo Tutor
+
+## Project Description
+An ephemeral, low-stakes mobile application for art students and hobbyists to build confidence. This project focuses on adding a **private, AI-powered "Solo Tutor"** to the existing app. This feature provides a one-on-one chat interface where a user can get personalized guidance on their art. The tutor uses a Retrieval-Augmented Generation (RAG) system to learn from the user's private chat history, offering contextual, evolving feedback that acts as a dedicated art coach.
+
+## Target Audience
+- **Primary Persona (Alex):** A busy working professional (30s) new to art. He uses the existing **Class Feed** for low-stakes peer interaction and the new **Solo Tutor** for private, in-depth learning, asking questions, and building confidence without judgment.
+
+## Desired Features
+### Core App Structure & Navigation
+- [ ] A new "Solo" tab will be added to the main tab bar in `app/(tabs)/_layout.tsx`.
+- [ ] This tab will navigate to a new `app/(tabs)/solo.tsx` screen, which will host the AI chat interface.
+
+### AI-Powered Solo Tutor (New Feature)
+- [ ] **Chat Interface:**
+    - [ ] The "Solo Feed" will be a single, continuous chat log.
+    - [ ] Users can initiate conversation by sending a text-only message or by uploading an image with an accompanying text prompt.
+    - [ ] A loading indicator will be displayed while the AI is generating a response.
+- [ ] **Multimodal AI Interaction:**
+    - [ ] The AI tutor must be able to analyze user-uploaded images. This will be implemented using a multimodal model like **OpenAI's GPT-4o**.
+    - [ ] **Image Upload Workflow:** When a user uploads an image in the chat, the app will first upload the file to Supabase Storage. This is a standard industry practice that provides a secure, permanent URL for the media file, which is then used for the API call.
+
+### Backend & RAG Implementation
+- [ ] **Database Schema (Supabase):**
+    - [ ] Create a new Supabase migration to add two tables:
+        - [ ] **`solo_ai_chats`**: Acts as a container for each conversation thread (Columns: `id`, `user_id`, `created_at`, `title`).
+        - [ ] **`solo_ai_messages`**: Stores every message bubble (Columns: `id`, `chat_id`, `role`, `content`, `image_url` (nullable), `embedding`).
+    - [ ] The `solo_ai_messages.embedding` column will be of type `vector` and will utilize the `pgvector` extension.
+- [ ] **RAG on Textual Analysis (MVP Strategy):**
+    - [ ] For the MVP, RAG will be performed on the **text content** of the conversation (user prompts and the AI's textual analysis of images). Image data itself will not be converted into vectors for retrieval.
+    - [ ] When an image is analyzed, the AI's rich textual feedback is converted to a text embedding and stored for future retrieval.
+- [ ] **Supabase Edge Function (`get-ai-response`):**
+    - [ ] This function will contain the complete, self-contained RAG logic:
+        1.  **Receive Request:** The function is triggered with the user's new prompt, the `chat_id`, and an optional `image_url`.
+        2.  **Generate Query Embedding:** Create a text embedding from the user's new text prompt.
+        3.  **Retrieve Relevant History (Long-Term Memory):** Perform a vector similarity search on the `solo_ai_messages` table to find the most relevant historical messages from the user's entire chat history.
+        4.  **Retrieve Recent Conversation (Short-Term Memory):** Fetch the last 4-6 messages from the current `chat_id` to maintain the immediate conversational flow.
+        5.  **Augment the Prompt:** Construct a final, enhanced prompt for the LLM. This prompt will include the user's current question, the *retrieved historical messages*, and the *recent conversation messages*.
+        6.  **Generate Response (Multimodal Step):** Send the augmented prompt (and the `image_url`, if provided) to the OpenAI GPT-4o API. The model will use the text context to inform its analysis of the image.
+        7.  **Persist Conversation:** After receiving the AI's response, save both the user's message and the AI's response as new rows in the `solo_ai_messages` table. This includes generating and storing a new text embedding for each message to make them retrievable in the future.
+
+### Synthetic Demo Data
+- [ ] A new `seed.sql` script will be created to populate the Solo Tutor with a rich, **five-chat history** for a demo user ("Alex").
+- [ ] The synthetic chats will cover a range of topics (e.g., hand proportions, perspective basics, color theory, composition) and will be structured to build on each other, allowing a demo to compellingly showcase the RAG system's "memory" and personalization.
+- [ ] The seed script must include pre-computed embeddings for the synthetic messages.
+
+## Design Requests
+- [ ] **Tab Bar:** The bottom tab bar will contain three items: "Class Feed," "Camera," and "Solo Feed," maintaining consistency with the current app structure.
+- [ ] **Solo Tutor Chat UI:**
+    - [ ] The chat interface should reuse existing components (`GlassMorphismCard`, `ThemedText`).
+    - [ ] Chat bubbles for the user and AI should be clearly distinguishable (e.g., right-aligned for the user, left-aligned for the AI).
+    - [ ] When an image is part of a message, it should be displayed in a card format within the chat log, **not** as a full-screen background.
+- [ ] **Chat Input Area:**
+    - [ ] The text input field at the bottom of the screen will be contained within a glass morphism card.
+    - [ ] This card will also feature distinct, tappable icons for **"Take a Picture"** and **"Upload a Picture"**.
+
+## Other Notes
+- **Key Technical Decision:** The entire backend, including the vector database, will be handled by **Supabase** and its `pgvector` extension.
+- **Future RAG Enhancements:** While the MVP uses text-based RAG, the architecture is designed to potentially incorporate multimodal embedding models like CLIP in the future for more advanced image-based retrieval.
+- **Error Handling:** The chat UI must gracefully handle potential API errors from OpenAI or the Edge Function, displaying a user-friendly message.
+
+================
+File: _docs/oldbraindumpSolo2.md
+================
+# Project Name
+ArtCritique AI: Solo Tutor
+
+## Project Description
+An ephemeral, low-stakes mobile application for art students and hobbyists to build confidence. This project focuses on adding a **private, AI-powered "Solo Tutor"** to the existing app. This feature provides a one-on-one chat interface where a user can get personalized guidance on their art. The tutor uses a Retrieval-Augmented Generation (RAG) system to learn from the user's private chat history, offering contextual, evolving feedback that acts as a dedicated art coach.
+
+## Target Audience
+- **Primary Persona (Alex):** A busy working professional (30s) new to art. He uses the existing **Class Feed** for low-stakes peer interaction and the new **Solo Tutor** for private, in-depth learning, asking questions, and building confidence without judgment.
+
+## Desired Features
+### Core App Structure & Navigation
+- [ ] A new "Solo" tab will be added to the main tab bar in `app/(tabs)/_layout.tsx`.
+- [ ] This tab will navigate to a new `app/(tabs)/solo.tsx` screen, which will host the AI chat interface.
+
+### AI-Powered Solo Tutor (New Feature)
+- [ ] **Chat Interface:**
+    - [ ] The "Solo Feed" will be a single, continuous chat log.
+    - [ ] Users can initiate conversation by sending a text-only message or by uploading an image with an accompanying text prompt.
+    - [ ] A loading indicator will be displayed while the AI is generating a response.
+- [ ] **Multimodal AI Interaction:**
+    - [ ] The AI tutor will use a multimodal model like **OpenAI's GPT-4o** to analyze user-uploaded images.
+    - [ ] **Image Upload Workflow:** When a user uploads an image, the app will first upload the file to Supabase Storage. This is a standard industry practice that provides a secure, permanent URL for the media file, which is then used in the API call to the AI.
+
+### Backend & RAG Implementation
+- [ ] **Database Schema (Supabase):**
+    - [ ] A new Supabase migration will be created to add the following tables. The `pgvector` extension must be enabled in Supabase to support the `vector` type.
+
+      ```sql
+      -- Table to act as a container for each conversation thread
+      CREATE TABLE solo_ai_chats (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+          title TEXT, -- A user-definable title for the chat, e.g., "Hand Study Feedback"
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+
+      -- Table to store every individual message within a chat
+      CREATE TABLE solo_ai_messages (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          chat_id UUID NOT NULL REFERENCES solo_ai_chats(id) ON DELETE CASCADE,
+          role TEXT NOT NULL CHECK (role IN ('user', 'assistant')), -- 'user' for Alex, 'assistant' for the AI
+          content TEXT NOT NULL, -- The text of the message
+          image_url TEXT, -- Optional URL for an image associated with the message
+          embedding vector(1536), -- Stores the embedding for RAG. Dimension 1536 matches 'text-embedding-3-small'
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+      ```
+- [ ] **Prompt Engineering Strategy:**
+    - [ ] A detailed **System Prompt** will be designed to instruct the AI on its persona ('Canvas', a supportive tutor). It will also instruct the AI to use specific art terminology (e.g., 'composition', 'shading', 'perspective') to ensure its responses are not only helpful to the user but also generate rich text content that is ideal for creating powerful embeddings for RAG.
+- [ ] **Supabase Edge Function (`get-ai-response`):**
+    - [ ] This function will contain the complete, self-contained RAG logic:
+        1.  **Receive Request:** The function is triggered with the user's new prompt, the `chat_id`, and an optional `image_url`.
+        2.  **Generate Query Embedding:** Call the **OpenAI `text-embedding-3-small` model** to convert the user's new text prompt into a vector embedding.
+        3.  **Retrieve Relevant History (Long-Term Memory):** Use the newly generated embedding to perform a vector similarity search within the `solo_ai_messages` table (using `pgvector`'s capabilities) to find the most relevant historical messages.
+        4.  **Retrieve Recent Conversation (Short-Term Memory):** Fetch the last 4-6 messages from the current `chat_id` to maintain the immediate conversational flow.
+        5.  **Augment the Prompt:** Construct a final, enhanced prompt for the LLM. This prompt will include the user's current question, the *retrieved historical messages*, and the *recent conversation messages*.
+        6.  **Generate Response (Multimodal Step):** Send the augmented prompt (and the `image_url`, if provided) to the **OpenAI `GPT-4o` API**.
+        7.  **Persist Conversation:** After receiving the AI's response, save both the user's message and the AI's response as new rows in the `solo_ai_messages` table. This includes calling the `text-embedding-3-small` model again to create and store a new embedding for each message.
+
+### Synthetic Demo Data
+- [ ] A new `seed.sql` script will be created to populate the Solo Tutor with a rich, **five-chat history** for a demo user ("Alex").
+- [ ] The synthetic chats will cover a range of topics (e.g., hand proportions, perspective, color theory, composition) and will be structured to build on each other, allowing a demo to compellingly showcase the RAG system's "memory."
+- [ ] The seed script must include pre-computed embeddings for the synthetic messages.
+
+## Design Requests
+- [ ] **Tab Bar:** The bottom tab bar will contain three items: "Class Feed," "Camera," and "Solo Feed."
+- [ ] **Solo Tutor Chat UI:**
+    - [ ] The chat interface should reuse existing components (`GlassMorphismCard`, `ThemedText`).
+    - [ ] Chat bubbles for the user and AI should be clearly distinguishable (e.g., right-aligned for the user, left-aligned for the AI).
+    - [ ] When an image is part of a message, it should be displayed in a card format within the chat log, **not** as a full-screen background.
+- [ ] **Chat Input Area:**
+    - [ ] The text input field at the bottom of the screen will be contained within a glass morphism card.
+    - [ ] This card will also feature a distinct, tappable icon to **upload a picture** from the user's gallery. The "take a picture" option will be omitted from the chat UI to keep it clean.
+
+## Other Notes
+- **Technology Stack Clarification:** Embeddings will be **created** by the `OpenAI text-embedding-3-small` model. They will be **stored and searched** within Supabase using the `pgvector` extension.
+- **Future RAG Enhancements:** While the MVP uses text-based RAG, the architecture is designed to potentially incorporate multimodal embedding models like CLIP in the future.
+- **Error Handling:** The chat UI must gracefully handle potential API errors from OpenAI or the Edge Function, displaying a user-friendly message.
 
 ================
 File: _docs/repomix.md
@@ -5399,6 +5310,483 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 }));
 
 ================
+File: supabase/functions/get-ai-response/index.ts
+================
+/**
+ * Solo AI Tutor Edge Function
+ * 
+ * This Supabase Edge Function implements the complete RAG (Retrieval-Augmented Generation) logic
+ * for the Solo AI Tutor feature. It combines vector similarity search with OpenAI's GPT-4o
+ * for intelligent, context-aware art tutoring conversations.
+ * 
+ * Features:
+ * - OpenAI text-embedding-3-small for generating embeddings
+ * - Vector similarity search using pgvector for long-term memory
+ * - Recent conversation context for short-term memory
+ * - GPT-4o multimodal API for text and image analysis
+ * - Dual message persistence with automatic embedding generation
+ * - Comprehensive error handling and logging
+ */
+
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
+
+// Types for the request and response
+interface SoloAIRequest {
+  chat_id: string;
+  user_message: string;
+  image_url?: string;
+  user_id: string;
+}
+
+interface SoloAIResponse {
+  success: boolean;
+  ai_response?: string;
+  user_message_id?: string;
+  ai_message_id?: string;
+  error?: string;
+  processing_time_ms?: number;
+}
+
+interface DatabaseMessage {
+  id: string;
+  chat_id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  image_url?: string;
+  embedding?: number[];
+  created_at: string;
+}
+
+interface OpenAIEmbeddingResponse {
+  data: Array<{
+    embedding: number[];
+  }>;
+}
+
+interface OpenAIChatResponse {
+  choices: Array<{
+    message: {
+      content: string;
+    };
+  }>;
+}
+
+// Initialize Supabase client with service role for database operations
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const openaiApiKey = Deno.env.get('OPENAI_API_KEY')!;
+
+console.log('🚀 Solo AI Function - Initializing with environment variables');
+console.log('📍 Supabase URL:', supabaseUrl ? 'Set ✓' : 'Missing ❌');
+console.log('🔑 Service Key:', supabaseServiceKey ? 'Set ✓' : 'Missing ❌');
+console.log('🤖 OpenAI Key:', openaiApiKey ? 'Set ✓' : 'Missing ❌');
+
+if (!supabaseUrl || !supabaseServiceKey || !openaiApiKey) {
+  throw new Error('Missing required environment variables: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, OPENAI_API_KEY');
+}
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+/**
+ * Generate text embedding using OpenAI text-embedding-3-small model
+ */
+async function generateEmbedding(text: string): Promise<number[]> {
+  console.log('📊 Solo AI Function - Generating embedding for text length:', text.length);
+  
+  try {
+    const response = await fetch('https://api.openai.com/v1/embeddings', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openaiApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'text-embedding-3-small',
+        input: text,
+        encoding_format: 'float',
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Solo AI Function - OpenAI embedding error:', response.status, errorText);
+      throw new Error(`OpenAI embedding API error: ${response.status}`);
+    }
+
+    const data: OpenAIEmbeddingResponse = await response.json();
+    const embedding = data.data[0].embedding;
+    
+    console.log('✅ Solo AI Function - Generated embedding with dimension:', embedding.length);
+    return embedding;
+  } catch (error) {
+    console.error('❌ Solo AI Function - Embedding generation failed:', error);
+    throw new Error(`Failed to generate embedding: ${error.message}`);
+  }
+}
+
+/**
+ * Perform vector similarity search for relevant historical context
+ */
+async function searchRelevantHistory(
+  queryEmbedding: number[], 
+  chatId: string, 
+  userId: string,
+  limit: number = 5
+): Promise<DatabaseMessage[]> {
+  console.log('🔍 Solo AI Function - Searching relevant history for chat:', chatId);
+  console.log('📊 Solo AI Function - Query embedding dimension:', queryEmbedding.length);
+  
+  try {
+    // Convert embedding array to pgvector format
+    const embeddingString = '[' + queryEmbedding.join(',') + ']';
+    
+    // Search for relevant messages across all user's chats using cosine similarity
+    const { data, error } = await supabase
+      .rpc('search_similar_messages', {
+        query_embedding: embeddingString,
+        similarity_threshold: 0.7,
+        match_count: limit,
+        target_user_id: userId
+      });
+
+    if (error) {
+      console.error('❌ Solo AI Function - Database search error:', error);
+      throw new Error(`Database search failed: ${error.message}`);
+    }
+
+    console.log('📋 Solo AI Function - Found', data?.length || 0, 'relevant historical messages');
+    return data || [];
+  } catch (error) {
+    console.error('❌ Solo AI Function - Relevant history search failed:', error);
+    throw new Error(`Relevant history search failed: ${error.message}`);
+  }
+}
+
+/**
+ * Fetch recent conversation messages for short-term memory
+ */
+async function getRecentConversation(chatId: string, limit: number = 6): Promise<DatabaseMessage[]> {
+  console.log('💬 Solo AI Function - Fetching recent conversation for chat:', chatId);
+  
+  try {
+    const { data, error } = await supabase
+      .from('solo_ai_messages')
+      .select('*')
+      .eq('chat_id', chatId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('❌ Solo AI Function - Recent conversation fetch error:', error);
+      throw new Error(`Failed to fetch recent conversation: ${error.message}`);
+    }
+
+    // Reverse to get chronological order (oldest first)
+    const messages = (data || []).reverse();
+    console.log('📚 Solo AI Function - Retrieved', messages.length, 'recent messages');
+    return messages;
+  } catch (error) {
+    console.error('❌ Solo AI Function - Recent conversation fetch failed:', error);
+    throw new Error(`Recent conversation fetch failed: ${error.message}`);
+  }
+}
+
+/**
+ * Canvas AI Tutor System Prompt
+ */
+const CANVAS_SYSTEM_PROMPT = `You are Canvas, a supportive and encouraging AI art tutor. Your purpose is to help art students improve their skills through constructive feedback, technical guidance, and creative inspiration.
+
+Your personality:
+- Warm, encouraging, and patient
+- Knowledgeable about art techniques, composition, color theory, and artistic principles
+- Focused on growth and learning rather than criticism
+- Use art-specific terminology naturally (composition, value, hue, saturation, perspective, etc.)
+
+Your responses should:
+- Be encouraging and constructive
+- Provide specific, actionable feedback when analyzing artwork
+- Ask thoughtful questions to help students think critically about their work
+- Reference relevant art techniques and principles
+- Build on previous conversations and lessons learned
+- Keep responses concise but informative (1-2 paragraphs max)
+
+When analyzing images:
+- Comment on composition, use of color, technique, and overall impact
+- Suggest specific areas for improvement
+- Acknowledge what's working well
+- Provide practical next steps or exercises
+
+Remember: You're here to inspire confidence and growth in budding artists.`;
+
+/**
+ * Generate AI response using OpenAI GPT-4o with context
+ */
+async function generateAIResponse(
+  userMessage: string,
+  imageUrl: string | undefined,
+  relevantHistory: DatabaseMessage[],
+  recentConversation: DatabaseMessage[]
+): Promise<string> {
+  console.log('🤖 Solo AI Function - Generating AI response');
+  console.log('📝 Solo AI Function - User message length:', userMessage.length);
+  console.log('🖼️ Solo AI Function - Has image:', !!imageUrl);
+  console.log('📚 Solo AI Function - Relevant history count:', relevantHistory.length);
+  console.log('💬 Solo AI Function - Recent conversation count:', recentConversation.length);
+
+  try {
+    // Construct context from relevant history
+    let contextPrompt = '';
+    if (relevantHistory.length > 0) {
+      contextPrompt += '\n\nRelevant conversation history:\n';
+      relevantHistory.forEach((msg, index) => {
+        contextPrompt += `${msg.role === 'user' ? 'Student' : 'Canvas'}: ${msg.content}\n`;
+      });
+    }
+
+    // Add recent conversation for immediate context
+    if (recentConversation.length > 0) {
+      contextPrompt += '\n\nRecent conversation:\n';
+      recentConversation.forEach((msg, index) => {
+        contextPrompt += `${msg.role === 'user' ? 'Student' : 'Canvas'}: ${msg.content}\n`;
+      });
+    }
+
+    // Prepare messages for OpenAI
+    const messages = [
+      {
+        role: 'system',
+        content: CANVAS_SYSTEM_PROMPT + contextPrompt
+      },
+      {
+        role: 'user',
+        content: imageUrl ? [
+          { type: 'text', text: userMessage },
+          { type: 'image_url', image_url: { url: imageUrl } }
+        ] : userMessage
+      }
+    ];
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openaiApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages,
+        max_tokens: 500,
+        temperature: 0.8,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Solo AI Function - OpenAI chat error:', response.status, errorText);
+      throw new Error(`OpenAI chat API error: ${response.status}`);
+    }
+
+    const data: OpenAIChatResponse = await response.json();
+    const aiResponse = data.choices[0].message.content;
+    
+    console.log('✅ Solo AI Function - Generated AI response length:', aiResponse.length);
+    return aiResponse;
+  } catch (error) {
+    console.error('❌ Solo AI Function - AI response generation failed:', error);
+    throw new Error(`Failed to generate AI response: ${error.message}`);
+  }
+}
+
+/**
+ * Save message to database with embedding
+ */
+async function saveMessage(
+  chatId: string,
+  role: 'user' | 'assistant',
+  content: string,
+  imageUrl?: string
+): Promise<string> {
+  console.log('💾 Solo AI Function - Saving', role, 'message to database');
+  
+  try {
+    // Generate embedding for the message content
+    const embedding = await generateEmbedding(content);
+    
+    // Insert message into database
+    const { data, error } = await supabase
+      .from('solo_ai_messages')
+      .insert({
+        chat_id: chatId,
+        role,
+        content,
+        image_url: imageUrl,
+        embedding
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('❌ Solo AI Function - Message save error:', error);
+      throw new Error(`Failed to save message: ${error.message}`);
+    }
+
+    console.log('✅ Solo AI Function - Saved', role, 'message with ID:', data.id);
+    return data.id;
+  } catch (error) {
+    console.error('❌ Solo AI Function - Message save failed:', error);
+    throw new Error(`Message save failed: ${error.message}`);
+  }
+}
+
+/**
+ * Main Edge Function handler
+ */
+Deno.serve(async (req) => {
+  const startTime = Date.now();
+  console.log('🚀 Solo AI Function - Request received at', new Date().toISOString());
+
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+      },
+    });
+  }
+
+  if (req.method !== 'POST') {
+    console.log('❌ Solo AI Function - Invalid method:', req.method);
+    return new Response(
+      JSON.stringify({ success: false, error: 'Method not allowed' }),
+      { 
+        status: 405,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      }
+    );
+  }
+
+  try {
+    // Parse request body
+    const requestBody: SoloAIRequest = await req.json();
+    console.log('📥 Solo AI Function - Parsed request:', {
+      chat_id: requestBody.chat_id,
+      user_id: requestBody.user_id,
+      message_length: requestBody.user_message?.length || 0,
+      has_image: !!requestBody.image_url
+    });
+
+    // Validate required fields
+    if (!requestBody.chat_id || !requestBody.user_message || !requestBody.user_id) {
+      console.log('❌ Solo AI Function - Missing required fields');
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Missing required fields: chat_id, user_message, user_id' 
+        }),
+        { 
+          status: 400,
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        }
+      );
+    }
+
+    // Step 1: Generate embedding for user's message
+    console.log('📊 Solo AI Function - Step 1: Generating query embedding');
+    const queryEmbedding = await generateEmbedding(requestBody.user_message);
+
+    // Step 2: Search for relevant historical context
+    console.log('🔍 Solo AI Function - Step 2: Searching relevant history');
+    const relevantHistory = await searchRelevantHistory(
+      queryEmbedding,
+      requestBody.chat_id,
+      requestBody.user_id
+    );
+
+    // Step 3: Get recent conversation context
+    console.log('💬 Solo AI Function - Step 3: Fetching recent conversation');
+    const recentConversation = await getRecentConversation(requestBody.chat_id);
+
+    // Step 4: Generate AI response with context
+    console.log('🤖 Solo AI Function - Step 4: Generating AI response');
+    const aiResponse = await generateAIResponse(
+      requestBody.user_message,
+      requestBody.image_url,
+      relevantHistory,
+      recentConversation
+    );
+
+    // Step 5: Save user message
+    console.log('💾 Solo AI Function - Step 5: Saving user message');
+    const userMessageId = await saveMessage(
+      requestBody.chat_id,
+      'user',
+      requestBody.user_message,
+      requestBody.image_url
+    );
+
+    // Step 6: Save AI response
+    console.log('💾 Solo AI Function - Step 6: Saving AI response');
+    const aiMessageId = await saveMessage(
+      requestBody.chat_id,
+      'assistant',
+      aiResponse
+    );
+
+    const processingTime = Date.now() - startTime;
+    console.log('✅ Solo AI Function - Request completed successfully in', processingTime, 'ms');
+
+    const response: SoloAIResponse = {
+      success: true,
+      ai_response: aiResponse,
+      user_message_id: userMessageId,
+      ai_message_id: aiMessageId,
+      processing_time_ms: processingTime
+    };
+
+    return new Response(
+      JSON.stringify(response),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      }
+    );
+
+  } catch (error) {
+    const processingTime = Date.now() - startTime;
+    console.error('❌ Solo AI Function - Request failed after', processingTime, 'ms:', error);
+
+    const errorResponse: SoloAIResponse = {
+      success: false,
+      error: error.message || 'Internal server error',
+      processing_time_ms: processingTime
+    };
+
+    return new Response(
+      JSON.stringify(errorResponse),
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      }
+    );
+  }
+});
+
+================
 File: supabase/migrations/20250101000001_auth_tables.sql
 ================
 -- User authentication and profiles migration
@@ -5778,6 +6166,195 @@ INNER JOIN public.users u ON af.user_id = u.id;
 -- Grant permissions
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.ai_feedback TO authenticated;
 GRANT SELECT ON public.ai_feedback_with_posts TO authenticated;
+
+================
+File: supabase/migrations/20250103000001_create_solo_tables.sql
+================
+-- Solo Tutor Database Schema Migration
+-- This migration creates the database schema for the Solo AI Tutor feature including:
+-- - Enabling pgvector extension for embedding storage
+-- - Creating solo_ai_chats table for conversation threads
+-- - Creating solo_ai_messages table for individual messages with embeddings
+-- - Setting up Row Level Security (RLS) policies
+-- - Creating vector similarity search function for RAG
+
+-- Enable pgvector extension for vector embeddings storage and similarity search
+CREATE EXTENSION IF NOT EXISTS vector;
+
+-- Create solo_ai_chats table for conversation threads
+CREATE TABLE IF NOT EXISTS public.solo_ai_chats (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  title TEXT, -- Optional user-defined title for the chat thread
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create indexes for performance on solo_ai_chats
+CREATE INDEX IF NOT EXISTS solo_ai_chats_user_id_idx ON public.solo_ai_chats(user_id);
+CREATE INDEX IF NOT EXISTS solo_ai_chats_created_at_idx ON public.solo_ai_chats(created_at);
+CREATE INDEX IF NOT EXISTS solo_ai_chats_updated_at_idx ON public.solo_ai_chats(updated_at);
+
+-- Enable RLS on solo_ai_chats table
+ALTER TABLE public.solo_ai_chats ENABLE ROW LEVEL SECURITY;
+
+-- Create solo_ai_messages table for individual messages with embeddings
+CREATE TABLE IF NOT EXISTS public.solo_ai_messages (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  chat_id UUID NOT NULL REFERENCES public.solo_ai_chats(id) ON DELETE CASCADE,
+  role TEXT NOT NULL CHECK (role IN ('user', 'assistant')), -- 'user' for student messages, 'assistant' for AI responses
+  content TEXT NOT NULL, -- The message content text
+  image_url TEXT, -- Optional image URL for multimodal messages
+  embedding vector(1536), -- Text embedding vector for RAG (matches text-embedding-3-small dimension)
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  -- Constraints for data integrity
+  CONSTRAINT solo_ai_messages_content_not_empty CHECK (length(trim(content)) > 0)
+);
+
+-- Create indexes for performance on solo_ai_messages
+CREATE INDEX IF NOT EXISTS solo_ai_messages_chat_id_idx ON public.solo_ai_messages(chat_id);
+CREATE INDEX IF NOT EXISTS solo_ai_messages_role_idx ON public.solo_ai_messages(role);
+CREATE INDEX IF NOT EXISTS solo_ai_messages_created_at_idx ON public.solo_ai_messages(created_at);
+
+-- Create vector similarity search index for RAG functionality
+CREATE INDEX IF NOT EXISTS solo_ai_messages_embedding_idx ON public.solo_ai_messages 
+USING ivfflat (embedding vector_cosine_ops)
+WITH (lists = 100);
+
+-- Enable RLS on solo_ai_messages table
+ALTER TABLE public.solo_ai_messages ENABLE ROW LEVEL SECURITY;
+
+-- Add updated_at trigger for solo_ai_chats (reuse existing function)
+CREATE TRIGGER solo_ai_chats_updated_at
+  BEFORE UPDATE ON public.solo_ai_chats
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_updated_at();
+
+-- Create vector similarity search function for RAG
+CREATE OR REPLACE FUNCTION public.search_similar_messages(
+  query_embedding vector(1536),
+  similarity_threshold float DEFAULT 0.7,
+  match_count int DEFAULT 5,
+  target_user_id uuid DEFAULT NULL
+)
+RETURNS TABLE (
+  id uuid,
+  chat_id uuid,
+  role text,
+  content text,
+  image_url text,
+  similarity float,
+  created_at timestamp with time zone
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    sam.id,
+    sam.chat_id,
+    sam.role,
+    sam.content,
+    sam.image_url,
+    -- Calculate cosine similarity (1 - cosine distance)
+    1 - (sam.embedding <=> query_embedding) as similarity,
+    sam.created_at
+  FROM public.solo_ai_messages sam
+  INNER JOIN public.solo_ai_chats sac ON sam.chat_id = sac.id
+  WHERE 
+    -- Only include messages where similarity exceeds threshold
+    1 - (sam.embedding <=> query_embedding) > similarity_threshold
+    -- Filter by user if specified
+    AND (target_user_id IS NULL OR sac.user_id = target_user_id)
+    -- Only include messages that have embeddings
+    AND sam.embedding IS NOT NULL
+  ORDER BY sam.embedding <=> query_embedding
+  LIMIT match_count;
+END;
+$$;
+
+-- Grant execution permissions for the search function
+GRANT EXECUTE ON FUNCTION public.search_similar_messages(vector, float, int, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.search_similar_messages(vector, float, int, uuid) TO service_role;
+
+-- RLS policies for solo_ai_chats table
+
+-- Users can view their own chat threads only
+CREATE POLICY "Users can view own solo chats" ON public.solo_ai_chats
+FOR SELECT 
+TO authenticated
+USING (auth.uid() = user_id);
+
+-- Users can create their own chat threads
+CREATE POLICY "Users can create own solo chats" ON public.solo_ai_chats
+FOR INSERT 
+TO authenticated
+WITH CHECK (auth.uid() = user_id);
+
+-- Users can update their own chat threads (e.g., change title)
+CREATE POLICY "Users can update own solo chats" ON public.solo_ai_chats
+FOR UPDATE 
+TO authenticated
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
+
+-- Users can delete their own chat threads
+CREATE POLICY "Users can delete own solo chats" ON public.solo_ai_chats
+FOR DELETE 
+TO authenticated
+USING (auth.uid() = user_id);
+
+-- RLS policies for solo_ai_messages table
+
+-- Users can view messages from their own chats only
+CREATE POLICY "Users can view own solo messages" ON public.solo_ai_messages
+FOR SELECT 
+TO authenticated
+USING (
+  chat_id IN (
+    SELECT id FROM public.solo_ai_chats WHERE user_id = auth.uid()
+  )
+);
+
+-- Users can create messages in their own chats
+CREATE POLICY "Users can create solo messages in own chats" ON public.solo_ai_messages
+FOR INSERT 
+TO authenticated
+WITH CHECK (
+  chat_id IN (
+    SELECT id FROM public.solo_ai_chats WHERE user_id = auth.uid()
+  )
+);
+
+-- Users can update messages in their own chats (for editing functionality)
+CREATE POLICY "Users can update solo messages in own chats" ON public.solo_ai_messages
+FOR UPDATE 
+TO authenticated
+USING (
+  chat_id IN (
+    SELECT id FROM public.solo_ai_chats WHERE user_id = auth.uid()
+  )
+)
+WITH CHECK (
+  chat_id IN (
+    SELECT id FROM public.solo_ai_chats WHERE user_id = auth.uid()
+  )
+);
+
+-- Users can delete messages from their own chats
+CREATE POLICY "Users can delete solo messages in own chats" ON public.solo_ai_messages
+FOR DELETE 
+TO authenticated
+USING (
+  chat_id IN (
+    SELECT id FROM public.solo_ai_chats WHERE user_id = auth.uid()
+  )
+);
+
+-- Grant permissions for authenticated users
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.solo_ai_chats TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.solo_ai_messages TO authenticated;
 
 ================
 File: supabase/.gitignore
@@ -6512,6 +7089,97 @@ Based on PRD: `prd-veo-creative-image-messenger.md`
   - [ ] 5.10 Create recovery mechanisms for partial failures and interrupted processes
 
 ================
+File: deno.lock
+================
+{
+  "version": "5",
+  "redirects": {
+    "https://esm.sh/@supabase/node-fetch@^2.6.14?target=denonext": "https://esm.sh/@supabase/node-fetch@2.6.15?target=denonext",
+    "https://esm.sh/bufferutil@^4.0.1?target=denonext": "https://esm.sh/bufferutil@4.0.9?target=denonext",
+    "https://esm.sh/node-gyp-build@^4.3.0?target=denonext": "https://esm.sh/node-gyp-build@4.8.4?target=denonext",
+    "https://esm.sh/tr46@~0.0.3?target=denonext": "https://esm.sh/tr46@0.0.3?target=denonext",
+    "https://esm.sh/utf-8-validate@%3E=5.0.2?target=denonext": "https://esm.sh/utf-8-validate@6.0.5?target=denonext",
+    "https://esm.sh/webidl-conversions@^3.0.0?target=denonext": "https://esm.sh/webidl-conversions@3.0.1?target=denonext",
+    "https://esm.sh/whatwg-url@^5.0.0?target=denonext": "https://esm.sh/whatwg-url@5.0.0?target=denonext",
+    "https://esm.sh/ws@^8.18.2?target=denonext": "https://esm.sh/ws@8.18.2?target=denonext"
+  },
+  "remote": {
+    "https://esm.sh/@supabase/auth-js@2.70.0/denonext/auth-js.mjs": "51f137a91dc64489abf1a500582918ee5042e1e0b64c167f26a3b6d2f807f43c",
+    "https://esm.sh/@supabase/functions-js@2.4.4/denonext/functions-js.mjs": "7adeb257410ef3c4a8a1eb9b4ff416c0075d1c32860ca04913c8a9dace1de6a6",
+    "https://esm.sh/@supabase/node-fetch@2.6.15/denonext/node-fetch.mjs": "0bae9052231f4f6dbccc7234d05ea96923dbf967be12f402764580b6bf9f713d",
+    "https://esm.sh/@supabase/node-fetch@2.6.15?target=denonext": "4d28c4ad97328403184353f68434f2b6973971507919e9150297413664919cf3",
+    "https://esm.sh/@supabase/postgrest-js@1.19.4/denonext/postgrest-js.mjs": "2073b5552ba10c7a8302bffffae771e3aede1daf833382355dae239fb0ab2576",
+    "https://esm.sh/@supabase/realtime-js@2.11.10/denonext/realtime-js.mjs": "23ab7d3a2cda22a65d0ed48e8adea547cc967bf4d2e32fd0af522563bdf77c24",
+    "https://esm.sh/@supabase/storage-js@2.7.1/denonext/storage-js.mjs": "73ac8cdc95cfcd794fe603dbd7ce06d539ab51538ae6467eabe0f9cc26c993aa",
+    "https://esm.sh/@supabase/supabase-js@2.50.0": "08871b551234bdcaf766bf2f864b8c00b6d7f92a66d23045596624e4b6c5d762",
+    "https://esm.sh/@supabase/supabase-js@2.50.0/denonext/supabase-js.mjs": "f123d5a83e021b6ddd0ab4b3795c5ba5d3d27117d2e5844298ce5f9ba216311c",
+    "https://esm.sh/bufferutil@4.0.9/denonext/bufferutil.mjs": "13dca4d5bb2c68cbe119f880fa3bd785b9a81a8e02e0834dae604b4b85295cd8",
+    "https://esm.sh/bufferutil@4.0.9?target=denonext": "e32574569ab438facfcc3f412c659b0719bbf05477136ca176938c9a3ac45125",
+    "https://esm.sh/node-gyp-build@4.8.4/denonext/node-gyp-build.mjs": "9a86f2d044fc77bd60aaa3d697c2ba1b818da5fb1b9aaeedec59a40b8e908803",
+    "https://esm.sh/node-gyp-build@4.8.4?target=denonext": "261a6cedf1fdbf159798141ba1e2311ac1510682c5c8b55dacc8cf5fdee4aa06",
+    "https://esm.sh/tr46@0.0.3/denonext/tr46.mjs": "5753ec0a99414f4055f0c1f97691100f13d88e48a8443b00aebb90a512785fa2",
+    "https://esm.sh/tr46@0.0.3?target=denonext": "19cb9be0f0d418a0c3abb81f2df31f080e9540a04e43b0f699bce1149cba0cbb",
+    "https://esm.sh/utf-8-validate@6.0.5/denonext/utf-8-validate.mjs": "66b8ea532a0c745068f5b96ddb1bae332c3036703243541d2e89e66331974d98",
+    "https://esm.sh/utf-8-validate@6.0.5?target=denonext": "071bc33ba1a58297e23a34d69dd589fd06df04b0f373b382ff5da544a623f271",
+    "https://esm.sh/webidl-conversions@3.0.1/denonext/webidl-conversions.mjs": "54b5c2d50a294853c4ccebf9d5ed8988c94f4e24e463d84ec859a866ea5fafec",
+    "https://esm.sh/webidl-conversions@3.0.1?target=denonext": "4e20318d50528084616c79d7b3f6e7f0fe7b6d09013bd01b3974d7448d767e29",
+    "https://esm.sh/whatwg-url@5.0.0/denonext/whatwg-url.mjs": "29b16d74ee72624c915745bbd25b617cfd2248c6af0f5120d131e232a9a9af79",
+    "https://esm.sh/whatwg-url@5.0.0?target=denonext": "f001a2cadf81312d214ca330033f474e74d81a003e21e8c5d70a1f46dc97b02d",
+    "https://esm.sh/ws@8.18.2/denonext/ws.mjs": "b9211ecb1511b09f418c1330920c66800b66710b2cd2997b64b7e0525bd895d2",
+    "https://esm.sh/ws@8.18.2?target=denonext": "2ee7b1bb11543dda3e7e1c685ad8599b6f18aea785302374c3def5da468a1e51"
+  },
+  "workspace": {
+    "packageJson": {
+      "dependencies": [
+        "npm:@babel/core@^7.25.2",
+        "npm:@expo-google-fonts/instrument-serif@0.4",
+        "npm:@expo-google-fonts/montserrat@~0.4.1",
+        "npm:@expo/vector-icons@^14.1.0",
+        "npm:@react-navigation/bottom-tabs@^7.3.10",
+        "npm:@react-navigation/elements@^2.3.8",
+        "npm:@react-navigation/native@^7.1.6",
+        "npm:@supabase/supabase-js@^2.50.0",
+        "npm:@types/react@~19.0.10",
+        "npm:base64-arraybuffer@^1.0.2",
+        "npm:dotenv@^16.5.0",
+        "npm:eslint-config-expo@9.2",
+        "npm:eslint@^9.25.0",
+        "npm:expo-av@~15.1.6",
+        "npm:expo-blur@~14.1.5",
+        "npm:expo-camera@~16.1.8",
+        "npm:expo-constants@~17.1.6",
+        "npm:expo-file-system@^18.1.10",
+        "npm:expo-font@~13.3.1",
+        "npm:expo-haptics@~14.1.4",
+        "npm:expo-image-picker@~16.1.4",
+        "npm:expo-image@2.3",
+        "npm:expo-linking@~7.1.5",
+        "npm:expo-router@5.1",
+        "npm:expo-splash-screen@~0.30.9",
+        "npm:expo-status-bar@~2.2.3",
+        "npm:expo-symbols@~0.4.5",
+        "npm:expo-system-ui@~5.0.9",
+        "npm:expo-web-browser@14.2",
+        "npm:expo@~53.0.12",
+        "npm:node-fetch@^3.3.2",
+        "npm:react-dom@19.0.0",
+        "npm:react-native-gesture-handler@2.24",
+        "npm:react-native-reanimated@~3.17.4",
+        "npm:react-native-safe-area-context@5.4.0",
+        "npm:react-native-screens@~4.11.1",
+        "npm:react-native-url-polyfill@2",
+        "npm:react-native-web@0.20",
+        "npm:react-native-webview@13.13.5",
+        "npm:react-native@0.79.4",
+        "npm:react@19.0.0",
+        "npm:typescript@~5.8.3",
+        "npm:zustand@^5.0.5"
+      ]
+    }
+  }
+}
+
+================
 File: eas.json
 ================
 {
@@ -7012,6 +7680,337 @@ A mobile app for art students to share works-in-progress in low-pressure, epheme
 - Live countdown timers demonstrate ephemeral nature
 - AI feedback only appears on user's own posts
 - **Authentication flow**: Name entry → Welcome screen → Join class button → Class code entry → Feed access
+
+================
+File: _docs/debugClassList.md
+================
+1. Logs from Step1
+
+
+*** Upon first press of the Join Class button a "Monday Fundamentals" class is piopulated in the list. I am succussfully able to go into the class and I am taken to 4 prepopulated artwork that is outlined in demo_data_seed.sql and class Store. this is what I expect. and what I want. The logs from this event are below ***
+
+
+
+- LOG  📝 Register Screen - Rendering glass morphism registration interface
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  📝 AuthForm - Rendering glass morphism register form
+- LOG  ✅ Auth Store - User registered successfully
+- LOG  🚀 Root Layout - Initializing Draft app with proper typography
+- LOG  🔑 Login Screen - Rendering glass morphism login interface
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  📝 AuthForm - Rendering glass morphism login form
+- LOG  📝 Register Screen - Rendering glass morphism registration interface
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  📝 AuthForm - Rendering glass morphism register form
+- LOG  ✅ Register Screen - Registration successful, user automatically signed in
+- LOG  ✅ AuthForm - register form submitted successfully
+- LOG  📝 AuthForm - Rendering glass morphism register form
+- LOG  🎉 Register Screen - User ready to start, redirecting to camera
+- LOG  🎥 Camera Screen - Rendering with permission: undefined
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  ⏳ Camera Screen - Permission loading
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 0
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": [], "classNames": [], "isLoading": false, "timestamp": 1750980193896, "userClassesCount": 0}
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  📚 Class Feed Screen - Loading user classes for: a5aedeaa-02b5-4313-8bbc-9c6a798f1e13
+- LOG  📚 Class Store - Loading user classes: a5aedeaa-02b5-4313-8bbc-9c6a798f1e13
+- LOG  🔧 DEBUG - loadUserClasses START: {"currentClassIds": [], "currentUserClassesCount": 0, "timestamp": 1750980193922}
+- LOG  📋 Class Service - Fetching user classes: a5aedeaa-02b5-4313-8bbc-9c6a798f1e13
+- LOG  📰 Class Feed Screen - Current class changed: undefined
+- LOG  🔍 Class Feed Screen - Checking class membership status
+- LOG  📚 Class Feed Screen - No class selected, showing class list
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 0
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": [], "classNames": [], "isLoading": true, "timestamp": 1750980193931, "userClassesCount": 0}
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🔍 Class Feed Screen - Checking class membership status
+- LOG  ✅ Class Service - Found 0 classes for user
+- LOG  ✅ Class Store - Loaded 0 classes
+- LOG  🔧 DEBUG - loadUserClasses END: {"newClassIds": [], "newClassNames": [], "newUserClassesCount": 0, "timestamp": 1750980193993}
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 0
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": [], "classNames": [], "isLoading": false, "timestamp": 1750980193995, "userClassesCount": 0}
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🔍 Class Feed Screen - Checking class membership status
+- LOG  📚 Class Feed Screen - No class selected, showing class list
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  ➕ Class List Screen - Opening join class modal
+- LOG  ➕ Class Feed Screen - Opening join modal from class list
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 0
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": [], "classNames": [], "isLoading": false, "timestamp": 1750980205123, "userClassesCount": 0}
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🚀 Class Join Modal - Attempting to join class with code: DRAW01
+- LOG  🚀 Class Store - Joining class with code: DRAW01
+- LOG  🚀 Class Service - User attempting to join class: {"joinCode": "DRAW01", "userId": "a5aedeaa-02b5-4313-8bbc-9c6a798f1e13"}
+- LOG  🔍 Class Service - Validating class join code: DRAW01
+- LOG  🔍 Class Service - Validating join code format: DRAW01
+- LOG  ✅ Class Service - Join code format validation: true
+- LOG  📝 Class Service - Normalized join code: DRAW01
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 0
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": [], "classNames": [], "isLoading": true, "timestamp": 1750980266609, "userClassesCount": 0}
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🔍 Class Feed Screen - Checking class membership status
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  ✅ Class Service - Class found: Monday Drawing Fundamentals
+- LOG  ✅ Class Service - Join code validated for class: Monday Drawing Fundamentals
+- LOG  📊 Class Service - Current member count: 0 / 30
+- LOG  🎉 Class Service - Successfully joined class!
+- LOG  🎉 Class Store - Successfully joined class: Monday Drawing Fundamentals
+- LOG  🔧 DEBUG - State after joinClassWithCode: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "newClassAdded": "Monday Drawing Fundamentals", "timestamp": 1750980266806, "userClassesCount": 1}
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 1
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "isLoading": false, "timestamp": 1750980266809, "userClassesCount": 1}
+- LOG  🌟 GlassMorphismCard - Rendering secondary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🔍 Class Feed Screen - Checking class membership status
+- LOG  📚 Class Feed Screen - No class selected, showing class list
+- LOG  🎉 Class Join Modal - Successfully joined class
+- LOG  🎉 Class Feed Screen - Successfully joined class
+- LOG  🔧 DEBUG - handleJoinSuccess START: {"currentClassId": undefined, "currentClassName": undefined, "showClassList": true, "showJoinModal": true, "timestamp": 1750980266824, "userClassesCount": 0}
+- LOG  🔄 Class Feed Screen - Refreshing user classes after join
+- LOG  🔧 DEBUG - About to call loadUserClasses: {"timestamp": 1750980266824, "userId": "a5aedeaa-02b5-4313-8bbc-9c6a798f1e13"}
+- LOG  📚 Class Store - Loading user classes: a5aedeaa-02b5-4313-8bbc-9c6a798f1e13
+- LOG  🔧 DEBUG - loadUserClasses START: {"currentClassIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "currentUserClassesCount": 1, "timestamp": 1750980266825}
+- LOG  📋 Class Service - Fetching user classes: a5aedeaa-02b5-4313-8bbc-9c6a798f1e13
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 1
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "isLoading": true, "timestamp": 1750980266829, "userClassesCount": 1}
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🔍 Class Feed Screen - Checking class membership status
+- LOG  ✅ Class Service - Found 1 classes for user
+- LOG  ✅ Class Store - Loaded 1 classes
+- LOG  🔧 DEBUG - loadUserClasses END: {"newClassIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "newClassNames": ["Monday Drawing Fundamentals"], "newUserClassesCount": 1, "timestamp": 1750980266856}
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 1
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "isLoading": false, "timestamp": 1750980266858, "userClassesCount": 1}
+- LOG  🌟 GlassMorphismCard - Rendering secondary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🔍 Class Feed Screen - Checking class membership status
+- LOG  📚 Class Feed Screen - No class selected, showing class list
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  🎯 Class List Screen - Selected class: Monday Drawing Fundamentals
+- LOG  🔧 DEBUG - handleClassPress called: {"classId": "539c0b4e-f741-45a7-8df6-44afff8ccedc", "className": "Monday Drawing Fundamentals", "foundClass": "YES", "timestamp": 1750980287279, "userClassesCount": 1}
+- LOG  🎯 Class Feed Screen - Class selected from list: 539c0b4e-f741-45a7-8df6-44afff8ccedc
+- LOG  🔧 DEBUG - handleClassSelect called: {"availableClassIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classId": "539c0b4e-f741-45a7-8df6-44afff8ccedc", "timestamp": 1750980287280, "userClassesCount": 1}
+- LOG  🔧 DEBUG - selectedClass found: {"className": "Monday Drawing Fundamentals", "found": true, "timestamp": 1750980287280}
+- LOG  🎯 Class Store - Setting current class: Monday Drawing Fundamentals
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 1
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "isLoading": false, "timestamp": 1750980287287, "userClassesCount": 1}
+- LOG  🌟 GlassMorphismCard - Rendering secondary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  📰 Class Feed Screen - Current class changed: Monday Drawing Fundamentals
+- LOG  📰 Class Store - Loading posts for class: 539c0b4e-f741-45a7-8df6-44afff8ccedc
+- LOG  🔍 Class Feed Screen - Checking class membership status
+- LOG  🎨 Class Feed Screen - Class selected, showing feed
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  ✅ Class Store - Loaded 4 posts
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🌟 GlassMorphismCard - Rendering secondary glass card
+  
+
+2. 
+
+
+
+ *** Then I click the back button and I am successfully returned to the class list screen and can see the Monday Fundamentals button. However the moment I press the back buttton and am returned here some weirdness happens in the logs which i have recorded below. This I think is where things break down ***
+  
+  
+- LOG  🔙 Class Feed Screen - Back button pressed, returning to class list
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 1
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "isLoading": false, "timestamp": 1750980831673, "userClassesCount": 1}
+- LOG  🌟 GlassMorphismCard - Rendering secondary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+  
+3. 
+
+*** I try to click the Monday Fundamentals class button for a 2nd time - the one that says "tap to enter class", which was the last time i pressed it and took me to the classes artwork. Now when I press again to return to the artwork i get these logs. ***
+  
+- LOG  🎯 Class List Screen - Selected class: Monday Drawing Fundamentals
+- LOG  🔧 DEBUG - handleClassPress called: {"classId": "539c0b4e-f741-45a7-8df6-44afff8ccedc", "className": "Monday Drawing Fundamentals", "foundClass": "YES", "timestamp": 1750981116492, "userClassesCount": 1}
+- LOG  🎯 Class Feed Screen - Class selected from list: 539c0b4e-f741-45a7-8df6-44afff8ccedc
+- LOG  🔧 DEBUG - handleClassSelect called: {"availableClassIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classId": "539c0b4e-f741-45a7-8df6-44afff8ccedc", "timestamp": 1750981116492, "userClassesCount": 1}
+- LOG  🔧 DEBUG - selectedClass found: {"className": "Monday Drawing Fundamentals", "found": true, "timestamp": 1750981116492}
+- LOG  🎯 Class Store - Setting current class: Monday Drawing Fundamentals
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 1
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "isLoading": false, "timestamp": 1750981116500, "userClassesCount": 1}
+- LOG  🌟 GlassMorphismCard - Rendering secondary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+  
+  
+  
+3
+  *** so when I then use the Join Class button for a 2nd time and enter the code I then am automatically taken to A TOTALLY DIFFERENT PAGE that I do not expect to be at. It is a page that reads " Be the first to share artwork in Your classmates will see your post appear here with a live countdown timer". This is not where I expect to be taken, because I know there is prepopilated data in the Monday Fundamentals class. I want to be taken to the artwork, not this page. ***
+  
+- LOG  ➕ Class List Screen - Opening join class modal
+- LOG  ➕ Class Feed Screen - Opening join modal from class list
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 1
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "isLoading": false, "timestamp": 1750981165326, "userClassesCount": 1}
+- LOG  🌟 GlassMorphismCard - Rendering secondary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🚀 Class Join Modal - Attempting to join class with code: DRAW01
+- LOG  🚀 Class Store - Joining class with code: DRAW01
+- LOG  🚀 Class Service - User attempting to join class: {"joinCode": "DRAW01", "userId": "a5aedeaa-02b5-4313-8bbc-9c6a798f1e13"}
+- LOG  🔍 Class Service - Validating class join code: DRAW01
+- LOG  🔍 Class Service - Validating join code format: DRAW01
+- LOG  ✅ Class Service - Join code format validation: true
+- LOG  📝 Class Service - Normalized join code: DRAW01
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 1
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "isLoading": true, "timestamp": 1750981183868, "userClassesCount": 1}
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🔍 Class Feed Screen - Checking class membership status
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  ✅ Class Service - Class found: Monday Drawing Fundamentals
+- LOG  ✅ Class Service - Join code validated for class: Monday Drawing Fundamentals
+- LOG  ℹ️ Class Service - User is already a member
+- LOG  🎉 Class Store - Successfully joined class: Monday Drawing Fundamentals
+- LOG  ℹ️ Class Store - User already member of class, not adding duplicate
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  📚 Class List Screen - Rendering class selection interface
+- LOG  📚 Class List Screen - User classes count: 1
+- LOG  🔧 DEBUG - ClassListScreen render: {"classIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "classNames": ["Monday Drawing Fundamentals"], "isLoading": false, "timestamp": 1750981184080, "userClassesCount": 1}
+- LOG  🌟 GlassMorphismCard - Rendering secondary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🔍 Class Feed Screen - Checking class membership status
+- LOG  🎨 Class Feed Screen - Class selected, showing feed
+- LOG  🎉 Class Join Modal - Successfully joined class
+- LOG  🎉 Class Feed Screen - Successfully joined class
+- LOG  🔧 DEBUG - handleJoinSuccess START: {"currentClassId": "539c0b4e-f741-45a7-8df6-44afff8ccedc", "currentClassName": "Monday Drawing Fundamentals", "showClassList": true, "showJoinModal": true, "timestamp": 1750981184099, "userClassesCount": 1}
+- LOG  🔄 Class Feed Screen - Refreshing user classes after join
+- LOG  🔧 DEBUG - About to call loadUserClasses: {"timestamp": 1750981184100, "userId": "a5aedeaa-02b5-4313-8bbc-9c6a798f1e13"}
+- LOG  📚 Class Store - Loading user classes: a5aedeaa-02b5-4313-8bbc-9c6a798f1e13
+- LOG  🔧 DEBUG - loadUserClasses START: {"currentClassIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "currentUserClassesCount": 1, "timestamp": 1750981184100}
+- LOG  📋 Class Service - Fetching user classes: a5aedeaa-02b5-4313-8bbc-9c6a798f1e13
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🔍 Class Feed Screen - Checking class membership status
+- LOG  ✅ Class Service - Found 1 classes for user
+- LOG  ✅ Class Store - Loaded 1 classes
+- LOG  🔧 DEBUG - loadUserClasses END: {"newClassIds": ["539c0b4e-f741-45a7-8df6-44afff8ccedc"], "newClassNames": ["Monday Drawing Fundamentals"], "newUserClassesCount": 1, "timestamp": 1750981184154}
+- LOG  🎥 Camera Screen - Rendering with permission: true
+- LOG  📷 Camera Screen - Captured photo: No photo
+- LOG  ⏫ Camera Screen - Upload state: {"isUploading": false, "uploadSuccess": false}
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
+- LOG  🌟 GlassMorphismCard - Rendering primary glass card
+- LOG  🏫 Class Join Modal - Rendering class join modal
+- LOG  🔍 Class Feed Screen - Checking class membership status
+- LOG  🎨 Class Feed Screen - Class selected, showing feed
+- LOG  🎨 Class Feed Screen - Rendering glass morphism artwork-as-background feed
 
 ================
 File: _docs/UIDesign.md
@@ -9477,15 +10476,73 @@ DROP POLICY IF EXISTS "Class members can create comments" ON public.comments;
 -- migrations 001, 002, and 003.
 
 ================
-File: .env.example
+File: tasks/tasks-braindumpSolo3.md
 ================
-EXPO_PUBLIC_SUPABASE_URL=
-EXPO_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-DATABASE_URL=
+## Relevant Files
 
-EXPO_PUBLIC_SUPABASE_URL_LOCAL=
-EXPO_PUBLIC_SUPABASE_ANON_KEY_LOCAL=
+- `app/(tabs)/solo.tsx` - Main Solo Tutor chat screen component
+- `app/(tabs)/_layout.tsx` - Tab navigation layout (needs Solo tab addition)
+- `components/solo/SoloChat.tsx` - Chat interface component
+- `components/solo/ChatMessage.tsx` - Individual chat message component
+- `components/solo/ChatInput.tsx` - Text input and image upload component
+- `lib/soloService.ts` - Service for Solo Tutor API calls
+- `store/soloStore.ts` - Zustand store for Solo Tutor state management
+- `supabase/functions/get-ai-response/index.ts` - Edge function for AI responses with RAG
+- `supabase/migrations/20250103000001_create_solo_tables.sql` - Database schema for Solo Tutor
+- `supabase/migrations/20250103000002_solo_demo_seed.sql` - Synthetic demo data
+
+### Notes
+
+- The Solo Tutor uses OpenAI's GPT-4o for multimodal AI responses and text-embedding-3-small for RAG embeddings
+- Database uses pgvector extension for vector similarity search
+- Image uploads go to Supabase Storage before being sent to AI
+- RAG system combines both long-term memory (vector search) and short-term memory (recent messages)
+
+## Tasks
+
+- [x] 1.0 Database Schema & Migration Setup
+  - [x] 1.1 Enable pgvector extension in Supabase database
+  - [x] 1.2 Create solo_ai_chats table migration with user_id, title, timestamps
+  - [x] 1.3 Create solo_ai_messages table migration with chat_id, role, content, image_url, embedding vector(1536), timestamps
+  - [x] 1.4 Add RLS policies for solo_ai_chats table (users can only access their own chats)
+  - [x] 1.5 Add RLS policies for solo_ai_messages table (users can only access messages from their own chats)
+  - [x] 1.6 Run and test database migrations locally
+
+- [ ] 2.0 Supabase Edge Function with RAG Implementation
+  - [x] 2.1 Create base Supabase Edge Function structure in supabase/functions/get-ai-response/
+  - [x] 2.2 Implement OpenAI text-embedding-3-small integration for query embedding generation
+  - [x] 2.3 Implement vector similarity search logic using pgvector for long-term memory retrieval
+  - [x] 2.4 Implement recent conversation fetching for short-term memory (last 4-6 messages)
+  - [x] 2.5 Create system prompt for "Canvas" AI tutor persona with art terminology focus
+  - [x] 2.6 Implement OpenAI GPT-4o multimodal API integration for generating responses
+  - [x] 2.7 Implement dual message persistence (user message + AI response) with embeddings
+  - [x] 2.8 Add comprehensive error handling and logging for all API calls
+  - [ ] 2.9 Test Edge Function locally with curl commands
+
+- [ ] 3.0 Frontend Navigation & Screen Structure
+  - [ ] 3.1 Add "Solo" tab to app/(tabs)/_layout.tsx with appropriate icon
+  - [ ] 3.2 Create app/(tabs)/solo.tsx main screen component
+  - [ ] 3.3 Integrate solo screen with existing theme and navigation patterns
+  - [ ] 3.4 Add solo-related types to TypeScript definitions
+
+- [ ] 4.0 Chat Interface Components & UI
+  - [ ] 4.1 Create components/solo/SoloChat.tsx main chat container component
+  - [ ] 4.2 Create components/solo/ChatMessage.tsx for individual message display (user vs AI styling)
+  - [ ] 4.3 Create components/solo/ChatInput.tsx with text input and image upload functionality
+  - [ ] 4.4 Implement image upload to Supabase Storage integration
+  - [ ] 4.5 Add loading states and error handling for AI responses
+  - [ ] 4.6 Style chat interface using existing GlassMorphismCard and ThemedText components
+  - [ ] 4.7 Implement chat scrolling and message ordering functionality
+  - [ ] 4.8 Create lib/soloService.ts for API communication with Edge Function
+  - [ ] 4.9 Create store/soloStore.ts Zustand store for chat state management
+- [ ] 5.0 Demo Data & Testing Integration
+  - [ ] 5.1 Create supabase/migrations/20250103000002_solo_demo_seed.sql with synthetic chat data
+  - [ ] 5.2 Generate pre-computed embeddings for demo messages using OpenAI API
+  - [ ] 5.3 Create 5 diverse demo chats covering different art topics (hand proportions, perspective, color theory, composition)
+  - [ ] 5.4 Test complete user flow: navigation → chat → image upload → AI response
+  - [ ] 5.5 Test RAG functionality with demo data (verify relevant history retrieval)
+  - [ ] 5.6 Verify RLS policies work correctly (users only see their own chats)
+  - [ ] 5.7 Test error handling scenarios (network failures, API errors, invalid images)
 
 ================
 File: app.config.js
@@ -11110,6 +12167,19 @@ ai_feedback (
 ---
 
 This PRD provides a comprehensive roadmap for building EphemeralArt as an anxiety-reducing, ephemeral art sharing platform that prioritizes clean design, simple interactions, and confidence-building features for art students.
+
+================
+File: .env.example
+================
+EXPO_PUBLIC_SUPABASE_URL=
+EXPO_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+DATABASE_URL=
+
+EXPO_PUBLIC_SUPABASE_URL_LOCAL=
+EXPO_PUBLIC_SUPABASE_ANON_KEY_LOCAL=
+
+OPENAI_API_KEY=
 
 ================
 File: app/(tabs)/_layout.tsx
