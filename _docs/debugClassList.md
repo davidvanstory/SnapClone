@@ -236,7 +236,7 @@
   
   
 3
-  *** so when I then use the Join Class button for a 2nd time and enter the code I then am automatically taken to A TOTALLY DIFFERENT PAGE that I do not expect to be at. It is a page that reads " Be the first to share artwork in Your classmates will see your post appear here with a live countdown timer". This is not where I expect to be taken, because I know there is prepopilated data in the Monday Fundamentals class. ***
+  *** so when I then use the Join Class button for a 2nd time and enter the code I then am automatically taken to A TOTALLY DIFFERENT PAGE that I do not expect to be at. It is a page that reads " Be the first to share artwork in Your classmates will see your post appear here with a live countdown timer". This is not where I expect to be taken, because I know there is prepopilated data in the Monday Fundamentals class. I want to be taken to the artwork, not this page. ***
   
 - LOG  ➕ Class List Screen - Opening join class modal
 - LOG  ➕ Class Feed Screen - Opening join modal from class list
