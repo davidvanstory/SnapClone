@@ -184,6 +184,27 @@ export interface AIFeedback {
   updated_at: string;
 }
 
+/**
+ * Solo AI Tutor Types
+ */
+export interface SoloAIChat {
+  id: string;
+  user_id: string;
+  title?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SoloAIMessage {
+  id: string;
+  chat_id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  image_url?: string;
+  embedding?: number[];
+  created_at: string;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -221,6 +242,16 @@ export interface Database {
         Row: AIFeedback;
         Insert: Omit<AIFeedback, 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Omit<AIFeedback, 'id' | 'created_at' | 'updated_at'>>;
+      };
+      solo_ai_chats: {
+        Row: SoloAIChat;
+        Insert: Omit<SoloAIChat, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<SoloAIChat, 'id' | 'created_at' | 'updated_at'>>;
+      };
+      solo_ai_messages: {
+        Row: SoloAIMessage;
+        Insert: Omit<SoloAIMessage, 'id' | 'created_at'>;
+        Update: Partial<Omit<SoloAIMessage, 'id' | 'created_at'>>;
       };
     };
   };

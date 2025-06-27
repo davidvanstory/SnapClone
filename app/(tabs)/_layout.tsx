@@ -64,6 +64,20 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="solo"
+        options={{
+          title: 'Solo Tutor',
+          tabBarIcon: ({ color, focused }) => (
+            <IconSymbol 
+              size={focused ? 30 : 28} 
+              name="brain" 
+              color={color}
+              weight={focused ? 'semibold' : 'regular'}
+            />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

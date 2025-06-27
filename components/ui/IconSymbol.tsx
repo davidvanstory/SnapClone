@@ -19,6 +19,7 @@ const MAPPING = {
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
   'camera.fill': 'camera-alt',
+  'brain': 'psychology', // Solo AI Tutor icon
 } as IconMapping;
 
 /**
