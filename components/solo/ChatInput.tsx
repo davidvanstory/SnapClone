@@ -282,7 +282,7 @@ export default function ChatInput({
   };
 
   return (
-    <GlassMorphismCard type="secondary" style={styles.container}>
+    <GlassMorphismCard type="secondary" style={[styles.container, { borderColor: colors.border, borderWidth: 2 }]}>
       <View style={styles.content}>
         {/* Image Preview (if selected) */}
         {renderImagePreview()}

@@ -4,7 +4,7 @@
  * This screen implements the login interface from UIDesign.md specifications:
  * - Clean white background with subtle paper texture
  * - Glass morphism container (Primary Glass Card specs)
- * - "Welcome to JUNI" header in Instrument Serif 28pt
+ * - Large app icon (160x160) as primary branding element
  * - Email/password inputs with glass morphism styling
  * - Warm sage accent color for focus states
  * - Typography hierarchy per UIDesign.md exact specifications
@@ -99,15 +99,12 @@ export default function LoginScreen() {
           <GlassMorphismCard type="primary" style={styles.loginCard}>
             {/* Header - JUNI Branding per UIDesign.md */}
             <View style={styles.header}>
-              {/* App Icon */}
+              {/* App Icon - 2x larger */}
               <Image 
                 source={require('../../assets/images/icon.png')} 
                 style={styles.appIcon}
                 resizeMode="contain"
               />
-              <ThemedText type="screenTitle" style={[styles.title, { color: colors.text }]}>
-                Welcome to JUNI
-              </ThemedText>
               <ThemedText type="bodyText" style={[styles.subtitle, { color: colors.textSecondary }]}>
                 Sign in to join your art class
               </ThemedText>
@@ -173,13 +170,9 @@ const styles = StyleSheet.create({
     gap: 12,                     // 12px gap to accommodate icon
   },
   appIcon: {
-    width: 80,                   // Prominent but not overwhelming
-    height: 80,
-    marginBottom: 8,             // Space between icon and title
-  },
-  title: {
-    textAlign: 'center',
-    // Instrument Serif 28pt per UIDesign.md applied via ThemedText type="screenTitle"
+    width: 160,                  // 2x larger - prominent branding
+    height: 160,
+    marginBottom: 16,            // Increased space between icon and subtitle
   },
   subtitle: {
     textAlign: 'center',
