@@ -2,64 +2,45 @@
  * Supabase Client Configuration
  * 
  * This file configures the Supabase client for the SnapClone application.
- * It uses a HYBRID approach:
- * - Local database/API for fast development
- * - Production edge functions for AI features (since local edge functions have issues)
+ * FULL CLOUD CONFIGURATION:
+ * - All operations (database, auth, storage, edge functions) use production Supabase
+ * - No local development environment complexity
+ * - Guaranteed data consistency for AI features
+ * - Single source of truth for all data
  */
 
 import { createClient } from '@supabase/supabase-js';
 import Constants from 'expo-constants';
 
-// The __DEV__ global variable is `true` when running in development mode,
-// and `false` when running in a production build.
-const isDevelopment = __DEV__;
+console.log('🌐 FULL CLOUD MODE - All operations use production Supabase');
 
-console.log('Running in', isDevelopment ? 'DEVELOPMENT' : 'PRODUCTION', 'mode.');
+// SIMPLIFIED CONFIGURATION:
+// Always use production Supabase for everything
+const supabaseUrl = Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
-// HYBRID CONFIGURATION:
-// - Use LOCAL database/API for fast development
-// - Use PRODUCTION edge functions (since local ones don't work)
+console.log('🔧 Supabase Config - CLOUD-ONLY MODE');
+console.log('📍 Supabase URL:', supabaseUrl ? 'Set ✓' : 'Missing ❌');
+console.log('🔑 Supabase Key:', supabaseAnonKey ? 'Set ✓' : 'Missing ❌');
 
-// Database client (local for dev, production for prod)
-const dbUrl = isDevelopment
-  ? Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_URL_LOCAL
-  : Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_URL;
-
-const dbAnonKey = isDevelopment
-  ? Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_ANON_KEY_LOCAL
-  : Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_ANON_KEY;
-
-// Edge Functions client (ALWAYS production for working AI)
-const edgeFunctionsUrl = Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_URL;
-const edgeFunctionsAnonKey = Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_ANON_KEY;
-
-console.log('🔧 Supabase Config - HYBRID MODE');
-console.log('📊 Database:', isDevelopment ? 'Local' : 'Production');
-console.log('⚡ Edge Functions:', 'Production (for working AI)');
-console.log('📍 DB URL:', dbUrl ? 'Set ✓' : 'Missing ❌');
-console.log('🔑 DB Key:', dbAnonKey ? 'Set ✓' : 'Missing ❌');
-console.log('⚡ Functions URL:', edgeFunctionsUrl ? 'Set ✓' : 'Missing ❌');
-console.log('🔑 Functions Key:', edgeFunctionsAnonKey ? 'Set ✓' : 'Missing ❌');
-
-if (!dbUrl || !dbAnonKey) {
-  const missingVar = !dbUrl ? 'URL' : 'Key';
-  const envName = isDevelopment ? `EXPO_PUBLIC_SUPABASE_${missingVar}_LOCAL` : `EXPO_PUBLIC_SUPABASE_${missingVar}`;
+if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(
-    `Missing Supabase environment variable: ${envName}. Please check your .env file.`
-  );
-}
-
-if (!edgeFunctionsUrl || !edgeFunctionsAnonKey) {
-  throw new Error(
-    `Missing production Supabase environment variables for edge functions. Please check EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY.`
+    `Missing Supabase environment variables. Please check your .env file for:
+    - EXPO_PUBLIC_SUPABASE_URL
+    - EXPO_PUBLIC_SUPABASE_ANON_KEY`
   );
 }
 
 /**
- * Main Supabase client for database operations
- * Uses local instance in development, production in production
+ * Single Supabase client for all operations
+ * Uses production cloud instance for everything:
+ * - Database operations
+ * - Authentication
+ * - Storage
+ * - Edge Functions
+ * - Real-time subscriptions
  */
-export const supabase = createClient(dbUrl, dbAnonKey, {
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
@@ -68,25 +49,13 @@ export const supabase = createClient(dbUrl, dbAnonKey, {
 });
 
 /**
- * Edge Functions client for AI features
- * ALWAYS uses production (since local edge functions don't work)
- */
-export const supabaseEdgeFunctions = createClient(edgeFunctionsUrl, edgeFunctionsAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false,
-  },
-});
-
-/**
- * Helper function to call AI edge function
- * Uses the production edge functions client
+ * Helper function to call AI edge functions
+ * Uses the same production client as everything else
  */
 export const callAIFunction = async (functionName: string, payload: any) => {
-  console.log('🤖 Calling AI function:', functionName, 'on production');
+  console.log('🤖 Calling AI function:', functionName, 'on production cloud');
   
-  const { data, error } = await supabaseEdgeFunctions.functions.invoke(functionName, {
+  const { data, error } = await supabase.functions.invoke(functionName, {
     body: payload,
   });
   
