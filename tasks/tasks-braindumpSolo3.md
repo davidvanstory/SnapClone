@@ -20,23 +20,23 @@
 
 ## Tasks
 
-- [ ] 1.0 Database Schema & Migration Setup
-  - [ ] 1.1 Enable pgvector extension in Supabase database
-  - [ ] 1.2 Create solo_ai_chats table migration with user_id, title, timestamps
-  - [ ] 1.3 Create solo_ai_messages table migration with chat_id, role, content, image_url, embedding vector(1536), timestamps
-  - [ ] 1.4 Add RLS policies for solo_ai_chats table (users can only access their own chats)
-  - [ ] 1.5 Add RLS policies for solo_ai_messages table (users can only access messages from their own chats)
-  - [ ] 1.6 Run and test database migrations locally
+- [x] 1.0 Database Schema & Migration Setup
+  - [x] 1.1 Enable pgvector extension in Supabase database
+  - [x] 1.2 Create solo_ai_chats table migration with user_id, title, timestamps
+  - [x] 1.3 Create solo_ai_messages table migration with chat_id, role, content, image_url, embedding vector(1536), timestamps
+  - [x] 1.4 Add RLS policies for solo_ai_chats table (users can only access their own chats)
+  - [x] 1.5 Add RLS policies for solo_ai_messages table (users can only access messages from their own chats)
+  - [x] 1.6 Run and test database migrations locally
 
 - [ ] 2.0 Supabase Edge Function with RAG Implementation
-  - [ ] 2.1 Create base Supabase Edge Function structure in supabase/functions/get-ai-response/
-  - [ ] 2.2 Implement OpenAI text-embedding-3-small integration for query embedding generation
-  - [ ] 2.3 Implement vector similarity search logic using pgvector for long-term memory retrieval
-  - [ ] 2.4 Implement recent conversation fetching for short-term memory (last 4-6 messages)
-  - [ ] 2.5 Create system prompt for "Canvas" AI tutor persona with art terminology focus
-  - [ ] 2.6 Implement OpenAI GPT-4o multimodal API integration for generating responses
-  - [ ] 2.7 Implement dual message persistence (user message + AI response) with embeddings
-  - [ ] 2.8 Add comprehensive error handling and logging for all API calls
+  - [x] 2.1 Create base Supabase Edge Function structure in supabase/functions/get-ai-response/
+  - [x] 2.2 Implement OpenAI text-embedding-3-small integration for query embedding generation
+  - [x] 2.3 Implement vector similarity search logic using pgvector for long-term memory retrieval
+  - [x] 2.4 Implement recent conversation fetching for short-term memory (last 4-6 messages)
+  - [x] 2.5 Create system prompt for "Canvas" AI tutor persona with art terminology focus
+  - [x] 2.6 Implement OpenAI GPT-4o multimodal API integration for generating responses
+  - [x] 2.7 Implement dual message persistence (user message + AI response) with embeddings
+  - [x] 2.8 Add comprehensive error handling and logging for all API calls
   - [ ] 2.9 Test Edge Function locally with curl commands
 
 - [ ] 3.0 Frontend Navigation & Screen Structure
