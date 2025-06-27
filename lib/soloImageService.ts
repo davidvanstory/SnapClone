@@ -88,10 +88,12 @@ export async function uploadSoloImage(
   try {
     // Generate unique filename
     const fileName = generateSoloImageFileName(options.userId);
-    const filePath = `uploads/${fileName}`;
+    // Use userId as the folder name to match RLS policy: {userId}/filename.jpg
+    const filePath = options.userId ? `${options.userId}/${fileName}` : `uploads/${fileName}`;
     
     console.log('📝 Solo Image Service - Generated filename:', fileName);
     console.log('📂 Solo Image Service - File path:', filePath);
+    console.log('👤 Solo Image Service - User ID for folder:', options.userId || 'No user ID provided');
 
     // Get file info
     const fileSize = await getFileSize(imageUri);

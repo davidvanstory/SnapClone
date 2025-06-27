@@ -57,10 +57,12 @@
   - [x] 4.9 Create store/soloStore.ts Zustand store for chat state management
   
 - [ ] 5.0 Demo Data & Testing Integration
-  - [ ] 5.1 Create supabase/migrations/20250103000002_solo_demo_seed.sql with synthetic chat data
-  - [ ] 5.2 Generate pre-computed embeddings for demo messages using OpenAI API
-  - [ ] 5.3 Create 5 diverse demo chats covering different art topics (hand proportions, perspective, color theory, composition)
-  - [ ] 5.4 Test complete user flow: navigation → chat → image upload → AI response
-  - [ ] 5.5 Test RAG functionality with demo data (verify relevant history retrieval)
-  - [ ] 5.6 Verify RLS policies work correctly (users only see their own chats)
-  - [ ] 5.7 Test error handling scenarios (network failures, API errors, invalid images) 
+  - [x] 5.1 Create solo-images storage bucket for image uploads (Fixed missing bucket error)
+  - [x] 5.1.1 Fix RLS policy path mismatch for image uploads (Fixed userId folder structure)
+  - [ ] 5.2 Create supabase/migrations/20250103000002_solo_demo_seed.sql with synthetic chat data
+  - [ ] 5.3 Generate pre-computed embeddings for demo messages using OpenAI API
+  - [ ] 5.4 Create 5 diverse demo chats covering different art topics (hand proportions, perspective, color theory, composition)
+  - [ ] 5.5 Test complete user flow: navigation → chat → image upload → AI response
+  - [ ] 5.6 Test RAG functionality with demo data (verify relevant history retrieval)
+  - [ ] 5.7 Verify RLS policies work correctly (users only see their own chats)
+  - [ ] 5.8 Test error handling scenarios (network failures, API errors, invalid images) 
