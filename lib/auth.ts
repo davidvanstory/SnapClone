@@ -19,12 +19,10 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
  * Password validation requirements
- * - Minimum 8 characters
- * - At least 1 uppercase letter
- * - At least 1 lowercase letter
- * - At least 1 number
+ * - Minimum 6 characters
+ * - Any characters allowed
  */
-const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/;
+const PASSWORD_REGEX = /^.{6,}$/;
 
 /**
  * Validate email format
@@ -44,20 +42,8 @@ export function validatePassword(password: string): {
   console.log('🔒 Auth Utils - Validating password strength');
   const errors: string[] = [];
 
-  if (password.length < 8) {
-    errors.push('Password must be at least 8 characters long');
-  }
-
-  if (!/[a-z]/.test(password)) {
-    errors.push('Password must contain at least one lowercase letter');
-  }
-
-  if (!/[A-Z]/.test(password)) {
-    errors.push('Password must contain at least one uppercase letter');
-  }
-
-  if (!/\d/.test(password)) {
-    errors.push('Password must contain at least one number');
+  if (password.length < 6) {
+    errors.push('Password must be at least 6 characters long');
   }
 
   return {
