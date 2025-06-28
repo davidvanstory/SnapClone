@@ -46,7 +46,7 @@ export default function ChatInput({
   onSendMessage,
   isLoading = false,
   disabled = false,
-  placeholder = "Ask Canvas about art techniques, or upload your artwork for feedback...",
+  placeholder = "Ask Juni about art techniques, or upload your artwork for feedback...",
 }: ChatInputProps) {
   console.log('💬 Chat Input - Rendering with state:', { isLoading, disabled });
 

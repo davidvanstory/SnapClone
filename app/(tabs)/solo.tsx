@@ -107,15 +107,9 @@ export default function SoloTutorScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        {/* Header */}
+        {/* Header - Minimal thin header */}
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
           <View style={styles.headerContent}>
-            <ThemedText type="screenTitle" style={[styles.title, { color: colors.text }]}>
-              Solo Tutor
-            </ThemedText>
-            <ThemedText type="bodyText" style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Your personal AI art coach, Canvas, is here to help
-            </ThemedText>
           </View>
         </View>
 
@@ -172,6 +166,7 @@ export default function SoloTutorScreen() {
             }}
             isLoading={isSendingMessage}
             disabled={!currentChat || isLoading}
+            placeholder="Ask Juni your art question..."
           />
         </View>
       </KeyboardAvoidingView>
@@ -210,24 +205,19 @@ const styles = StyleSheet.create({
     // Montserrat 16pt per UIDesign.md applied via ThemedText type="bodyText"
   },
   
-  // Header
+  // Header - Minimal thin design
   header: {
     borderBottomWidth: 1,
     paddingTop: Platform.OS === 'ios' ? 0 : 24,
   },
   headerContent: {
     paddingHorizontal: 24,
-    paddingVertical: 20,
+    paddingVertical: 12,          // Reduced from 20 to 12 for thinner header
     alignItems: 'center',
   },
   title: {
-    marginBottom: 4,
     textAlign: 'center',
     // Instrument Serif 28pt per UIDesign.md applied via ThemedText type="screenTitle"
-  },
-  subtitle: {
-    textAlign: 'center',
-    // Montserrat 16pt per UIDesign.md applied via ThemedText type="bodyText"
   },
   
   // Chat Container

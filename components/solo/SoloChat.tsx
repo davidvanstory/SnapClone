@@ -108,7 +108,7 @@ export default function SoloChat({
               style={styles.loadingSpinner}
             />
             <ThemedText type="bodyText" style={[styles.loadingText, { color: colors.textSecondary }]}>
-              Canvas is thinking...
+              Juni is thinking...
             </ThemedText>
           </View>
         </GlassMorphismCard>
@@ -165,7 +165,7 @@ export default function SoloChat({
               🎨 Start Your Art Journey
             </ThemedText>
             <ThemedText type="bodyText" style={[styles.emptyDescription, { color: colors.text }]}>
-              Hi! I'm Canvas, your personal AI art tutor. I'm here to help you improve your artistic skills through personalized guidance and feedback.
+              Hi! I'm Juni, your personal AI art tutor. I'm here to help you improve your artistic skills through personalized guidance and feedback.
             </ThemedText>
             <ThemedText type="bodyText" style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
               Ask me anything about art techniques, upload your artwork for analysis, or just chat about your creative journey!
