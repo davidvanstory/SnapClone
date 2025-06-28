@@ -19,9 +19,9 @@
 
 import React from 'react';
 import {
-    Image,
-    StyleSheet,
-    View,
+  Image,
+  StyleSheet,
+  View,
 } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -135,7 +135,7 @@ export default function ChatMessage({
       {isAI && (
         <View style={styles.aiLabelContainer}>
           <ThemedText type="label" style={[styles.aiLabel, { color: colors.accentSage }]}>
-            🎨 Canvas
+            Juni
           </ThemedText>
         </View>
       )}
@@ -145,7 +145,7 @@ export default function ChatMessage({
         type="secondary" 
         style={[
           styles.messageBubble,
-          isUser ? [styles.userBubble, { backgroundColor: colors.accentSage }] : styles.aiBubble,
+          isUser ? [styles.userBubble, { backgroundColor: colors.accentSage }] : [styles.aiBubble, { backgroundColor: colors.border }],
           isUser ? styles.userBubblePosition : styles.aiBubblePosition
         ]}
       >
@@ -202,7 +202,8 @@ const styles = StyleSheet.create({
     borderWidth: 0,               // Remove border for solid background
   },
   aiBubble: {
-    // Uses default glass morphism styling
+    // Light grey background for AI messages (overrides glass morphism)
+    borderWidth: 0,               // Remove border for solid background
   },
   userBubblePosition: {
     borderBottomRightRadius: 4,   // Reduce corner radius on user side
