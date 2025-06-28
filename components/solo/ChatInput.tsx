@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
     width: '100%',                // Take full width since buttons are below
     borderWidth: 1,
     borderRadius: 16,             // 16px border radius per UIDesign.md
-    paddingHorizontal: 16,        // 16px horizontal padding for text visibility
+    paddingHorizontal: 0,         // No horizontal padding for maximum text space
     paddingVertical: 12,          // 12px vertical padding for text visibility
     fontSize: 16,                 // 16pt per UIDesign.md
     fontFamily: 'Montserrat_400Regular',
