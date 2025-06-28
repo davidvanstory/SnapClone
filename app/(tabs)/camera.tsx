@@ -14,6 +14,7 @@
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { uploadPhoto } from '@/lib/photoService';
 import { useAuthStore } from '@/store/authStore';
@@ -285,13 +286,21 @@ export default function CameraScreen() {
                 onPress={handleUploadPhoto}
                 disabled={isUploading || uploadSuccess}
               >
-                <Text style={styles.primaryButtonText}>
-                  {isUploading 
-                    ? 'Uploading...' 
-                    : uploadSuccess 
-                      ? 'Uploaded! ✅' 
-                      : 'Save to Supabase'}
-                </Text>
+                <View style={styles.buttonContent}>
+                  <IconSymbol 
+                    name="brain" 
+                    size={16} 
+                    color="white" 
+                    weight="semibold"
+                  />
+                  <Text style={styles.primaryButtonText}>
+                    {isUploading 
+                      ? 'Uploading...' 
+                      : uploadSuccess 
+                        ? 'Uploaded! ✅' 
+                        : 'Send to Juni'}
+                  </Text>
+                </View>
               </TouchableOpacity>
             </View>
             
@@ -325,6 +334,12 @@ export default function CameraScreen() {
                 { backgroundColor: isCapturing ? '#ccc' : 'white' }
               ]} />
             </TouchableOpacity>
+            
+            {!isCapturing && (
+              <Text style={styles.captureHintText}>
+                capture your art
+              </Text>
+            )}
             
             {isCapturing && (
               <Text style={[styles.capturingText, { color: textColor }]}>
@@ -417,6 +432,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'transparent',
+    marginBottom: 8, // Raise button slightly to make room for text
   },
   captureButtonInner: {
     width: 60,
@@ -431,6 +447,12 @@ const styles = StyleSheet.create({
     bottom: 20,
     fontSize: 16,
     fontWeight: '600',
+  },
+  captureHintText: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginTop: 4,
   },
   
   // Preview mode
@@ -485,5 +507,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     marginTop: 8,
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
 }); 
