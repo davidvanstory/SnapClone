@@ -8,9 +8,13 @@
  * - Send button with loading states during AI processing
  * - Glass morphism design per UIDesign.md specifications
  * - Keyboard management and proper focus handling
+ * - Prepopulated instructional text that disappears when user starts typing
  * 
  * Features:
  * - Auto-expanding text input (1-4 lines)
+ * - Instructional text "Ask Juni your art question" that appears when input is empty
+ * - Text automatically clears when user focuses/starts typing
+ * - Instructional text restores when input is empty and loses focus
  * - Image picker integration with plus icon for artwork uploads
  * - Send button with paper plane icon, disabled when empty or loading
  * - Image preview with remove functionality
@@ -55,22 +59,45 @@ export default function ChatInput({
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
+  // Instructional text constants
+  const INSTRUCTIONAL_TEXT = "Ask Juni your art question";
+
   // Local state
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(INSTRUCTIONAL_TEXT);
   const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
   const [inputHeight, setInputHeight] = useState(44); // Base height for single line
+  const [isShowingInstructionalText, setIsShowingInstructionalText] = useState(true);
 
   // Computed state
-  const canSend = !isLoading && !disabled && (message.trim().length > 0 || selectedImageUri);
+  const actualMessage = isShowingInstructionalText ? '' : message;
+  const canSend = !isLoading && !disabled && (actualMessage.trim().length > 0 || selectedImageUri);
   const maxInputHeight = 100; // Maximum height for 4 lines
   const minInputHeight = 44;  // Minimum height for single line
+
+  // Debug logging
+  console.log('🔍 Chat Input - Current state:', {
+    message,
+    isShowingInstructionalText,
+    actualMessage,
+    canSend,
+    messageLength: message.length,
+    actualMessageLength: actualMessage.length
+  });
 
   /**
    * Handle text input changes with auto-expanding height
    */
   const handleTextChange = (text: string) => {
     console.log('📝 Chat Input - Text changed, length:', text.length);
-    setMessage(text);
+    
+    // If user starts typing while instructional text is showing, clear it
+    if (isShowingInstructionalText && text !== INSTRUCTIONAL_TEXT) {
+      console.log('✏️ Chat Input - User started typing, clearing instructional text');
+      setIsShowingInstructionalText(false);
+      setMessage(text);
+    } else if (!isShowingInstructionalText) {
+      setMessage(text);
+    }
   };
 
   /**
@@ -81,6 +108,30 @@ export default function ChatInput({
     const newHeight = Math.min(Math.max(height + 16, minInputHeight), maxInputHeight);
     console.log('📏 Chat Input - Content size changed, new height:', newHeight);
     setInputHeight(newHeight);
+  };
+
+  /**
+   * Handle text input focus - clear instructional text if showing
+   */
+  const handleTextInputFocus = () => {
+    console.log('🎯 Chat Input - Text input focused');
+    if (isShowingInstructionalText) {
+      console.log('✏️ Chat Input - Clearing instructional text on focus');
+      setIsShowingInstructionalText(false);
+      setMessage('');
+    }
+  };
+
+  /**
+   * Handle text input blur - restore instructional text if empty
+   */
+  const handleTextInputBlur = () => {
+    console.log('🎯 Chat Input - Text input blurred');
+    if (!isShowingInstructionalText && message.trim() === '') {
+      console.log('✏️ Chat Input - Restoring instructional text on blur with empty input');
+      setIsShowingInstructionalText(true);
+      setMessage(INSTRUCTIONAL_TEXT);
+    }
   };
 
   /**
@@ -148,16 +199,17 @@ export default function ChatInput({
     }
 
     console.log('🚀 Chat Input - Sending message:', {
-      messageLength: message.length,
+      messageLength: actualMessage.length,
       hasImage: !!selectedImageUri
     });
 
     try {
-      await onSendMessage(message.trim(), selectedImageUri || undefined);
+      await onSendMessage(actualMessage.trim(), selectedImageUri || undefined);
       
-      // Clear input after successful send
+      // Clear input after successful send and restore instructional text
       console.log('✅ Chat Input - Message sent successfully, clearing input');
-      setMessage('');
+      setMessage(INSTRUCTIONAL_TEXT);
+      setIsShowingInstructionalText(true);
       setSelectedImageUri(null);
       setInputHeight(minInputHeight);
       
@@ -219,13 +271,16 @@ export default function ChatInput({
               height: inputHeight,
               borderColor: colors.glassBorderSecondary,
               backgroundColor: colors.glassInput,
-              color: colors.text,
+              color: isShowingInstructionalText ? colors.textSecondary : colors.text,
+              fontSize: isShowingInstructionalText ? 14 : 16, // 50% smaller when showing instructional text
             }
           ]}
           value={message}
           onChangeText={handleTextChange}
           onContentSizeChange={handleContentSizeChange}
-          placeholder={placeholder}
+          onFocus={handleTextInputFocus}
+          onBlur={handleTextInputBlur}
+          placeholder={!isShowingInstructionalText ? placeholder : undefined}
           placeholderTextColor={colors.glassPlaceholder}
           multiline={true}
           textAlignVertical="top"

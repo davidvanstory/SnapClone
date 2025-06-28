@@ -21,12 +21,12 @@
 
 import React, { useEffect } from 'react';
 import {
-    KeyboardAvoidingView,
-    Platform,
-    SafeAreaView,
-    StyleSheet,
-    TouchableOpacity,
-    View
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  StyleSheet,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   // Input Container
   inputContainer: {
     paddingHorizontal: 20,       // 20px screen margins per UIDesign.md
-    paddingBottom: 20,           // Space above tab bar
+    paddingBottom: 42,           // Increased space above tab bar (10% higher)
     paddingTop: 8,               // Small gap from chat
   },
 }); 
