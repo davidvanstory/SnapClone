@@ -24,7 +24,7 @@
  */
 
 import * as ImagePicker from 'expo-image-picker';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -40,6 +40,7 @@ import GlassMorphismCard from '@/components/ui/GlassMorphismCard';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { useSoloStore } from '@/store/soloStore';
 
 export interface ChatInputProps {
   onSendMessage: (message: string, imageUri?: string) => Promise<void>;
@@ -58,6 +59,7 @@ export default function ChatInput({
 
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
+  const { prepopulatedImageUri, clearPrepopulatedImageUri } = useSoloStore();
 
   // Instructional text constants
   const INSTRUCTIONAL_TEXT = "Ask Juni your art question";
@@ -66,6 +68,19 @@ export default function ChatInput({
   const [message, setMessage] = useState(INSTRUCTIONAL_TEXT);
   const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
   const [isShowingInstructionalText, setIsShowingInstructionalText] = useState(true);
+
+  // Handle prepopulated image from camera
+  useEffect(() => {
+    if (prepopulatedImageUri) {
+      console.log('📷 Chat Input - Prepopulated image detected from camera:', prepopulatedImageUri);
+      setSelectedImageUri(prepopulatedImageUri);
+      clearPrepopulatedImageUri();
+      
+      // Clear instructional text and focus on the input for user to add their question
+      setIsShowingInstructionalText(false);
+      setMessage('');
+    }
+  }, [prepopulatedImageUri, clearPrepopulatedImageUri]);
 
   // Computed state
   const actualMessage = isShowingInstructionalText ? '' : message;
@@ -262,7 +277,7 @@ export default function ChatInput({
           </TouchableOpacity>
         </View>
         <ThemedText type="caption" style={[styles.imagePreviewLabel, { color: colors.textSecondary }]}>
-          Artwork to analyze
+          Ask Juni about your artwork
         </ThemedText>
       </View>
     );

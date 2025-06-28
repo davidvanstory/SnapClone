@@ -19,6 +19,7 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { uploadPhoto } from '@/lib/photoService';
 import { useAuthStore } from '@/store/authStore';
 import { useClassStore } from '@/store/classStore';
+import { useSoloStore } from '@/store/soloStore';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { router } from 'expo-router';
 import React, { useRef, useState } from 'react';
@@ -46,6 +47,7 @@ export default function CameraScreen() {
   // Auth store for logout functionality
   const { signOut } = useAuthStore();
   const { clearClassData } = useClassStore();
+  const { setPrepopulatedImageUri } = useSoloStore();
   
   // Themed colors
   const backgroundColor = useThemeColor({}, 'background');
@@ -151,7 +153,7 @@ export default function CameraScreen() {
   };
 
   /**
-   * Upload photo to Supabase
+   * Upload photo to Supabase and navigate to Juni tab
    */
   const handleUploadPhoto = async () => {
     if (!capturedPhoto) {
@@ -171,20 +173,21 @@ export default function CameraScreen() {
         console.log('🌐 Public URL:', result.publicUrl);
         
         setUploadSuccess(true);
-        Alert.alert(
-          'Success! 🎉',
-          'Your photo has been uploaded to Supabase!',
-          [
-            {
-              text: 'Take Another',
-              onPress: resetCamera,
-            },
-            {
-              text: 'OK',
-              style: 'default',
-            },
-          ]
-        );
+        
+        // Set the captured photo in Solo store for prepopulation
+        console.log('🧠 Camera Screen - Setting prepopulated image in Solo store');
+        setPrepopulatedImageUri(capturedPhoto);
+        
+        // Navigate to Juni tab after short delay to show success state
+        setTimeout(() => {
+          console.log('🚀 Camera Screen - Navigating to Juni tab');
+          router.push('/(tabs)/solo');
+          
+          // Reset camera state after navigation
+          setCapturedPhoto(null);
+          setUploadSuccess(false);
+        }, 1000); // 1 second delay to show success state
+        
       } else {
         console.error('❌ Camera Screen - Upload failed:', result.error);
         Alert.alert(
@@ -295,20 +298,14 @@ export default function CameraScreen() {
                   />
                   <Text style={styles.primaryButtonText}>
                     {isUploading 
-                      ? 'Uploading...' 
+                      ? 'Sending...' 
                       : uploadSuccess 
-                        ? 'Uploaded! ✅' 
+                        ? 'Sent! ✅' 
                         : 'Send to Juni'}
                   </Text>
                 </View>
               </TouchableOpacity>
             </View>
-            
-            {isUploading && (
-              <Text style={[styles.statusText, { color: textColor }]}>
-                📤 Uploading to Supabase...
-              </Text>
-            )}
           </View>
         </>
       ) : (
@@ -338,12 +335,6 @@ export default function CameraScreen() {
             {!isCapturing && (
               <Text style={styles.captureHintText}>
                 capture your art
-              </Text>
-            )}
-            
-            {isCapturing && (
-              <Text style={[styles.capturingText, { color: textColor }]}>
-                Capturing...
               </Text>
             )}
           </View>
@@ -442,12 +433,6 @@ const styles = StyleSheet.create({
   captureButtonDisabled: {
     opacity: 0.5,
   },
-  capturingText: {
-    position: 'absolute',
-    bottom: 20,
-    fontSize: 16,
-    fontWeight: '600',
-  },
   captureHintText: {
     fontSize: 12,
     fontWeight: '400',
@@ -502,11 +487,6 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
-  },
-  statusText: {
-    fontSize: 14,
-    textAlign: 'center',
-    marginTop: 8,
   },
   buttonContent: {
     flexDirection: 'row',

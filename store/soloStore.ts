@@ -44,6 +44,7 @@ export interface SoloState {
   
   // UI states
   isInitialized: boolean;
+  prepopulatedImageUri: string | null;
   
   // Actions
   initialize: (userId: string) => Promise<void>;
@@ -57,6 +58,8 @@ export interface SoloState {
   clearError: () => void;
   clearMessageError: () => void;
   reset: () => void;
+  setPrepopulatedImageUri: (imageUri: string | null) => void;
+  clearPrepopulatedImageUri: () => void;
   
   // Internal state setters
   setCurrentChat: (chat: SoloAIChat | null) => void;
@@ -87,6 +90,7 @@ export const useSoloStore = create<SoloState>((set, get) => ({
   error: null,
   messageError: null,
   isInitialized: false,
+  prepopulatedImageUri: null,
 
   // Initialize the Solo Tutor store
   initialize: async (userId: string) => {
@@ -369,6 +373,7 @@ export const useSoloStore = create<SoloState>((set, get) => ({
       error: null,
       messageError: null,
       isInitialized: false,
+      prepopulatedImageUri: null,
     });
   },
 
@@ -430,5 +435,16 @@ export const useSoloStore = create<SoloState>((set, get) => ({
 
   setInitialized: (initialized: boolean) => {
     set({ isInitialized: initialized });
+  },
+
+  // Prepopulated image management
+  setPrepopulatedImageUri: (imageUri: string | null) => {
+    console.log('📷 Solo Store - Setting prepopulated image URI:', imageUri ? 'Image set' : 'Cleared');
+    set({ prepopulatedImageUri: imageUri });
+  },
+
+  clearPrepopulatedImageUri: () => {
+    console.log('🧹 Solo Store - Clearing prepopulated image URI');
+    set({ prepopulatedImageUri: null });
   },
 })); 
