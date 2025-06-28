@@ -1,5 +1,12 @@
 # Welcome to your Expo app 👋
 
+
+To access the RAG features - must use account 
+hello@example.com
+123456
+
+
+
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
 ## Get started

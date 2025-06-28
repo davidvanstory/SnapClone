@@ -95,21 +95,21 @@ export default function LoginScreen() {
         style={styles.keyboardView}
       >
         <View style={styles.content}>
+          {/* Header - JUNI Branding moved above card for 20% higher positioning */}
+          <View style={styles.headerAboveCard}>
+            {/* App Icon - 2x larger */}
+            <Image 
+              source={require('../../assets/images/icon.png')} 
+              style={styles.appIcon}
+              resizeMode="contain"
+            />
+            <ThemedText type="bodyText" style={[styles.subtitle, { color: colors.textSecondary }]}>
+              Grow as an artist with peers and AI
+            </ThemedText>
+          </View>
+
           {/* Glass Morphism Card Container per UIDesign.md */}
           <GlassMorphismCard type="primary" style={styles.loginCard}>
-            {/* Header - JUNI Branding per UIDesign.md */}
-            <View style={styles.header}>
-              {/* App Icon - 2x larger */}
-              <Image 
-                source={require('../../assets/images/icon.png')} 
-                style={styles.appIcon}
-                resizeMode="contain"
-              />
-              <ThemedText type="bodyText" style={[styles.subtitle, { color: colors.textSecondary }]}>
-                Sign in to join your art class
-              </ThemedText>
-            </View>
-
             {/* Form */}
             <View style={styles.form}>
               <AuthForm
@@ -156,18 +156,19 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    justifyContent: 'center',    // Center the glass card vertically
-    paddingHorizontal: 20,       // 20px screen margins per UIDesign.md
+    justifyContent: 'flex-start', // Changed to flex-start to allow custom positioning
+    paddingHorizontal: 20,        // 20px screen margins per UIDesign.md
     paddingVertical: 40,
+  },
+  headerAboveCard: {
+    alignItems: 'center',
+    marginTop: '15%',            // Position header 15% from top (20% higher than center)
+    marginBottom: 32,            // Space between header and card
+    gap: 12,                     // 12px gap to accommodate icon
   },
   loginCard: {
     padding: 24,                 // 24px section spacing per UIDesign.md
     marginHorizontal: 4,         // Slight margin for card shadow visibility
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 24,            // 24px section spacing per UIDesign.md
-    gap: 12,                     // 12px gap to accommodate icon
   },
   appIcon: {
     width: 160,                  // 2x larger - prominent branding

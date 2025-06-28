@@ -24,7 +24,7 @@ module.exports = {
     newArchEnabled: true,
     ios: {
       supportsTablet: true,
-      bundleIdentifier: "com.davidvanstory.juni"
+      bundleIdentifier: "com.davidvanstory.ephemeralart"
     },
     android: {
       adaptiveIcon: {
