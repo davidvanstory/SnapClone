@@ -11,27 +11,29 @@
  * 
  * Features:
  * - Auto-expanding text input (1-4 lines)
- * - Image picker integration for artwork uploads
- * - Send button disabled when empty or loading
+ * - Image picker integration with plus icon for artwork uploads
+ * - Send button with paper plane icon, disabled when empty or loading
  * - Image preview with remove functionality
  * - Proper keyboard avoidance and focus management
  * - Error handling for image upload failures
+ * - Consistent IconSymbol usage matching app design system
  */
 
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Image,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import GlassMorphismCard from '@/components/ui/GlassMorphismCard';
+import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
@@ -85,7 +87,7 @@ export default function ChatInput({
    * Handle image picker selection
    */
   const handleImagePicker = async () => {
-    console.log('🖼️ Chat Input - Opening image picker');
+    console.log('➕ Chat Input - Opening image picker via plus icon');
 
     try {
       // Request permissions
@@ -247,12 +249,12 @@ export default function ChatInput({
             disabled={disabled || isLoading}
             activeOpacity={0.8}
           >
-            <ThemedText type="label" style={[
-              styles.imageButtonText,
-              { color: selectedImageUri ? 'white' : colors.text }
-            ]}>
-              📷
-            </ThemedText>
+            <IconSymbol
+              name="plus"
+              size={20}
+              color={selectedImageUri ? 'white' : colors.text}
+              weight="medium"
+            />
           </TouchableOpacity>
 
           {/* Send Button */}
@@ -271,9 +273,12 @@ export default function ChatInput({
             {isLoading ? (
               <ActivityIndicator size="small" color="white" />
             ) : (
-              <ThemedText type="label" style={styles.sendButtonText}>
-                ➤
-              </ThemedText>
+              <IconSymbol
+                name="paperplane.fill"
+                size={18}
+                color="white"
+                weight="medium"
+              />
             )}
           </TouchableOpacity>
         </View>
@@ -369,20 +374,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  imageButtonText: {
-    fontSize: 18,                 // Larger emoji size
-    // Montserrat 14pt Medium per UIDesign.md applied via ThemedText type="label"
-  },
   sendButton: {
     width: 44,                    // 44px touch target per UIDesign.md
     height: 44,                   // Square button
     borderRadius: 22,             // Circular button
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  sendButtonText: {
-    color: 'white',               // White text on sage background
-    fontSize: 18,                 // Larger arrow size
-    // Montserrat 14pt Medium per UIDesign.md applied via ThemedText type="label"
   },
 }); 
