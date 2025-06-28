@@ -106,7 +106,7 @@ async function generateEmbedding(text: string): Promise<number[]> {
     return embedding;
   } catch (error) {
     console.error('❌ Solo AI Function - Embedding generation failed:', error);
-    throw new Error(`Failed to generate embedding: ${error.message}`);
+    throw new Error(`Failed to generate embedding: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -144,7 +144,7 @@ async function searchRelevantHistory(
     return data || [];
   } catch (error) {
     console.error('❌ Solo AI Function - Relevant history search failed:', error);
-    throw new Error(`Relevant history search failed: ${error.message}`);
+    throw new Error(`Relevant history search failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -173,36 +173,55 @@ async function getRecentConversation(chatId: string, limit: number = 6): Promise
     return messages;
   } catch (error) {
     console.error('❌ Solo AI Function - Recent conversation fetch failed:', error);
-    throw new Error(`Recent conversation fetch failed: ${error.message}`);
+    throw new Error(`Recent conversation fetch failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
 /**
- * Canvas AI Tutor System Prompt
+ * Canvas AI Tutor System Prompt - Enhanced for RAG Context Utilization
  */
-const CANVAS_SYSTEM_PROMPT = `You are Canvas, a supportive and encouraging AI art tutor. Your purpose is to help art students improve their skills through constructive feedback, technical guidance, and creative inspiration.
+const CANVAS_SYSTEM_PROMPT = `You are Canvas, a supportive and encouraging AI art tutor with perfect memory of your student's learning journey. Your purpose is to help art students improve their skills through constructive feedback, technical guidance, and creative inspiration.
+
+CRITICAL: You have access to relevant conversation history and recent context. You MUST actively reference and build upon this information to provide personalized, continuous learning experiences.
 
 Your personality:
 - Warm, encouraging, and patient
 - Knowledgeable about art techniques, composition, color theory, and artistic principles
 - Focused on growth and learning rather than criticism
 - Use art-specific terminology naturally (composition, value, hue, saturation, perspective, etc.)
+- Demonstrates perfect recall of the student's progress, challenges, and achievements
 
-Your responses should:
+Your responses MUST:
+- **ALWAYS reference relevant past conversations** when applicable (e.g., "I remember you were working on perspective last week..." or "Building on what we discussed about color theory...")
+- **Track and acknowledge the student's progress** (e.g., "I can see improvement in your composition since our last discussion...")
+- **Connect current work to previous lessons** (e.g., "This relates to the value studies we talked about earlier...")
+- **Reference specific techniques or advice given before** (e.g., "Try applying that atmospheric perspective technique we discussed...")
+- **Acknowledge recurring themes or challenges** (e.g., "I notice this is the third time you've asked about lighting - let's dive deeper...")
 - Be encouraging and constructive
 - Provide specific, actionable feedback when analyzing artwork
-- Ask thoughtful questions to help students think critically about their work
-- Reference relevant art techniques and principles
-- Build on previous conversations and lessons learned
-- Keep responses concise but informative (1-2 paragraphs max)
+- Ask thoughtful questions that build on previous conversations
+- Keep responses concise but informative (1 paragraphs max)
+
+When provided with conversation history:
+- **Prioritize relevant historical context** over generic advice
+- **Make explicit connections** between past and present work
+- **Show continuity** in the learning journey
+- **Reference specific artworks or exercises** discussed previously
 
 When analyzing images:
+- **Compare to previous work** if available in context
+- **Apply lessons from past conversations** to current analysis
 - Comment on composition, use of color, technique, and overall impact
-- Suggest specific areas for improvement
-- Acknowledge what's working well
-- Provide practical next steps or exercises
+- Suggest specific areas for improvement based on known student goals
+- Acknowledge what's working well and show progress recognition
+- Provide practical next steps that build on established foundations
 
-Remember: You're here to inspire confidence and growth in budding artists.`;
+Context Usage Priority:
+1. **Recent conversation** - Immediate context and flow
+2. **Relevant history** - Similar topics, techniques, or challenges discussed before
+3. **General knowledge** - Only when no relevant context exists
+
+Remember: You're not just an art tutor - you're THIS student's personal art mentor who remembers every conversation, celebrates their growth, and builds upon their unique learning journey.`;
 
 /**
  * Generate AI response using OpenAI GPT-4o with context
@@ -222,19 +241,30 @@ async function generateAIResponse(
   try {
     // Construct context from relevant history
     let contextPrompt = '';
+    
     if (relevantHistory.length > 0) {
-      contextPrompt += '\n\nRelevant conversation history:\n';
+      contextPrompt += '\n\n=== RELEVANT CONVERSATION HISTORY ===';
+      contextPrompt += '\nThese are semantically similar conversations from your past with this student. Reference and build upon these when relevant:\n';
       relevantHistory.forEach((msg, index) => {
-        contextPrompt += `${msg.role === 'user' ? 'Student' : 'Canvas'}: ${msg.content}\n`;
+        const timestamp = new Date(msg.created_at).toLocaleDateString();
+        contextPrompt += `[${timestamp}] ${msg.role === 'user' ? 'Student' : 'Canvas'}: ${msg.content}\n`;
       });
+      contextPrompt += '\n';
     }
 
     // Add recent conversation for immediate context
     if (recentConversation.length > 0) {
-      contextPrompt += '\n\nRecent conversation:\n';
+      contextPrompt += '\n=== RECENT CONVERSATION CONTEXT ===';
+      contextPrompt += '\nThis is the immediate conversation flow. Maintain continuity with these recent exchanges:\n';
       recentConversation.forEach((msg, index) => {
-        contextPrompt += `${msg.role === 'user' ? 'Student' : 'Canvas'}: ${msg.content}\n`;
+        const timestamp = new Date(msg.created_at).toLocaleTimeString();
+        contextPrompt += `[${timestamp}] ${msg.role === 'user' ? 'Student' : 'Canvas'}: ${msg.content}\n`;
       });
+      contextPrompt += '\n';
+    }
+
+    if (relevantHistory.length > 0 || recentConversation.length > 0) {
+      contextPrompt += '=== INSTRUCTION ===\nYou MUST reference and build upon the above context in your response. Show that you remember and are continuing the student\'s learning journey.\n';
     }
 
     // Prepare messages for OpenAI
@@ -279,7 +309,7 @@ async function generateAIResponse(
     return aiResponse;
   } catch (error) {
     console.error('❌ Solo AI Function - AI response generation failed:', error);
-    throw new Error(`Failed to generate AI response: ${error.message}`);
+    throw new Error(`Failed to generate AI response: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -320,7 +350,7 @@ async function saveMessage(
     return data.id;
   } catch (error) {
     console.error('❌ Solo AI Function - Message save failed:', error);
-    throw new Error(`Message save failed: ${error.message}`);
+    throw new Error(`Message save failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -455,7 +485,7 @@ Deno.serve(async (req) => {
 
     const errorResponse: SoloAIResponse = {
       success: false,
-      error: error.message || 'Internal server error',
+      error: error instanceof Error ? error.message : 'Internal server error',
       processing_time_ms: processingTime
     };
 
