@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
 
   // Input Container
   inputContainer: {
-    paddingHorizontal: 16,       // Match ChatInput internal padding
+    paddingHorizontal: 12,       // Reduced to minimize dead space
     paddingBottom: 42,           // Increased space above tab bar (10% higher)
     paddingTop: 0,               // Remove top padding to eliminate dead space
   },

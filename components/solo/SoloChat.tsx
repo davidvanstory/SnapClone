@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
   messagesContainer: {
     paddingHorizontal: 16,        // 16px horizontal padding per UIDesign.md
     paddingTop: 16,               // 16px top padding
-    paddingBottom: 0,             // Remove bottom padding to eliminate dead space
+    paddingBottom: 4,             // Minimal bottom padding to prevent cutting off
   },
   emptyMessagesContainer: {
     flexGrow: 1,                  // Allow centering of empty state
@@ -338,6 +338,6 @@ const styles = StyleSheet.create({
   
   // Footer Container
   footerContainer: {
-    paddingBottom: 4,             // Minimal bottom padding to avoid cutting off content
+    paddingBottom: 2,             // Minimal bottom padding to avoid cutting off content
   },
 }); 

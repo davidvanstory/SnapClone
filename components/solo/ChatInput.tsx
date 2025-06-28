@@ -65,13 +65,12 @@ export default function ChatInput({
   // Local state
   const [message, setMessage] = useState(INSTRUCTIONAL_TEXT);
   const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
-  const [inputHeight, setInputHeight] = useState(44); // Base height for single line
   const [isShowingInstructionalText, setIsShowingInstructionalText] = useState(true);
 
   // Computed state
   const actualMessage = isShowingInstructionalText ? '' : message;
   const canSend = !isLoading && !disabled && (actualMessage.trim().length > 0 || selectedImageUri);
-  const maxInputHeight = 100; // Maximum height for 4 lines
+  const maxInputHeight = 92;  // Maximum height for exactly 3 lines (44px base + 24px per additional line + padding)
   const minInputHeight = 44;  // Minimum height for single line
 
   // Debug logging
@@ -88,7 +87,11 @@ export default function ChatInput({
    * Handle text input changes with auto-expanding height
    */
   const handleTextChange = (text: string) => {
-    console.log('📝 Chat Input - Text changed, length:', text.length);
+    console.log('📝 Chat Input - Text changed:', { 
+      textLength: text.length, 
+      isShowingInstructional: isShowingInstructionalText,
+      lineCount: text.split('\n').length
+    });
     
     // If user starts typing while instructional text is showing, clear it
     if (isShowingInstructionalText && text !== INSTRUCTIONAL_TEXT) {
@@ -105,9 +108,18 @@ export default function ChatInput({
    */
   const handleContentSizeChange = (event: any) => {
     const { height } = event.nativeEvent.contentSize;
-    const newHeight = Math.min(Math.max(height + 16, minInputHeight), maxInputHeight);
-    console.log('📏 Chat Input - Content size changed, new height:', newHeight);
-    setInputHeight(newHeight);
+    const lineCount = message.split('\n').length;
+    const willScroll = height > maxInputHeight;
+    console.log('📏 Chat Input - Content size changed:', { 
+      contentHeight: height,
+      minHeight: minInputHeight,
+      maxHeight: maxInputHeight,
+      lineCount,
+      willScroll,
+      currentMessage: message.substring(0, 50) + '...'
+    });
+    // Height is now handled by minHeight/maxHeight in styles
+    // When content exceeds maxHeight, TextInput will automatically scroll
   };
 
   /**
@@ -211,7 +223,6 @@ export default function ChatInput({
       setMessage(INSTRUCTIONAL_TEXT);
       setIsShowingInstructionalText(true);
       setSelectedImageUri(null);
-      setInputHeight(minInputHeight);
       
     } catch (error) {
       console.error('❌ Chat Input - Failed to send message:', error);
@@ -268,7 +279,8 @@ export default function ChatInput({
           style={[
             styles.textInput,
             {
-              height: inputHeight,
+              minHeight: minInputHeight,
+              maxHeight: maxInputHeight,
               borderColor: colors.glassBorderSecondary,
               backgroundColor: colors.glassInput,
               color: isShowingInstructionalText ? colors.textSecondary : colors.text,
@@ -287,6 +299,7 @@ export default function ChatInput({
           editable={!disabled && !isLoading}
           returnKeyType="default"
           blurOnSubmit={false}
+          scrollEnabled={true}
         />
 
         {/* Action Buttons - Always on line below text input */}
@@ -359,11 +372,11 @@ const styles = StyleSheet.create({
   // Main Container
   container: {
     margin: 0,                    // Remove margin to eliminate dead space
-    paddingHorizontal: 16,        // 16px internal padding per UIDesign.md
-    paddingVertical: 12,          // 12px vertical padding
+    paddingHorizontal: 12,        // Reduced padding to minimize dead space
+    paddingVertical: 8,           // Reduced vertical padding to minimize dead space
   },
   content: {
-    gap: 12,                      // 12px spacing between elements
+    gap: 8,                       // Reduced spacing to minimize dead space
   },
 
   // Image Preview
@@ -403,17 +416,17 @@ const styles = StyleSheet.create({
   // Input Controls
   inputControls: {
     flexDirection: 'column',      // Stack vertically so buttons are below text input
-    gap: 8,                       // 8px spacing between input and buttons
+    gap: 6,                       // Reduced spacing to minimize dead space
   },
   textInput: {
     width: '100%',                // Take full width since buttons are below
     borderWidth: 1,
     borderRadius: 16,             // 16px border radius per UIDesign.md
-    paddingHorizontal: 0,        // 16px horizontal padding
-    paddingVertical: 0,          // 12px vertical padding
+    paddingHorizontal: 16,        // 16px horizontal padding for text visibility
+    paddingVertical: 12,          // 12px vertical padding for text visibility
     fontSize: 16,                 // 16pt per UIDesign.md
     fontFamily: 'Montserrat_400Regular',
-    // Dynamic height handled by state
+    // Height: minHeight to maxHeight (3 lines), then scrollable
   },
 
   // Action Buttons
