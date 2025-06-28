@@ -223,8 +223,8 @@ const styles = StyleSheet.create({
   // Chat Container
   chatContainer: {
     flex: 1,
-    paddingHorizontal: 20,       // 20px screen margins per UIDesign.md
-    paddingVertical: 20,
+    paddingHorizontal: 0,        // Remove horizontal padding - SoloChat handles its own
+    paddingVertical: 0,          // Remove vertical padding to eliminate dead space
   },
   welcomeCard: {
     padding: 24,                 // 24px section spacing per UIDesign.md
@@ -282,8 +282,8 @@ const styles = StyleSheet.create({
 
   // Input Container
   inputContainer: {
-    paddingHorizontal: 20,       // 20px screen margins per UIDesign.md
+    paddingHorizontal: 16,       // Match ChatInput internal padding
     paddingBottom: 42,           // Increased space above tab bar (10% higher)
-    paddingTop: 8,               // Small gap from chat
+    paddingTop: 0,               // Remove top padding to eliminate dead space
   },
 }); 

@@ -289,7 +289,7 @@ export default function ChatInput({
           blurOnSubmit={false}
         />
 
-        {/* Action Buttons */}
+        {/* Action Buttons - Always on line below text input */}
         <View style={styles.actionButtons}>
           {/* Image Upload Button */}
           <TouchableOpacity
@@ -358,7 +358,7 @@ export default function ChatInput({
 const styles = StyleSheet.create({
   // Main Container
   container: {
-    margin: 16,                   // 16px margin from screen edges
+    margin: 0,                    // Remove margin to eliminate dead space
     paddingHorizontal: 16,        // 16px internal padding per UIDesign.md
     paddingVertical: 12,          // 12px vertical padding
   },
@@ -402,16 +402,15 @@ const styles = StyleSheet.create({
 
   // Input Controls
   inputControls: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',       // Align to bottom for multi-line input
+    flexDirection: 'column',      // Stack vertically so buttons are below text input
     gap: 8,                       // 8px spacing between input and buttons
   },
   textInput: {
-    flex: 1,                      // Take remaining space
+    width: '100%',                // Take full width since buttons are below
     borderWidth: 1,
     borderRadius: 16,             // 16px border radius per UIDesign.md
-    paddingHorizontal: 16,        // 16px horizontal padding
-    paddingVertical: 12,          // 12px vertical padding
+    paddingHorizontal: 0,        // 16px horizontal padding
+    paddingVertical: 0,          // 12px vertical padding
     fontSize: 16,                 // 16pt per UIDesign.md
     fontFamily: 'Montserrat_400Regular',
     // Dynamic height handled by state
@@ -420,6 +419,7 @@ const styles = StyleSheet.create({
   // Action Buttons
   actionButtons: {
     flexDirection: 'row',
+    justifyContent: 'flex-end',   // Align buttons to the right
     gap: 8,                       // 8px spacing between buttons
   },
   imageButton: {

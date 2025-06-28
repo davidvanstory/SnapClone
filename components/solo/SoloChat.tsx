@@ -21,12 +21,12 @@
 
 import React, { useEffect, useRef } from 'react';
 import {
-    ActivityIndicator,
-    FlatList,
-    RefreshControl,
-    StyleSheet,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
   messagesContainer: {
     paddingHorizontal: 16,        // 16px horizontal padding per UIDesign.md
     paddingTop: 16,               // 16px top padding
-    paddingBottom: 8,             // Small bottom padding for footer
+    paddingBottom: 0,             // Remove bottom padding to eliminate dead space
   },
   emptyMessagesContainer: {
     flexGrow: 1,                  // Allow centering of empty state
@@ -338,6 +338,6 @@ const styles = StyleSheet.create({
   
   // Footer Container
   footerContainer: {
-    paddingBottom: 16,            // Bottom padding for last elements
+    paddingBottom: 4,             // Minimal bottom padding to avoid cutting off content
   },
 }); 
