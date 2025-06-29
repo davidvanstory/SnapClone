@@ -9,6 +9,7 @@
  * - Typography: Montserrat 14pt for inputs, exact sizes per UIDesign.md
  * - Error states with soft coral accent (#E67E50)
  * - Button styling with warm sage accent and glass morphism
+ * - Clean layout without field labels for Bank of America-inspired design
  */
 
 import React, { useState } from 'react';
@@ -50,7 +51,7 @@ export default function AuthForm({
   submitButtonText,
   loadingButtonText,
 }: AuthFormProps) {
-  console.log(`📝 AuthForm - Rendering glass morphism ${mode} form`);
+  console.log(`📝 AuthForm - Rendering clean ${mode} form without field labels`);
 
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
@@ -70,7 +71,7 @@ export default function AuthForm({
   const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
 
   // Default button texts based on mode
-  const defaultSubmitText = mode === 'login' ? 'Sign In to JUNI' : 'Join JUNI';
+  const defaultSubmitText = mode === 'login' ? 'Sign in to JUNI' : 'Join JUNI';
   const defaultLoadingText = mode === 'login' ? 'Signing In...' : 'Creating Account...';
   
   const finalSubmitText = submitButtonText || defaultSubmitText;
@@ -198,11 +199,8 @@ export default function AuthForm({
 
   return (
     <View style={styles.container}>
-      {/* Email Input */}
+      {/* Email Input - No label, clean design */}
       <View style={styles.inputGroup}>
-        <ThemedText type="label" style={[styles.label, { color: colors.text }]}>
-          Email Address
-        </ThemedText>
         <TextInput
           style={[
             styles.input,
@@ -242,11 +240,8 @@ export default function AuthForm({
         ) : null}
       </View>
 
-      {/* Password Input */}
+      {/* Password Input - No label, clean design */}
       <View style={styles.inputGroup}>
-        <ThemedText type="label" style={[styles.label, { color: colors.text }]}>
-          Password
-        </ThemedText>
         <TextInput
           style={[
             styles.input,
@@ -288,12 +283,9 @@ export default function AuthForm({
         ) : null}
       </View>
 
-      {/* Confirm Password Input (Register Mode Only) */}
+      {/* Confirm Password Input (Register Mode Only) - No label, clean design */}
       {mode === 'register' && (
         <View style={styles.inputGroup}>
-          <ThemedText type="label" style={[styles.label, { color: colors.text }]}>
-            Confirm Password
-          </ThemedText>
           <TextInput
             style={[
               styles.input,
@@ -337,9 +329,8 @@ export default function AuthForm({
       {/* Submit Button */}
       <TouchableOpacity
         style={[
-          styles.submitButton,
+          styles.button,
           { 
-            backgroundColor: colors.accentSage,
             opacity: isFormDisabled ? 0.6 : 1,
           }
         ]}
@@ -360,16 +351,13 @@ export default function AuthForm({
   );
 }
 
-// Glass Morphism Input Styles per UIDesign.md
+// Clean Form Styles per UIDesign.md - Bank of America inspired layout
 const styles = StyleSheet.create({
   container: {
-    gap: 20,                     // 20px between input groups
+    gap: 16,                     // Tighter spacing for cleaner look
   },
   inputGroup: {
-    gap: 8,                      // 8px base unit between label and input
-  },
-  label: {
-    // Montserrat 14pt Medium per UIDesign.md applied via ThemedText type="label"
+    gap: 8,                      // 8px base unit for error messages
   },
   input: {
     height: 50,                  // 44px+ touch target per UIDesign.md
@@ -389,22 +377,23 @@ const styles = StyleSheet.create({
     // Montserrat 11pt per UIDesign.md applied via ThemedText type="caption"
     // Soft coral color (#E67E50) applied via color prop
   },
-  submitButton: {
-    height: 50,                  // 44px+ touch target
-    borderRadius: 28,            // 28px fully rounded per UIDesign.md
-    justifyContent: 'center',
+  button: {
+    backgroundColor: 'rgba(118, 147, 125, 0.9)',  // Warm sage with high opacity
+    borderRadius: 16,                              // Rounded corners per UIDesign.md
+    paddingVertical: 12,                          // Reduced from 16px to make button smaller
+    paddingHorizontal: 24,                        // Reduced from 32px to make button smaller
     alignItems: 'center',
-    marginTop: 8,                // 8px base unit spacing
-    
-    // Glass morphism button shadow per UIDesign.md
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 16,
-    elevation: 6,
+    justifyContent: 'center',
+    // Glass morphism shadow effect per UIDesign.md
+    shadowColor: 'rgba(118, 147, 125, 0.3)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 12,
+    elevation: 8,                                  // Android shadow
+    // Subtle border for glass effect
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    minHeight: 44,                                // Reduced from 52px to make button smaller
   },
   buttonContent: {
     flexDirection: 'row',

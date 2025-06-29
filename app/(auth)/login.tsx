@@ -1,13 +1,12 @@
 /**
- * Login Screen Component - Glass Morphism Implementation
+ * Login Screen Component - Bank of America Inspired Layout
  * 
- * This screen implements the login interface from UIDesign.md specifications:
- * - Clean white background with subtle paper texture
- * - Glass morphism container (Primary Glass Card specs)
- * - Large app icon (160x160) as primary branding element
- * - Email/password inputs with glass morphism styling
- * - Warm sage accent color for focus states
- * - Typography hierarchy per UIDesign.md exact specifications
+ * This screen implements a clean, professional login interface inspired by Bank of America:
+ * - Header with JUNI text and small logo
+ * - Form card positioned in upper third of screen
+ * - Large branding (logo + tagline) in lower half
+ * - Maintains all UIDesign.md specifications for glass morphism and typography
+ * - Solves keyboard covering issues by positioning inputs in upper portion
  */
 
 import { Link, router } from 'expo-router';
@@ -29,7 +28,7 @@ import { useColorScheme } from '../../hooks/useColorScheme';
 import { useAuthStore } from '../../store/authStore';
 
 export default function LoginScreen() {
-  console.log('🔑 Login Screen - Rendering glass morphism login interface');
+  console.log('🔑 Login Screen - Rendering Bank of America inspired login interface');
 
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
@@ -95,49 +94,58 @@ export default function LoginScreen() {
         style={styles.keyboardView}
       >
         <View style={styles.content}>
-          {/* Header - JUNI Branding moved above card for 20% higher positioning */}
-          <View style={styles.headerAboveCard}>
-            {/* App Icon - 2x larger */}
-            <Image 
-              source={require('../../assets/images/icon.png')} 
-              style={styles.appIcon}
-              resizeMode="contain"
-            />
-            <ThemedText type="bodyText" style={[styles.subtitle, { color: colors.textSecondary }]}>
+          {/* Header - JUNI text, small logo, and tagline */}
+          <View style={styles.header}>
+            <View style={styles.headerTop}>
+              <ThemedText type="appName" style={[styles.appName, { color: colors.text }]}>
+                JUNI
+              </ThemedText>
+              <Image 
+                source={require('../../assets/images/icon.png')} 
+                style={styles.headerLogo}
+                resizeMode="contain"
+              />
+            </View>
+            <ThemedText type="bodyText" style={[styles.tagline, { color: colors.textSecondary }]}>
               Grow as an artist with peers and AI
             </ThemedText>
           </View>
 
-          {/* Glass Morphism Card Container per UIDesign.md */}
-          <GlassMorphismCard type="primary" style={styles.loginCard}>
-            {/* Form */}
-            <View style={styles.form}>
+          {/* Form Card - Positioned in upper third */}
+          <View style={styles.formSection}>
+            <GlassMorphismCard type="primary" style={styles.loginCard}>
               <AuthForm
                 mode="login"
                 onSubmit={handleLogin}
                 isLoading={isLoading}
               />
-            </View>
 
-            {/* Footer */}
-            <View style={styles.footer}>
-              <ThemedText type="bodyText" style={[styles.footerText, { color: colors.textSecondary }]}>
-                Don't have an account?{' '}
+              {/* Footer link inside card */}
+              <View style={styles.cardFooter}>
                 <Link href="/(auth)/register" asChild>
                   <ThemedText type="link" style={[styles.linkText, { color: colors.accentSage }]}>
                     Create Account
                   </ThemedText>
                 </Link>
-              </ThemedText>
-            </View>
-          </GlassMorphismCard>
+              </View>
+            </GlassMorphismCard>
+          </View>
+
+          {/* Large Branding Section - Bottom half (just logo now) */}
+          <View style={styles.brandingSection}>
+            <Image 
+              source={require('../../assets/images/icon.png')} 
+              style={styles.largeLogo}
+              resizeMode="contain"
+            />
+          </View>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-// Glass Morphism Design System Styles per UIDesign.md
+// Bank of America Inspired Layout Styles per UIDesign.md
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -156,34 +164,50 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    justifyContent: 'flex-start', // Changed to flex-start to allow custom positioning
-    paddingHorizontal: 20,        // 20px screen margins per UIDesign.md
-    paddingVertical: 40,
+    paddingHorizontal: 20,       // 20px screen margins per UIDesign.md
+    paddingVertical: 20,
   },
-  headerAboveCard: {
+  
+  // Header with JUNI text, small logo, and tagline - centered
+  header: {
+    alignItems: 'center',        // Center all header content
+    paddingTop: 20,              // Additional top padding for header
+    marginBottom: 40,            // Space before form section
+    gap: 12,                     // Space between top row and tagline
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginTop: '15%',            // Position header 15% from top (20% higher than center)
-    marginBottom: 32,            // Space between header and card
-    gap: 12,                     // 12px gap to accommodate icon
+    gap: 12,                     // Space between JUNI text and logo
   },
-  loginCard: {
-    padding: 24,                 // 24px section spacing per UIDesign.md
-    marginHorizontal: 4,         // Slight margin for card shadow visibility
+  appName: {
+    // Instrument Serif per UIDesign.md applied via ThemedText type="appName"
+    fontSize: 35,                // Increased by 25% from 28px (28 * 1.25 = 35)
   },
-  appIcon: {
-    width: 160,                  // 2x larger - prominent branding
-    height: 160,
-    marginBottom: 16,            // Increased space between icon and subtitle
+  headerLogo: {
+    width: 32,                   // Small logo like Bank of America
+    height: 32,
+    borderRadius: 8,             // Rounded corners for small logo
   },
-  subtitle: {
+  tagline: {
     textAlign: 'center',
+    paddingHorizontal: 20,       // Padding for text wrapping
     // Montserrat 16pt per UIDesign.md applied via ThemedText type="bodyText"
   },
-  form: {
-    marginBottom: 24,            // 24px section spacing
+
+  // Form section - positioned in upper third
+  formSection: {
+    marginBottom: 40,            // Space before branding section
   },
-  footer: {
+  loginCard: {
+    padding: 32,                 // Increased from 24px to make card taller
+    marginHorizontal: 4,         // Slight margin for card shadow visibility
+    paddingVertical: 36,         // Extra vertical padding for height
+  },
+  cardFooter: {
     alignItems: 'center',
+    marginTop: 24,               // Increased space above footer link
   },
   footerText: {
     textAlign: 'center',
@@ -192,5 +216,19 @@ const styles = StyleSheet.create({
   linkText: {
     // Warm sage color applied via color prop
     // Montserrat 16pt Medium per UIDesign.md applied via ThemedText type="link"
+  },
+
+  // Large branding section - bottom half
+  brandingSection: {
+    flex: 1,                     // Takes remaining space
+    justifyContent: 'center',    // Centers content vertically
+    alignItems: 'center',
+    paddingBottom: 40,           // Bottom padding
+  },
+  largeLogo: {
+    width: 160,                  // Increased from 120px to make logo bigger
+    height: 160,
+    marginBottom: 16,            // Space between logo and tagline
+    borderRadius: 32,            // Rounded corners for large logo (proportional to size)
   },
 }); 
