@@ -18,6 +18,7 @@ export interface UserProfile {
   email: string;
   username?: string;
   avatar_url?: string;
+  has_seen_onboarding?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -31,12 +32,20 @@ export interface AuthState {
   isLoading: boolean;
   isInitialized: boolean;
   
+  // Onboarding state
+  shouldShowOnboarding: boolean;
+  isCheckingOnboarding: boolean;
+  
   // Actions
   signUp: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
-  updateProfile: (updates: Partial<Pick<UserProfile, 'username' | 'avatar_url'>>) => Promise<{ success: boolean; error?: string }>;
+  updateProfile: (updates: Partial<Pick<UserProfile, 'username' | 'avatar_url' | 'has_seen_onboarding'>>) => Promise<{ success: boolean; error?: string }>;
   initialize: () => Promise<void>;
+  
+  // Onboarding actions
+  checkOnboardingStatus: () => Promise<void>;
+  markOnboardingComplete: () => Promise<{ success: boolean; error?: string }>;
   
   // Internal state setters
   setUser: (user: User | null) => void;
@@ -44,6 +53,8 @@ export interface AuthState {
   setSession: (session: Session | null) => void;
   setLoading: (loading: boolean) => void;
   setInitialized: (initialized: boolean) => void;
+  setShouldShowOnboarding: (show: boolean) => void;
+  setCheckingOnboarding: (checking: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -53,6 +64,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   session: null,
   isLoading: false,
   isInitialized: false,
+  
+  // Onboarding initial state
+  shouldShowOnboarding: false,
+  isCheckingOnboarding: false,
 
   // Initialize auth state and set up listener
   initialize: async () => {
@@ -185,6 +200,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             user: null,
             session: null,
             profile: null,
+            shouldShowOnboarding: false,
+            isCheckingOnboarding: false,
           });
         } else if (event === 'TOKEN_REFRESHED') {
           console.log('🔄 Auth Store - Token refreshed');
@@ -308,6 +325,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
 
       console.log('✅ Auth Store - User signed out successfully');
+      
+      // Reset onboarding state on logout
+      set({ 
+        shouldShowOnboarding: false,
+        isCheckingOnboarding: false 
+      });
     } catch (error) {
       console.error('❌ Auth Store - Sign out unexpected error:', error);
     } finally {
@@ -353,10 +376,103 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  // Onboarding functions
+  checkOnboardingStatus: async () => {
+    console.log('🎯 Auth Store - Checking onboarding status');
+    const { user } = get();
+    
+    if (!user) {
+      console.log('❌ Auth Store - No user found for onboarding check');
+      // Reset onboarding state when no user
+      set({ 
+        shouldShowOnboarding: false,
+        isCheckingOnboarding: false 
+      });
+      return;
+    }
+
+    set({ isCheckingOnboarding: true });
+
+    try {
+      // Import onboarding service
+      const { checkOnboardingStatus } = await import('../lib/onboardingService');
+      const result = await checkOnboardingStatus(user.id);
+
+      // Check if user is still logged in before updating state
+      const currentUser = get().user;
+      if (!currentUser) {
+        console.log('🔄 Auth Store - User logged out during onboarding check, skipping update');
+        set({ isCheckingOnboarding: false });
+        return;
+      }
+
+      if (result.success && result.data) {
+        console.log('✅ Auth Store - Onboarding status checked:', result.data);
+        set({ 
+          shouldShowOnboarding: !result.data.hasSeenOnboarding,
+          isCheckingOnboarding: false 
+        });
+      } else {
+        console.error('❌ Auth Store - Failed to check onboarding status:', result.error);
+        set({ 
+          shouldShowOnboarding: false,
+          isCheckingOnboarding: false 
+        });
+      }
+    } catch (error) {
+      console.error('❌ Auth Store - Unexpected error checking onboarding:', error);
+      set({ 
+        shouldShowOnboarding: false,
+        isCheckingOnboarding: false 
+      });
+    }
+  },
+
+  markOnboardingComplete: async () => {
+    console.log('✅ Auth Store - Marking onboarding as complete');
+    const { user } = get();
+    
+    if (!user) {
+      return { success: false, error: 'No user logged in' };
+    }
+
+    try {
+      // Import onboarding service
+      const { markOnboardingCompleted } = await import('../lib/onboardingService');
+      const result = await markOnboardingCompleted(user.id);
+
+      if (result.success) {
+        console.log('✅ Auth Store - Onboarding marked complete');
+        set({ shouldShowOnboarding: false });
+        
+        // Update profile in store to reflect the change
+        const currentProfile = get().profile;
+        if (currentProfile) {
+          set({ 
+            profile: { 
+              ...currentProfile, 
+              has_seen_onboarding: true 
+            } 
+          });
+        }
+      }
+
+      return result;
+    } catch (error) {
+      console.error('❌ Auth Store - Unexpected error marking onboarding complete:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to mark onboarding complete' 
+      };
+    }
+  },
+
   // State setters
   setUser: (user) => set({ user }),
   setProfile: (profile) => set({ profile }),
   setSession: (session) => set({ session }),
   setLoading: (isLoading) => set({ isLoading }),
   setInitialized: (isInitialized) => set({ isInitialized }),
+  setShouldShowOnboarding: (shouldShowOnboarding) => set({ shouldShowOnboarding }),
+  setCheckingOnboarding: (isCheckingOnboarding) => set({ isCheckingOnboarding }),
 })); 

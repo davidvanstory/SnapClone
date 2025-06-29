@@ -21,6 +21,7 @@ const MAPPING = {
   'camera.fill': 'camera-alt',
   'brain': 'psychology', // Solo AI Tutor icon
   'plus': 'add', // Plus icon for image upload
+  'checkmark': 'check', // Checkmark for completion
 } as IconMapping;
 
 /**
