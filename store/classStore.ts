@@ -60,6 +60,8 @@ export interface ClassState {
   loadPostComments: (postId: string) => Promise<void>;
   refreshFeed: () => void;
   markPostAsViewed: (postId: string, userId: string) => Promise<void>;
+  createPost: (postData: Partial<Post>) => Promise<{ success: boolean; postId?: string; error?: string }>;
+  createComment: (postId: string, userId: string, content: string) => Promise<{ success: boolean; error?: string }>;
   
   // Internal state setters
   setLoading: (loading: boolean) => void;
@@ -237,12 +239,13 @@ export const useClassStore = create<ClassState>((set, get) => ({
 
     try {
       // Fetch posts first (without user join to avoid foreign key error)
+      // Order by created_at ascending so newest posts appear at bottom (chat-style)
       const { data: posts, error } = await supabase
         .from('posts')
         .select('*')
         .eq('class_id', classId)
         .eq('is_expired', false)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: true });
 
       if (error) {
         console.error('❌ Class Store - Error loading posts:', error);
@@ -425,6 +428,86 @@ export const useClassStore = create<ClassState>((set, get) => ({
     } catch (error) {
       // Ignore errors (user might have already viewed this post)
       console.log('ℹ️ Class Store - Post view not recorded (already viewed?)');
+    }
+  },
+
+  // Create a new post in the current class
+  createPost: async (postData: Partial<Post>) => {
+    console.log('📝 Class Store - Creating new post');
+    const { currentClass } = get();
+    
+    if (!currentClass) {
+      console.error('❌ Class Store - No current class selected');
+      return { success: false, error: 'No class selected' };
+    }
+
+    try {
+      const { data: newPost, error } = await supabase
+        .from('posts')
+        .insert({
+          ...postData,
+          class_id: currentClass.id,
+          view_count: 0,
+          is_expired: false
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Class Store - Error creating post:', error);
+        return { success: false, error: error.message };
+      }
+
+      console.log('✅ Class Store - Post created successfully:', newPost.id);
+      
+      // Refresh the feed to include the new post
+      await get().loadClassPosts(currentClass.id, postData.user_id!);
+      
+      return { success: true, postId: newPost.id };
+    } catch (error) {
+      console.error('❌ Class Store - Unexpected error creating post:', error);
+      return { success: false, error: 'Failed to create post' };
+    }
+  },
+
+  // Create a new comment on a post
+  createComment: async (postId: string, userId: string, content: string) => {
+    console.log('💬 Class Store - Creating comment on post:', postId);
+    
+    try {
+      const { data: newComment, error } = await supabase
+        .from('comments')
+        .insert({
+          post_id: postId,
+          user_id: userId,
+          content: content.trim(),
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Class Store - Error creating comment:', error);
+        return { success: false, error: error.message };
+      }
+
+      console.log('✅ Class Store - Comment created successfully:', newComment.id);
+      
+      // Update local post to increment comment count
+      const { classPosts } = get();
+      const updatedPosts = classPosts.map(post => 
+        post.id === postId 
+          ? { ...post, comments_count: (post.comments_count || 0) + 1 }
+          : post
+      );
+      set({ classPosts: updatedPosts });
+      
+      // Reload comments for this post
+      await get().loadPostComments(postId);
+      
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Class Store - Unexpected error creating comment:', error);
+      return { success: false, error: 'Failed to create comment' };
     }
   },
 
