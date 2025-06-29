@@ -73,7 +73,7 @@ export default function ChatInput({
   const [isShowingInstructionalText, setIsShowingInstructionalText] = useState(true);
 
   // Animation values for share button
-  const shareButtonSlideAnim = useRef(new Animated.Value(-60)).current; // Start off-screen
+  const shareButtonSlideAnim = useRef(new Animated.Value(-150)).current; // Start off-screen (wider for text)
   const shareButtonPulseAnim = useRef(new Animated.Value(1)).current;
   const hasShownPulse = useRef(false);
 
@@ -134,7 +134,7 @@ export default function ChatInput({
       
       // Slide out animation
       Animated.timing(shareButtonSlideAnim, {
-        toValue: -60,
+        toValue: -150,
         duration: 300,
         useNativeDriver: true,
       }).start();
@@ -360,12 +360,9 @@ export default function ChatInput({
                 disabled={disabled || isLoading}
                 activeOpacity={0.8}
               >
-                <IconSymbol
-                  name="square.and.arrow.up"
-                  size={20}
-                  color="white"
-                  weight="medium"
-                />
+                <ThemedText type="button" style={styles.shareButtonText}>
+                  Share your work!
+                </ThemedText>
               </TouchableOpacity>
             </Animated.View>
           )}
@@ -511,9 +508,9 @@ const styles = StyleSheet.create({
     // No absolute positioning needed - let it flow naturally in the row
   },
   shareButton: {
-    width: 44,                    // 44px touch target per UIDesign.md
-    height: 44,                   // Square button
-    borderRadius: 22,             // Circular button
+    paddingHorizontal: 16,        // Add horizontal padding for text
+    height: 44,                   // Keep standard touch target height
+    borderRadius: 22,             // Rounded button
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',          // Add subtle shadow for prominence
@@ -524,6 +521,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,                 // Android shadow
+  },
+  shareButtonText: {
+    color: 'white',               // White text on green background
+    fontSize: 14,                 // Slightly smaller than body text
+    fontWeight: '600',            // Semi-bold for emphasis
   },
   imageButton: {
     width: 44,                    // 44px touch target per UIDesign.md
