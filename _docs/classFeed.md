@@ -1,0 +1,8 @@
+I want to update the visual style of the class feed. Instead of showing each piece of artwork in full screen, I want it to be in more of a chat interface with each piece of art being its own individual card. Each of those cards on the bottom have the sort of small, subtle text. They have the artist's name, the number of views, and the expiry time. At the top of this class feed, it has the class name title. It uses the same colour and styling as the rest of the app. There is a little text icon that indicates that you can add a comment, but it's not required for this first piece. I want the visuals there, and then people can scroll through and see what folks are sharing. I want the ability for new art to be populated into this class feed that is shared from either Junie or from the camera.
+
+
+That means ideally I would also have a button on the camera feature that is send to class as opposed to take another. We'll think about that.
+
+
+
+To better connect the Juni portion of the app with the class portion of the app, I want there to be a button that appears after an exchange with Juni that pops up and it's a share with class button and that button takes the last image that was discussed in the chat and it sends it to the class that the user is signed up for. In this case it'll be Monday fundamentals and make it really easy to send and then when it's sent it appears in the class feed and has its own card and I want it to be very smooth and easy and when the user presses the share with class button the image that is going to be sent pops up and that's the last image that was uploaded to the chat automatically and maybe there is an option and then let's have an option to include some like text caption or a question that can be sent with it.
