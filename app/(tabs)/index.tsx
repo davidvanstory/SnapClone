@@ -20,6 +20,17 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import {
+  GestureHandlerRootView,
+  PanGestureHandler
+} from 'react-native-gesture-handler';
+import Animated, {
+  runOnJS,
+  useAnimatedGestureHandler,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/ThemedText';
 import ClassFeedHeader from '@/components/feed/ClassFeedHeader';
@@ -66,6 +77,10 @@ export default function ClassFeedScreen() {
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [commentPost, setCommentPost] = useState<PostWithUser | null>(null);
   const [scrollToPostId, setScrollToPostId] = useState<string | null>(null);
+
+  // Swipe gesture values
+  const translateX = useSharedValue(0);
+  const opacity = useSharedValue(1);
 
   /**
    * Load user's classes on mount and when user changes
@@ -241,6 +256,63 @@ export default function ClassFeedScreen() {
     console.log('📍 Class Feed Screen - Scroll-to-post functionality ready for Juni integration');
   }, [scrollToPost]);
 
+  /**
+   * Handle going back to class list
+   */
+  const handleBackToClassList = useCallback(() => {
+    console.log('🔙 Class Feed Screen - Going back to class list');
+    setCurrentClass(null);
+    setShowClassList(true);
+  }, [setCurrentClass]);
+
+  /**
+   * Pan gesture handler for swipe-right to go back
+   */
+  const gestureHandler = useAnimatedGestureHandler({
+    onStart: (_, ctx: any) => {
+      ctx.startX = translateX.value;
+    },
+    onActive: (event, ctx) => {
+      // Only allow right swipe (positive translation)
+      if (event.translationX > 0) {
+        translateX.value = ctx.startX + event.translationX;
+        // Fade out as we swipe
+        opacity.value = 1 - (event.translationX / 300);
+      }
+    },
+    onEnd: (event) => {
+      // If swiped more than 100px to the right, go back
+      if (event.translationX > 100) {
+        translateX.value = withSpring(300);
+        opacity.value = withSpring(0, {}, () => {
+          runOnJS(handleBackToClassList)();
+        });
+      } else {
+        // Snap back
+        translateX.value = withSpring(0);
+        opacity.value = withSpring(1);
+      }
+    },
+  });
+
+  /**
+   * Animated styles for the feed container
+   */
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: translateX.value }],
+      opacity: opacity.value,
+    };
+  });
+
+  // Reset animation values when showing feed
+  useEffect(() => {
+    if (!showClassList && currentClass) {
+      translateX.value = 0;
+      opacity.value = 1;
+    }
+  }, [showClassList, currentClass, translateX, opacity]);
+
   // Show class selection screen when showClassList is true
   if (showClassList) {
     return (
@@ -310,64 +382,80 @@ export default function ClassFeedScreen() {
 
   // Main feed with vertical scrolling cards
   return (
-    <View style={[styles.feedContainer, { backgroundColor: colors.background }]}>
-      {/* Fixed Header */}
-      <ClassFeedHeader className={currentClass.name} />
-
-      {/* Scrollable Feed */}
-      <ClassFeedList
-        posts={classPosts}
-        isLoading={isLoadingPosts}
-        onRefresh={handleRefresh}
-        onArtworkPress={handleArtworkPress}
-        onCommentPress={handleCommentPress}
-        className={currentClass.name}
-        headerHeight={100} // Adjust based on actual header height
-        scrollToPostId={scrollToPostId}
-        onScrollToPostComplete={handleScrollToPostComplete}
-      />
-
-      {/* Floating Camera Button */}
-      <TouchableOpacity
-        style={[styles.cameraButton, { backgroundColor: colors.accentSage }]}
-        onPress={handleCameraPress}
-        activeOpacity={0.8}
+    <GestureHandlerRootView style={styles.gestureContainer}>
+      <PanGestureHandler
+        onGestureEvent={gestureHandler}
+        enabled={!showFullScreen && !showCommentModal} // Disable swipe when modals are open
       >
-        <ThemedText style={styles.cameraIcon}>📸</ThemedText>
-      </TouchableOpacity>
+        <Animated.View style={[styles.feedContainer, { backgroundColor: colors.background }, animatedStyle]}>
+          {/* Fixed Header with Back Button */}
+          <View style={styles.headerContainer}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={handleBackToClassList}
+              activeOpacity={0.7}
+            >
+              <ThemedText style={[styles.backButtonText, { color: colors.text }]}>‹</ThemedText>
+            </TouchableOpacity>
+            <ClassFeedHeader className={currentClass.name} />
+          </View>
 
-      {/* Full-Screen Artwork View */}
-      <FullScreenArtworkView
-        visible={showFullScreen}
-        post={selectedPost}
-        className={currentClass.name}
-        onClose={() => {
-          console.log('🔙 Class Feed Screen - Closing full-screen view');
-          setShowFullScreen(false);
-          setSelectedPost(null);
-        }}
-        onCommentPress={handleCommentPress}
-      />
+          {/* Scrollable Feed */}
+          <ClassFeedList
+            posts={classPosts}
+            isLoading={isLoadingPosts}
+            onRefresh={handleRefresh}
+            onArtworkPress={handleArtworkPress}
+            onCommentPress={handleCommentPress}
+            className={currentClass.name}
+            headerHeight={100} // Adjust based on actual header height
+            scrollToPostId={scrollToPostId}
+            onScrollToPostComplete={handleScrollToPostComplete}
+          />
 
-      {/* Comment Input Modal */}
-      <CommentInputModal
-        visible={showCommentModal}
-        post={commentPost}
-        onClose={() => {
-          console.log('🔙 Class Feed Screen - Closing comment modal');
-          setShowCommentModal(false);
-          setCommentPost(null);
-        }}
-        onSubmit={handleCommentSubmit}
-      />
+          {/* Floating Camera Button */}
+          <TouchableOpacity
+            style={[styles.cameraButton, { backgroundColor: colors.accentSage }]}
+            onPress={handleCameraPress}
+            activeOpacity={0.8}
+          >
+            <ThemedText style={styles.cameraIcon}>📸</ThemedText>
+          </TouchableOpacity>
 
-      {/* Class Join Modal (in case needed) */}
-      <ClassJoinModal
-        visible={showJoinModal}
-        onClose={() => setShowJoinModal(false)}
-        onSuccess={handleJoinSuccess}
-      />
-    </View>
+          {/* Full-Screen Artwork View */}
+          <FullScreenArtworkView
+            visible={showFullScreen}
+            post={selectedPost}
+            className={currentClass.name}
+            onClose={() => {
+              console.log('🔙 Class Feed Screen - Closing full-screen view');
+              setShowFullScreen(false);
+              setSelectedPost(null);
+            }}
+            onCommentPress={handleCommentPress}
+          />
+
+          {/* Comment Input Modal */}
+          <CommentInputModal
+            visible={showCommentModal}
+            post={commentPost}
+            onClose={() => {
+              console.log('🔙 Class Feed Screen - Closing comment modal');
+              setShowCommentModal(false);
+              setCommentPost(null);
+            }}
+            onSubmit={handleCommentSubmit}
+          />
+
+          {/* Class Join Modal (in case needed) */}
+          <ClassJoinModal
+            visible={showJoinModal}
+            onClose={() => setShowJoinModal(false)}
+            onSuccess={handleJoinSuccess}
+          />
+        </Animated.View>
+      </PanGestureHandler>
+    </GestureHandlerRootView>
   );
 }
 
@@ -377,9 +465,44 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   
+  // Gesture Container
+  gestureContainer: {
+    flex: 1,
+  },
+  
   // Feed Container
   feedContainer: {
     flex: 1,
+  },
+  
+  // Header Container
+  headerContainer: {
+    position: 'relative',
+  },
+  
+  // Back Button
+  backButton: {
+    position: 'absolute',
+    left: 20,
+    top: Platform.OS === 'ios' ? 60 : 40,
+    zIndex: 101,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    
+    // Shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  backButtonText: {
+    fontSize: 28,
+    fontWeight: '300',
   },
   
   // Empty State Styles
