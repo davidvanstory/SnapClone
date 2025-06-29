@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { OnboardingModal } from '@/components/onboarding/OnboardingModal';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -24,6 +24,9 @@ export default function TabLayout() {
   } = useAuthStore();
   
   const [isOnboardingModalVisible, setIsOnboardingModalVisible] = useState(false);
+  
+  // Track which user we've checked onboarding for to prevent infinite loops
+  const checkedOnboardingForUser = useRef<string | null>(null);
 
   // Check onboarding status when user is available
   useEffect(() => {
@@ -31,19 +34,28 @@ export default function TabLayout() {
       hasUser: !!user,
       isInitialized,
       isCheckingOnboarding,
-      shouldShowOnboarding
+      shouldShowOnboarding,
+      checkedForUser: checkedOnboardingForUser.current,
+      currentUserId: user?.id
     });
     
     if (user && isInitialized && !isCheckingOnboarding) {
-      console.log('✅ TabLayout - Checking onboarding status for user:', user.id);
-      checkOnboardingStatus();
+      // Only check if we haven't already checked for this user
+      if (checkedOnboardingForUser.current !== user.id) {
+        console.log('✅ TabLayout - Checking onboarding status for user:', user.id);
+        checkedOnboardingForUser.current = user.id;
+        checkOnboardingStatus();
+      } else {
+        console.log('⏭️ TabLayout - Already checked onboarding for this user, skipping');
+      }
     } else if (!user && isInitialized) {
-      // User logged out, hide onboarding modal
-      console.log('👋 TabLayout - User logged out, hiding onboarding modal');
+      // User logged out, reset tracking and hide onboarding modal
+      console.log('👋 TabLayout - User logged out, resetting onboarding state');
+      checkedOnboardingForUser.current = null;
       setIsOnboardingModalVisible(false);
       setShouldShowOnboarding(false);
     }
-  }, [user, isInitialized, isCheckingOnboarding, checkOnboardingStatus, setShouldShowOnboarding]);
+  }, [user?.id, isInitialized, isCheckingOnboarding, setShouldShowOnboarding]);
 
   // Show modal when onboarding should be displayed
   useEffect(() => {
