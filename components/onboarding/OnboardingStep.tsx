@@ -7,6 +7,7 @@
  */
 
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { Colors } from '@/constants/Colors';
 import { BlurView } from 'expo-blur';
 import React from 'react';
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -78,13 +79,13 @@ export function OnboardingStep({
 
           {/* Feature Icon */}
           <View style={styles.iconContainer}>
-            <BlurView intensity={8} style={styles.iconBackground}>
+            <View style={styles.iconBackground}>
               <IconSymbol 
                 name={iconName} 
                 size={32} 
-                color="rgba(255, 255, 255, 0.9)" 
+                color={Colors.light.accentSage}
               />
-            </BlurView>
+            </View>
           </View>
 
           {/* Content */}
@@ -108,7 +109,7 @@ export function OnboardingStep({
                 <IconSymbol 
                   name={isLastStep ? 'checkmark' : 'chevron.right'} 
                   size={16} 
-                  color="rgba(255, 255, 255, 0.9)" 
+                  color={Colors.light.accentSage}
                   style={styles.buttonIcon}
                 />
               </BlurView>
@@ -203,7 +204,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
   },
   
   textContainer: {
@@ -232,11 +234,12 @@ const styles = StyleSheet.create({
   
   buttonContainer: {
     width: '100%',
-    gap: 16,
+    gap: 12,
+    alignItems: 'center',
   },
   
   nextButton: {
-    borderRadius: 28,
+    borderRadius: 20,
     overflow: 'hidden',
   },
   
@@ -244,22 +247,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 24,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.3)',
-    gap: 8,
+    gap: 6,
   },
   
   nextButtonText: {
     fontFamily: 'Montserrat_500Medium',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '500',
     color: 'rgba(255, 255, 255, 0.9)',
   },
   
   buttonIcon: {
-    marginLeft: 4,
+    marginLeft: 2,
   },
   
   tapHint: {
