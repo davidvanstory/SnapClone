@@ -57,6 +57,23 @@ export default function SoloTutorScreen() {
     clearMessageError,
   } = useSoloStore();
 
+  // 🚨 DEBUG: Add comprehensive logging for user ID debugging
+  console.log('🚨 SOLO DEBUG - Current user state:', {
+    hasUser: !!user,
+    userId: user?.id,
+    userEmail: user?.email,
+    currentChatId: currentChat?.id,
+    isInitialized,
+    messageCount: messages.length
+  });
+
+  // 🚨 DEBUG: Log specifically what will be sent to RAG system
+  if (user?.id) {
+    console.log('🎯 RAG SYSTEM WILL RECEIVE USER ID:', user.id);
+    console.log('🎯 EXPECTED DEMO DATA USER ID: 7e20cbba-83c2-4297-90a6-0ac94aabb814');
+    console.log('🎯 USER IDs MATCH:', user.id === '7e20cbba-83c2-4297-90a6-0ac94aabb814' ? '✅ YES' : '❌ NO');
+  }
+
   // Only log essential state for debugging RAG system
   if (messages.length > 0) {
     console.log('🧠 Solo Tutor Screen - Active chat with', messages.length, 'messages');
@@ -140,6 +157,14 @@ export default function SoloTutorScreen() {
           <ChatInput
             onSendMessage={async (message: string, imageUri?: string) => {
               if (!currentChat?.id) return;
+              
+              // 🚨 DEBUG: Log exactly what will be sent to RAG system
+              console.log('🚨 SENDING TO RAG SYSTEM:', {
+                chatId: currentChat.id,
+                message: message.substring(0, 50) + '...',
+                userId: user.id,
+                userEmail: user?.email
+              });
               
               await sendMessage({
                 chatId: currentChat.id,

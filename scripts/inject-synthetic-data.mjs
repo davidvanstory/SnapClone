@@ -30,10 +30,11 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 /**
- * Generate embedding using OpenAI text-embedding-3-small
+ * Generate embedding using OpenAI text-embedding-3-large
  */
 async function generateEmbedding(text) {
   console.log(`📊 Generating embedding for text (${text.length} chars)...`);
+  console.log('🔄 Using text-embedding-3-large model (3072 dimensions)');
   
   try {
     const response = await fetch('https://api.openai.com/v1/embeddings', {
@@ -43,7 +44,7 @@ async function generateEmbedding(text) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'text-embedding-3-small',
+        model: 'text-embedding-3-large',
         input: text,
         encoding_format: 'float',
       }),
@@ -58,6 +59,9 @@ async function generateEmbedding(text) {
     const embedding = data.data[0].embedding;
     
     console.log(`✅ Generated embedding (dimension: ${embedding.length})`);
+    if (embedding.length !== 3072) {
+      console.warn('⚠️ Unexpected embedding dimension:', embedding.length, 'expected 3072');
+    }
     return embedding;
   } catch (error) {
     console.error('❌ Embedding generation failed:', error);

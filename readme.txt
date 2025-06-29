@@ -56,7 +56,7 @@ ArtCritique AI is a React Native mobile application built with Expo that combine
 ### **AI Integration (OpenAI)**
 - **Text Generation**: GPT-4o for multimodal AI tutoring responses
 - **Image Analysis**: GPT-4o vision capabilities for artwork feedback
-- **Embeddings**: text-embedding-3-small (1536 dimensions) for RAG
+- **Embeddings**: text-embedding-3-large (3072 dimensions) for RAG
 - **RAG System**: Vector similarity search + recent context for personalized responses
 
 ## Database Schema

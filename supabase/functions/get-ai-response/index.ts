@@ -6,7 +6,7 @@
  * for intelligent, context-aware art tutoring conversations.
  * 
  * Features:
- * - OpenAI text-embedding-3-small for generating embeddings
+ * - OpenAI text-embedding-3-large for generating embeddings (3072 dimensions)
  * - Vector similarity search using pgvector for long-term memory
  * - Recent conversation context for short-term memory
  * - GPT-4o multimodal API for text and image analysis
@@ -88,10 +88,11 @@ if (!supabaseUrl || !supabaseServiceKey || !openaiApiKey) {
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 /**
- * Generate text embedding using OpenAI text-embedding-3-small model
+ * Generate text embedding using OpenAI text-embedding-3-large model
  */
 async function generateEmbedding(text: string): Promise<number[]> {
   console.log('📊 Solo AI Function - Generating embedding for text length:', text.length);
+  console.log('🔄 Solo AI Function - Using text-embedding-3-large model (3072 dimensions)');
   
   try {
     const response = await fetch('https://api.openai.com/v1/embeddings', {
@@ -101,7 +102,7 @@ async function generateEmbedding(text: string): Promise<number[]> {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'text-embedding-3-small',
+        model: 'text-embedding-3-large',
         input: text,
         encoding_format: 'float',
       }),
@@ -117,6 +118,9 @@ async function generateEmbedding(text: string): Promise<number[]> {
     const embedding = data.data[0].embedding;
     
     console.log('✅ Solo AI Function - Generated embedding with dimension:', embedding.length);
+    if (embedding.length !== 3072) {
+      console.warn('⚠️ Solo AI Function - Unexpected embedding dimension:', embedding.length, 'expected 3072');
+    }
     return embedding;
   } catch (error) {
     console.error('❌ Solo AI Function - Embedding generation failed:', error);
@@ -136,38 +140,90 @@ async function searchRelevantHistory(
   console.log('🔍 Solo AI Function - Searching relevant history for chat:', chatId);
   console.log('📊 Solo AI Function - Query embedding dimension:', queryEmbedding.length);
   
+  // 🚨 SUPER VISIBLE DEBUG LOGGING
+  console.log('🚨🚨🚨 VECTOR SEARCH DEBUG START 🚨🚨🚨');
+  console.log('🎯 USER ID FOR SEARCH:', userId);
+  console.log('🎯 EMBEDDING DIMENSION:', queryEmbedding.length);
+  console.log('🎯 EMBEDDING SAMPLE (first 5 values):', queryEmbedding.slice(0, 5));
+  
   try {
     // Convert embedding array to pgvector format
     const embeddingString = '[' + queryEmbedding.join(',') + ']';
+    console.log('🎯 EMBEDDING STRING LENGTH:', embeddingString.length);
+    console.log('🎯 EMBEDDING STRING SAMPLE:', embeddingString.substring(0, 100) + '...');
     
     // Search for relevant messages across all user's chats using cosine similarity
+    const searchStartTime = Date.now();
+    console.log('⏱️ Solo AI Function - Starting vector similarity search (sequential scan - no index for 3072 dims)');
+    
+    console.log('🚨 CALLING search_similar_messages WITH:');
+    console.log('   - query_embedding: [vector of length', queryEmbedding.length, ']');
+    console.log('   - similarity_threshold: 0.0');
+    console.log('   - match_count: 50');
+    console.log('   - target_user_id:', userId);
+    
+    // First, get ALL similarity scores for debugging (no threshold)
+    const { data: allScores, error: allScoresError } = await supabase
+      .rpc('search_similar_messages', {
+        query_embedding: embeddingString,
+        similarity_threshold: 0.0, // Get ALL scores
+        match_count: 50, // Get more results for debugging
+        target_user_id: userId
+      });
+    
+    console.log('🚨 DATABASE QUERY COMPLETED!');
+    console.log('🚨 ERROR:', allScoresError ? allScoresError.message : 'None');
+    console.log('🚨 RESULTS COUNT:', allScores ? allScores.length : 'null/undefined');
+    
+    if (allScoresError) {
+      console.error('🚨🚨🚨 DATABASE ERROR:', allScoresError);
+      throw new Error(`Database search failed: ${allScoresError.message}`);
+    }
+    
+    // Log ALL similarity scores for debugging
+    if (allScores && allScores.length > 0) {
+      console.log('🎯🎯🎯 Solo AI Function - ALL Similarity scores (text-embedding-3-large):');
+      allScores.forEach((msg: DatabaseMessage, index: number) => {
+        console.log(`   ${index + 1}. Similarity: ${msg.similarity?.toFixed(4)} | "${msg.content.substring(0, 60)}${msg.content.length > 60 ? '...' : ''}"`);
+      });
+    } else {
+      console.log('🚨🚨🚨 Solo AI Function - No messages found for similarity calculation');
+      console.log('🚨🚨🚨 This means the database query returned 0 results!');
+    }
+    
+    // Now get the actual results with threshold for the response
     const { data, error } = await supabase
       .rpc('search_similar_messages', {
         query_embedding: embeddingString,
-        similarity_threshold: 0.43,
+        similarity_threshold: 0.6,
         match_count: limit,
         target_user_id: userId
       });
+    
+    const searchTime = Date.now() - searchStartTime;
+    console.log('⏱️ Solo AI Function - Vector search completed in', searchTime, 'ms (sequential scan)');
 
     if (error) {
       console.error('❌ Solo AI Function - Database search error:', error);
       throw new Error(`Database search failed: ${error.message}`);
     }
 
-    console.log('📋 Solo AI Function - Found', data?.length || 0, 'relevant historical messages');
+    console.log('📋 Solo AI Function - Found', data?.length || 0, 'relevant historical messages above 0.6 threshold');
     
-    // Log similarity scores for debugging
+    // Log similarity scores above threshold
     if (data && data.length > 0) {
-      console.log('🎯 Solo AI Function - Similarity scores:');
+      console.log('🎯 Solo AI Function - Matches above 0.6 threshold:');
       data.forEach((msg: DatabaseMessage, index: number) => {
         console.log(`   ${index + 1}. Similarity: ${msg.similarity?.toFixed(4)} | "${msg.content.substring(0, 60)}${msg.content.length > 60 ? '...' : ''}"`);
       });
           } else {
-        console.log('🎯 Solo AI Function - No similar messages found above threshold 0.43');
+        console.log('🎯 Solo AI Function - No similar messages found above threshold 0.6 (large model)');
       }
     
+    console.log('🚨🚨🚨 VECTOR SEARCH DEBUG END 🚨🚨🚨');
     return data || [];
   } catch (error) {
+    console.error('🚨🚨🚨 VECTOR SEARCH FAILED:', error);
     console.error('❌ Solo AI Function - Relevant history search failed:', error);
     throw new Error(`Relevant history search failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
@@ -494,7 +550,7 @@ Deno.serve(async (req) => {
               rag_details: {
           relevant_history_count: relevantHistory.length,
           recent_conversation_count: recentConversation.length,
-          similarity_threshold: 0.43,
+          similarity_threshold: 0.6,
           context_used: relevantHistory.length > 0 || recentConversation.length > 0,
           context_type: relevantHistory.length > 0 ? 'RAG with history' : (recentConversation.length > 0 ? 'Recent only' : 'None'),
           relevant_messages: relevantHistory.map((msg: DatabaseMessage) => ({
