@@ -4,7 +4,7 @@
  * Scrollable list container for artwork cards in the redesigned class feed.
  * Features:
  * - FlatList for efficient rendering of artwork cards
- * - Proper spacing between cards (16px per UIDesign.md)
+ * - Proper spacing between cards (32px doubled from 16px per UIDesign.md)
  * - Pull-to-refresh functionality
  * - Loading states for individual cards
  * - Scroll-to-post functionality for Juni integration
@@ -163,8 +163,8 @@ export default function ClassFeedList({
         initialNumToRender={5}
         // Item layout optimization for better scrollToIndex performance
         getItemLayout={(data, index) => ({
-          length: 260, // Approximate height of each card (60% screen width + metadata)
-          offset: 260 * index,
+          length: 390, // Updated height: caption (70) + artwork (70% screen) + metadata (50) + margin (48)
+          offset: 390 * index,
           index,
         })}
       />

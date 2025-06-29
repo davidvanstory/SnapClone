@@ -33,6 +33,7 @@ const placeholderGlass = 'rgba(255, 255, 255, 0.5)';   // Placeholder text
 
 // Accent Colors - Used Sparingly (Per UIDesign.md)
 const warmSage = '#8B9D83';            // Encouraging actions (AI feedback, positive states)
+const darkSage = '#4A5A44';            // Darker green for caption text (darker version of warmSage)
 const softCoral = '#E67E50';           // Critical actions (delete, warnings)
 const warmTan = '#B8956A';             // Special moments (first post, achievements)
 
@@ -66,6 +67,7 @@ export const Colors = {
     
     // Accent Colors (Sparingly Used)
     accentSage: warmSage,              // #8B9D83 - Encouraging actions
+    accentDarkSage: darkSage,          // #4A5A44 - Dark green for caption text
     accentCoral: softCoral,            // #E67E50 - Critical actions
     accentTan: warmTan,                // #B8956A - Special moments
     
@@ -107,6 +109,7 @@ export const Colors = {
     
     // Accent Colors (Same - work on both backgrounds)
     accentSage: warmSage,              // #8B9D83
+    accentDarkSage: darkSage,          // #4A5A44 - Dark green for caption text
     accentCoral: softCoral,            // #E67E50
     accentTan: warmTan,                // #B8956A
     

@@ -51,7 +51,7 @@
 
 - [ ] 4.0 Build Post Creation Service Integration
   - [ ] 4.1 Create or extend postService to handle Juni image sharing (reuse existing post creation logic from classStore)
-  - [ ] 4.2 Implement function to create ephemeral post with default settings (5 viewers, 5 hours)
+  - [ ] 4.2 Implement function to create ephemeral post with adjustable settings (default: 5 viewers, 5 hours)
   - [ ] 4.3 Handle image upload from Juni chat to class post storage (extend photoService.ts)
   - [ ] 4.4 Associate post with user's current enrolled class automatically
   - [ ] 4.5 Include user's caption/question in post description

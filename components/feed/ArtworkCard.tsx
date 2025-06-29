@@ -3,10 +3,12 @@
  * 
  * Individual artwork card for the redesigned class feed interface.
  * Features:
- * - 60% screen width with fixed aspect ratio
+ * - 70% screen width with fixed aspect ratio
+ * - Caption/question header from artist for feedback requests
  * - Primary glass morphism card for artwork container
  * - Secondary glass morphism metadata strip (no gap)
  * - Artist name, view count, expiry timer, and comment icon
+ * - Juni AI icon positioned on side border of artwork
  * - Tap handlers for artwork (full-screen) and comment icon
  * - Typography per UIDesign.md specifications
  */
@@ -47,15 +49,16 @@ export default function ArtworkCard({
   isLoading = false,
 }: ArtworkCardProps) {
   console.log('🎨 Artwork Card - Rendering card for post:', post.id, 'Loading:', isLoading);
+  console.log('📝 Artwork Card - Post caption/question:', post.description);
   
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
   /**
    * Calculate card dimensions
-   * 60% screen width with square aspect ratio
+   * 70% screen width with square aspect ratio
    */
-  const cardWidth = SCREEN_WIDTH * 0.6;
+  const cardWidth = SCREEN_WIDTH * 0.7;
   const cardHeight = cardWidth; // Square aspect ratio
 
   /**
@@ -83,6 +86,25 @@ export default function ArtworkCard({
    */
   const getArtistName = () => {
     return post.user?.username || 'Anonymous';
+  };
+
+  /**
+   * Get artist caption/question with fallback
+   */
+  const getArtistCaption = () => {
+    // If no description, provide default encouraging prompts
+    if (!post.description || post.description.trim() === '') {
+      const defaultCaptions = [
+        "What do you think?",
+        "Looking for feedback!",
+        "Work in progress...",
+        "Thoughts?",
+      ];
+      // Use post ID to consistently select a default
+      const index = post.id.charCodeAt(0) % defaultCaptions.length;
+      return defaultCaptions[index];
+    }
+    return post.description;
   };
 
   /**
@@ -115,6 +137,12 @@ export default function ArtworkCard({
   if (isLoading) {
     return (
       <View style={styles.container}>
+        {/* Caption Header Loading Skeleton */}
+        <GlassMorphismCard type="secondary" style={[styles.captionCard, { width: cardWidth }]}>
+          <View style={[styles.loadingText, { backgroundColor: colors.border, width: '80%', height: 16, marginBottom: 4 }]} />
+          <View style={[styles.loadingText, { backgroundColor: colors.border, width: '60%', height: 16 }]} />
+        </GlassMorphismCard>
+
         {/* Primary Glass Morphism Card - Artwork Container */}
         <GlassMorphismCard type="primary" style={[styles.card, { width: cardWidth }]}>
           <View style={[styles.artworkWrapper, { height: cardHeight }]}>
@@ -139,7 +167,14 @@ export default function ArtworkCard({
 
   return (
     <View style={styles.container}>
-      <GlassMorphismCard type="primary" style={styles.card}>
+      {/* Caption/Question Header */}
+      <GlassMorphismCard type="secondary" style={[styles.captionCard, { width: cardWidth }]}>
+        <ThemedText type="bodyText" style={[styles.captionText, { color: colors.accentDarkSage }]}>
+          {getArtistCaption()}
+        </ThemedText>
+      </GlassMorphismCard>
+
+      <GlassMorphismCard type="primary" style={[styles.card, { width: cardWidth }]}>
         {/* Artwork Container with relative positioning for overlay */}
         <View style={styles.artworkWrapper}>
           {/* Artwork Image */}
@@ -162,7 +197,7 @@ export default function ArtworkCard({
             )}
           </TouchableOpacity>
           
-          {/* Juni AI Icon Overlay - Top Right Corner */}
+          {/* Juni AI Icon Overlay - Right Side Border */}
           {onJuniPress && !isLoading && (
             <TouchableOpacity
               style={styles.juniOverlayButton}
@@ -223,12 +258,24 @@ export default function ArtworkCard({
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    marginBottom: 24,             // Increased by 50% from 16px for more noticeable spacing
+    marginBottom: 48,             // Doubled from 24px for 100% increase in spacing
+  },
+  captionCard: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 8,              // Small gap between caption and artwork
+  },
+  captionText: {
+    fontSize: 15,                 // Body text size per UIDesign.md (14-16pt)
+    fontWeight: '400',            // Regular weight for Montserrat
+    fontFamily: Platform.OS === 'ios' ? 'Montserrat-Regular' : 'sans-serif',
+    lineHeight: 22,               // 1.47x line height for readability
+    textAlign: 'center',          // Center align caption
   },
   card: {
     padding: 0,                   // No padding for artwork container
     overflow: 'visible',          // Allow Juni icon to extend outside
-    width: '60%',                 // 60% screen width per requirements
+    width: '70%',                 // 70% screen width per requirements
   },
   artworkWrapper: {
     position: 'relative',         // For absolute positioning of overlay
@@ -303,11 +350,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     opacity: 0.5,
   },
-  // Juni Overlay Button
+  // Juni Overlay Button - Now on the side
   juniOverlayButton: {
     position: 'absolute',
-    top: -18,                     // Half the icon height (36/2) to position half off
+    top: '50%',                   // Center vertically
     right: -18,                   // Half the icon width (36/2) to position half off
+    transform: [{ translateY: -18 }], // Center vertically by offsetting half height
     zIndex: 10,                   // Above the image
   },
   juniIconCircle: {
