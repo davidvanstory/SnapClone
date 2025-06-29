@@ -56,8 +56,7 @@ export default function SoloChat({
   onRefresh,
   isRefreshing = false,
 }: SoloChatProps) {
-  console.log('💬 Solo Chat - Rendering chat with', messages.length, 'messages');
-  console.log('🔧 Solo Chat - State:', { isLoading, isError, isRefreshing });
+  // Reduced logging - only log significant state changes
 
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
@@ -68,7 +67,6 @@ export default function SoloChat({
    */
   useEffect(() => {
     if (messages.length > 0 && flatListRef.current) {
-      console.log('📜 Solo Chat - Auto-scrolling to latest message');
       // Small delay to ensure layout is complete
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
@@ -80,8 +78,6 @@ export default function SoloChat({
    * Render individual chat message
    */
   const renderMessage = ({ item, index }: { item: SoloAIMessage; index: number }) => {
-    console.log('📝 Solo Chat - Rendering message:', item.role, item.content.substring(0, 50) + '...');
-    
     return (
       <ChatMessage
         message={item}
@@ -95,8 +91,6 @@ export default function SoloChat({
    */
   const renderLoadingIndicator = () => {
     if (!isLoading) return null;
-
-    console.log('⏳ Solo Chat - Rendering loading indicator');
     
     return (
       <View style={styles.loadingContainer}>
@@ -121,8 +115,6 @@ export default function SoloChat({
    */
   const renderErrorState = () => {
     if (!isError) return null;
-
-    console.log('❌ Solo Chat - Rendering error state:', errorMessage);
     
     return (
       <View style={styles.errorContainer}>
@@ -155,7 +147,6 @@ export default function SoloChat({
    * Render empty state for new chat
    */
   const renderEmptyState = () => {
-    console.log('🆕 Solo Chat - Rendering empty state');
     
     return (
       <View style={styles.emptyContainer}>
@@ -185,7 +176,6 @@ export default function SoloChat({
    * Handle refresh control
    */
   const handleRefresh = () => {
-    console.log('🔄 Solo Chat - Refresh triggered');
     onRefresh?.();
   };
 

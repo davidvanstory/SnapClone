@@ -55,7 +55,7 @@ export default function ChatInput({
   disabled = false,
   placeholder = "Ask Juni about art techniques, or upload your artwork for feedback...",
 }: ChatInputProps) {
-  console.log('💬 Chat Input - Rendering with state:', { isLoading, disabled });
+  // Minimal logging for essential debugging only
 
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
@@ -72,7 +72,6 @@ export default function ChatInput({
   // Handle prepopulated image from camera
   useEffect(() => {
     if (prepopulatedImageUri) {
-      console.log('📷 Chat Input - Prepopulated image detected from camera:', prepopulatedImageUri);
       setSelectedImageUri(prepopulatedImageUri);
       clearPrepopulatedImageUri();
       
@@ -88,29 +87,17 @@ export default function ChatInput({
   const maxInputHeight = 92;  // Maximum height for exactly 3 lines (44px base + 24px per additional line + padding)
   const minInputHeight = 44;  // Minimum height for single line
 
-  // Debug logging
-  console.log('🔍 Chat Input - Current state:', {
-    message,
-    isShowingInstructionalText,
-    actualMessage,
-    canSend,
-    messageLength: message.length,
-    actualMessageLength: actualMessage.length
-  });
+  // Minimal state logging for debugging
+  if (actualMessage.trim().length > 0) {
+    console.log('💬 Chat Input - User message ready:', actualMessage.substring(0, 50) + (actualMessage.length > 50 ? '...' : ''));
+  }
 
   /**
    * Handle text input changes with auto-expanding height
    */
   const handleTextChange = (text: string) => {
-    console.log('📝 Chat Input - Text changed:', { 
-      textLength: text.length, 
-      isShowingInstructional: isShowingInstructionalText,
-      lineCount: text.split('\n').length
-    });
-    
     // If user starts typing while instructional text is showing, clear it
     if (isShowingInstructionalText && text !== INSTRUCTIONAL_TEXT) {
-      console.log('✏️ Chat Input - User started typing, clearing instructional text');
       setIsShowingInstructionalText(false);
       setMessage(text);
     } else if (!isShowingInstructionalText) {
@@ -122,17 +109,6 @@ export default function ChatInput({
    * Handle text input content size change for auto-expanding
    */
   const handleContentSizeChange = (event: any) => {
-    const { height } = event.nativeEvent.contentSize;
-    const lineCount = message.split('\n').length;
-    const willScroll = height > maxInputHeight;
-    console.log('📏 Chat Input - Content size changed:', { 
-      contentHeight: height,
-      minHeight: minInputHeight,
-      maxHeight: maxInputHeight,
-      lineCount,
-      willScroll,
-      currentMessage: message.substring(0, 50) + '...'
-    });
     // Height is now handled by minHeight/maxHeight in styles
     // When content exceeds maxHeight, TextInput will automatically scroll
   };
@@ -141,9 +117,7 @@ export default function ChatInput({
    * Handle text input focus - clear instructional text if showing
    */
   const handleTextInputFocus = () => {
-    console.log('🎯 Chat Input - Text input focused');
     if (isShowingInstructionalText) {
-      console.log('✏️ Chat Input - Clearing instructional text on focus');
       setIsShowingInstructionalText(false);
       setMessage('');
     }
@@ -153,9 +127,7 @@ export default function ChatInput({
    * Handle text input blur - restore instructional text if empty
    */
   const handleTextInputBlur = () => {
-    console.log('🎯 Chat Input - Text input blurred');
     if (!isShowingInstructionalText && message.trim() === '') {
-      console.log('✏️ Chat Input - Restoring instructional text on blur with empty input');
       setIsShowingInstructionalText(true);
       setMessage(INSTRUCTIONAL_TEXT);
     }
@@ -165,14 +137,11 @@ export default function ChatInput({
    * Handle image picker selection
    */
   const handleImagePicker = async () => {
-    console.log('➕ Chat Input - Opening image picker via plus icon');
-
     try {
       // Request permissions
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       
       if (!permissionResult.granted) {
-        console.log('❌ Chat Input - Media library permission denied');
         Alert.alert(
           'Permission Required',
           'Please allow access to your photo library to upload artwork.',
@@ -192,10 +161,7 @@ export default function ChatInput({
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const selectedAsset = result.assets[0];
-        console.log('✅ Chat Input - Image selected:', selectedAsset.uri);
         setSelectedImageUri(selectedAsset.uri);
-      } else {
-        console.log('ℹ️ Chat Input - Image picker cancelled');
       }
 
     } catch (error) {
@@ -212,7 +178,6 @@ export default function ChatInput({
    * Handle removing selected image
    */
   const handleRemoveImage = () => {
-    console.log('🗑️ Chat Input - Removing selected image');
     setSelectedImageUri(null);
   };
 
@@ -220,15 +185,9 @@ export default function ChatInput({
    * Handle send message
    */
   const handleSendMessage = async () => {
-    if (!canSend) {
-      console.log('⚠️ Chat Input - Cannot send message, conditions not met');
-      return;
-    }
+    if (!canSend) return;
 
-    console.log('🚀 Chat Input - Sending message:', {
-      messageLength: actualMessage.length,
-      hasImage: !!selectedImageUri
-    });
+    console.log('🚀 Sending message:', actualMessage.substring(0, 100) + (actualMessage.length > 100 ? '...' : ''));
 
     try {
       await onSendMessage(actualMessage.trim(), selectedImageUri || undefined);
@@ -255,8 +214,6 @@ export default function ChatInput({
    */
   const renderImagePreview = () => {
     if (!selectedImageUri) return null;
-
-    console.log('🖼️ Chat Input - Rendering image preview');
 
     return (
       <View style={styles.imagePreviewContainer}>

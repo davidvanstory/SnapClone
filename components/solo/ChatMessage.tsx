@@ -39,8 +39,7 @@ export default function ChatMessage({
   message,
   isLatest = false,
 }: ChatMessageProps) {
-  console.log('📝 Chat Message - Rendering', message.role, 'message:', message.content.substring(0, 50) + '...');
-  console.log('🖼️ Chat Message - Has image:', !!message.image_url);
+  // Minimal logging for debugging - only log when needed
 
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
@@ -74,8 +73,6 @@ export default function ChatMessage({
    */
   const renderImage = () => {
     if (!message.image_url) return null;
-
-    console.log('🖼️ Chat Message - Rendering image:', message.image_url);
 
     return (
       <View style={styles.imageContainer}>

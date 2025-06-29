@@ -36,7 +36,7 @@ export default function GlassMorphismCard({
   children,
   ...props
 }: GlassMorphismCardProps) {
-  console.log(`🌟 GlassMorphismCard - Rendering ${type} glass card`);
+  // Removed excessive logging
 
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];

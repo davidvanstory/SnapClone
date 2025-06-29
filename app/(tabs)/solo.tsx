@@ -39,8 +39,6 @@ import { useAuthStore } from '@/store/authStore';
 import { useSoloStore } from '@/store/soloStore';
 
 export default function SoloTutorScreen() {
-  console.log('🧠 Solo Tutor Screen - Rendering Solo AI chat interface');
-
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const { user } = useAuthStore();
@@ -59,33 +57,22 @@ export default function SoloTutorScreen() {
     clearMessageError,
   } = useSoloStore();
 
-  console.log('👤 Solo Tutor Screen - Current user:', user?.id ? 'Authenticated ✓' : 'Not authenticated ❌');
-  console.log('💬 Solo Tutor Screen - Current chat ID:', currentChat?.id || 'No active chat');
-  console.log('🔧 Solo Tutor Screen - Store state:', { 
-    isLoading, 
-    isLoadingMessages, 
-    isSendingMessage, 
-    messageCount: messages.length,
-    isInitialized 
-  });
+  // Only log essential state for debugging RAG system
+  if (messages.length > 0) {
+    console.log('🧠 Solo Tutor Screen - Active chat with', messages.length, 'messages');
+  }
 
   /**
    * Initialize Solo Tutor when user is available
    */
   useEffect(() => {
-    console.log('🚀 Solo Tutor Screen - Initializing chat session');
-    
     if (user?.id && !isInitialized) {
-      console.log('📋 Solo Tutor Screen - User authenticated, initializing Solo Tutor');
       initialize(user.id);
-    } else if (!user?.id) {
-      console.log('⚠️ Solo Tutor Screen - User not authenticated');
     }
   }, [user?.id, isInitialized, initialize]);
 
   // Show loading state if user is not available
   if (!user) {
-    console.log('⏳ Solo Tutor Screen - Waiting for user authentication');
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.loadingContainer}>
@@ -152,10 +139,7 @@ export default function SoloTutorScreen() {
         <View style={styles.inputContainer}>
           <ChatInput
             onSendMessage={async (message: string, imageUri?: string) => {
-              if (!currentChat?.id) {
-                console.error('❌ Solo Screen - No current chat available');
-                return;
-              }
+              if (!currentChat?.id) return;
               
               await sendMessage({
                 chatId: currentChat.id,

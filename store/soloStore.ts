@@ -12,15 +12,15 @@
 
 import { create } from 'zustand';
 import {
-    createSoloChat,
-    deleteChat,
-    getChatMessages,
-    getOrCreateDefaultChat,
-    getUserChats,
-    sendMessage,
-    updateChatTitle,
-    type AIResponseResult,
-    type SendMessageOptions,
+  createSoloChat,
+  deleteChat,
+  getChatMessages,
+  getOrCreateDefaultChat,
+  getUserChats,
+  sendMessage,
+  updateChatTitle,
+  type AIResponseResult,
+  type SendMessageOptions,
 } from '../lib/soloService';
 import type { SoloAIChat, SoloAIMessage } from '../lib/supabase';
 
@@ -166,7 +166,6 @@ export const useSoloStore = create<SoloState>((set, get) => ({
 
   // Send a message and get AI response
   sendMessage: async (options: SendMessageOptions) => {
-    console.log('🚀 Solo Store - Sending message');
     set({ isSendingMessage: true, messageError: null });
 
     try {
@@ -379,29 +378,24 @@ export const useSoloStore = create<SoloState>((set, get) => ({
 
   // Internal state setters
   setCurrentChat: (chat: SoloAIChat | null) => {
-    console.log('🔄 Solo Store - Setting current chat:', chat?.id || 'null');
     set({ currentChat: chat });
   },
 
   setMessages: (messages: SoloAIMessage[]) => {
-    console.log('💬 Solo Store - Setting messages:', messages.length);
     set({ messages });
   },
 
   addMessage: (message: SoloAIMessage) => {
-    console.log('➕ Solo Store - Adding message:', message.role);
     const currentMessages = get().messages;
     set({ messages: [...currentMessages, message] });
   },
 
   addMessages: (messages: SoloAIMessage[]) => {
-    console.log('➕ Solo Store - Adding messages:', messages.length);
     const currentMessages = get().messages;
     set({ messages: [...currentMessages, ...messages] });
   },
 
   setUserChats: (chats: SoloAIChat[]) => {
-    console.log('📋 Solo Store - Setting user chats:', chats.length);
     set({ userChats: chats });
   },
 
@@ -439,12 +433,10 @@ export const useSoloStore = create<SoloState>((set, get) => ({
 
   // Prepopulated image management
   setPrepopulatedImageUri: (imageUri: string | null) => {
-    console.log('📷 Solo Store - Setting prepopulated image URI:', imageUri ? 'Image set' : 'Cleared');
     set({ prepopulatedImageUri: imageUri });
   },
 
   clearPrepopulatedImageUri: () => {
-    console.log('🧹 Solo Store - Clearing prepopulated image URI');
     set({ prepopulatedImageUri: null });
   },
 })); 

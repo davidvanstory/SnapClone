@@ -146,7 +146,7 @@ export async function getChatMessages(chatId: string): Promise<SoloAIMessage[]> 
 export async function sendMessage(options: SendMessageOptions): Promise<AIResponseResult> {
   console.log('🚀 Solo Service - Sending message to AI');
   console.log('📍 Chat ID:', options.chatId);
-  console.log('📝 Message length:', options.message.length);
+  console.log('📝 User Question:', options.message);
   console.log('🖼️ Has image:', !!options.imageUri);
 
   const startTime = Date.now();
@@ -214,8 +214,8 @@ export async function sendMessage(options: SendMessageOptions): Promise<AIRespon
     }
 
     console.log('✅ Solo Service - AI response received successfully');
+    console.log('🤖 AI Response:', responseData.ai_response || 'No response content');
     console.log('📊 Response data:', {
-      has_ai_response: !!responseData.ai_response,
       user_message_id: responseData.user_message_id,
       ai_message_id: responseData.ai_message_id,
       processing_time: responseData.processing_time_ms,
