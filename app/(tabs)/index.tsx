@@ -68,6 +68,8 @@ export default function ClassFeedScreen() {
     refreshFeed,
     createComment,
     markPostAsViewed,
+    pendingScrollToPostId,
+    setPendingScrollToPostId,
   } = useClassStore();
   
   // Solo store for Juni integration
@@ -107,12 +109,41 @@ export default function ClassFeedScreen() {
   }, [currentClass?.id, user?.id, loadClassPosts]);
 
   /**
+   * Handle pending scroll to post ID from Juni
+   * This triggers when posts are loaded and there's a pending scroll ID
+   */
+  useEffect(() => {
+    if (pendingScrollToPostId && classPosts.length > 0 && !isLoadingPosts) {
+      console.log('📍 Class Feed Screen - Found pending scroll ID from Juni:', pendingScrollToPostId);
+      
+      // Check if the post exists in the current feed
+      const postExists = classPosts.some(post => post.id === pendingScrollToPostId);
+      
+      if (postExists) {
+        console.log('✅ Class Feed Screen - Post found, scrolling to:', pendingScrollToPostId);
+        setScrollToPostId(pendingScrollToPostId);
+        
+        // Clear the pending scroll ID after using it
+        setPendingScrollToPostId(null);
+      } else {
+        console.log('⚠️ Class Feed Screen - Post not found in current feed:', pendingScrollToPostId);
+        // Clear it anyway to prevent infinite attempts
+        setPendingScrollToPostId(null);
+      }
+    }
+  }, [pendingScrollToPostId, classPosts, isLoadingPosts, setPendingScrollToPostId]);
+
+  /**
    * Check if user should see class list vs feed
    */
   useEffect(() => {
     console.log('🔍 Class Feed Screen - Checking class membership status');
     
+    // Check if we're coming from Juni with a pending scroll
+    const comingFromJuni = pendingScrollToPostId !== null;
+    
     // Always show class list first when user loads the feed tab
+    // UNLESS we're coming from Juni with a pending scroll
     if (user && !isLoading) {
       if (!currentClass) {
         console.log('📚 Class Feed Screen - No class selected, showing class list');
@@ -121,9 +152,15 @@ export default function ClassFeedScreen() {
       } else {
         console.log('🎨 Class Feed Screen - Class selected, showing feed');
         setShowClassList(false);
+        
+        // If coming from Juni, ensure we stay on the feed
+        if (comingFromJuni) {
+          console.log('🎯 Class Feed Screen - Coming from Juni, staying on feed');
+          setShowClassList(false);
+        }
       }
     }
-  }, [user, isLoading, currentClass]);
+  }, [user, isLoading, currentClass, pendingScrollToPostId]);
 
   /**
    * Handle class selection from class list

@@ -192,6 +192,8 @@ export default function SoloChat({
           messages.length === 0 && styles.emptyMessagesContainer
         ]}
         showsVerticalScrollIndicator={false}
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
         ListEmptyComponent={renderEmptyState}
         ListFooterComponent={
           <View style={styles.footerContainer}>

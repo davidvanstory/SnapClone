@@ -24,15 +24,16 @@
  */
 
 import * as ImagePicker from 'expo-image-picker';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   Image,
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -47,6 +48,7 @@ export interface ChatInputProps {
   isLoading?: boolean;
   disabled?: boolean;
   placeholder?: string;
+  onSharePress?: () => void;
 }
 
 export default function ChatInput({
@@ -54,12 +56,13 @@ export default function ChatInput({
   isLoading = false,
   disabled = false,
   placeholder = "Ask Juni about art techniques, or upload your artwork for feedback...",
+  onSharePress,
 }: ChatInputProps) {
   // Minimal logging for essential debugging only
 
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
-  const { prepopulatedImageUri, clearPrepopulatedImageUri } = useSoloStore();
+  const { prepopulatedImageUri, clearPrepopulatedImageUri, showShareButton } = useSoloStore();
 
   // Instructional text constants
   const INSTRUCTIONAL_TEXT = "Ask Juni your art question";
@@ -68,6 +71,11 @@ export default function ChatInput({
   const [message, setMessage] = useState(INSTRUCTIONAL_TEXT);
   const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
   const [isShowingInstructionalText, setIsShowingInstructionalText] = useState(true);
+
+  // Animation values for share button
+  const shareButtonSlideAnim = useRef(new Animated.Value(-60)).current; // Start off-screen
+  const shareButtonPulseAnim = useRef(new Animated.Value(1)).current;
+  const hasShownPulse = useRef(false);
 
   // Handle prepopulated image from camera
   useEffect(() => {
@@ -80,6 +88,61 @@ export default function ChatInput({
       setMessage('');
     }
   }, [prepopulatedImageUri, clearPrepopulatedImageUri]);
+
+  // Handle share button visibility animation
+  useEffect(() => {
+    if (showShareButton) {
+      console.log('🎉 Chat Input - Animating share button in');
+      
+      // Slide in animation
+      Animated.timing(shareButtonSlideAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => {
+        // Pulse animation after slide in (only on first appearance)
+        if (!hasShownPulse.current) {
+          hasShownPulse.current = true;
+          
+          // Create a sequence of pulses
+          Animated.sequence([
+            Animated.timing(shareButtonPulseAnim, {
+              toValue: 1.2,
+              duration: 200,
+              useNativeDriver: true,
+            }),
+            Animated.timing(shareButtonPulseAnim, {
+              toValue: 1,
+              duration: 200,
+              useNativeDriver: true,
+            }),
+            Animated.timing(shareButtonPulseAnim, {
+              toValue: 1.1,
+              duration: 150,
+              useNativeDriver: true,
+            }),
+            Animated.timing(shareButtonPulseAnim, {
+              toValue: 1,
+              duration: 150,
+              useNativeDriver: true,
+            }),
+          ]).start();
+        }
+      });
+    } else {
+      console.log('👋 Chat Input - Hiding share button');
+      
+      // Slide out animation
+      Animated.timing(shareButtonSlideAnim, {
+        toValue: -60,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+      
+      // Reset pulse state when hidden
+      hasShownPulse.current = false;
+    }
+  }, [showShareButton, shareButtonSlideAnim, shareButtonPulseAnim]);
 
   // Computed state
   const actualMessage = isShowingInstructionalText ? '' : message;
@@ -276,6 +339,40 @@ export default function ChatInput({
 
         {/* Action Buttons - Always on line below text input */}
         <View style={styles.actionButtons}>
+          {/* Animated Share Button - slides in from left */}
+          {showShareButton && (
+            <Animated.View
+              style={[
+                styles.shareButtonWrapper,
+                {
+                  transform: [{ translateX: shareButtonSlideAnim }, { scale: shareButtonPulseAnim }],
+                }
+              ]}
+            >
+              <TouchableOpacity
+                style={[
+                  styles.shareButton,
+                  { 
+                    backgroundColor: '#4CAF50', // Green color for share button
+                  }
+                ]}
+                onPress={onSharePress}
+                disabled={disabled || isLoading}
+                activeOpacity={0.8}
+              >
+                <IconSymbol
+                  name="square.and.arrow.up"
+                  size={20}
+                  color="white"
+                  weight="medium"
+                />
+              </TouchableOpacity>
+            </Animated.View>
+          )}
+
+          {/* Spacer to push buttons to right */}
+          <View style={{ flex: 1 }} />
+
           {/* Image Upload Button */}
           <TouchableOpacity
             style={[
@@ -404,8 +501,27 @@ const styles = StyleSheet.create({
   // Action Buttons
   actionButtons: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',   // Align buttons to the right
+    alignItems: 'center',         // Center buttons vertically
     gap: 8,                       // 8px spacing between buttons
+    minHeight: 44,                // Ensure minimum height for buttons
+  },
+  shareButtonWrapper: {
+    // No absolute positioning needed - let it flow naturally in the row
+  },
+  shareButton: {
+    width: 44,                    // 44px touch target per UIDesign.md
+    height: 44,                   // Square button
+    borderRadius: 22,             // Circular button
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',          // Add subtle shadow for prominence
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,                 // Android shadow
   },
   imageButton: {
     width: 44,                    // 44px touch target per UIDesign.md

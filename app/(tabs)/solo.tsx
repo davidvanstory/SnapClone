@@ -19,8 +19,11 @@
  * Design System: Glass morphism elegance per UIDesign.md specifications
  */
 
-import React, { useEffect } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
@@ -31,16 +34,20 @@ import {
 
 import { ThemedText } from '@/components/ThemedText';
 import ChatInput from '@/components/solo/ChatInput';
+import ShareWithClassModal from '@/components/solo/ShareWithClassModal';
 import SoloChat from '@/components/solo/SoloChat';
 import GlassMorphismCard from '@/components/ui/GlassMorphismCard';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { createJuniPost, getUserDisplayName } from '@/lib/postService';
 import { useAuthStore } from '@/store/authStore';
+import { useClassStore } from '@/store/classStore';
 import { useSoloStore } from '@/store/soloStore';
 
 export default function SoloTutorScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
+  const router = useRouter();
   const { user } = useAuthStore();
   const {
     currentChat,
@@ -55,7 +62,15 @@ export default function SoloTutorScreen() {
     sendMessage,
     clearError,
     clearMessageError,
+    resetShareButtonState,
+    getMostRecentUserImage,
+    setShowShareButton,
   } = useSoloStore();
+  const { currentClass, setPendingScrollToPostId } = useClassStore();
+
+  // Local state for share modal
+  const [isShareModalVisible, setIsShareModalVisible] = useState(false);
+  const [selectedImageForShare, setSelectedImageForShare] = useState<string | null>(null);
 
   // 🚨 DEBUG: Add comprehensive logging for user ID debugging
   console.log('🚨 SOLO DEBUG - Current user state:', {
@@ -87,6 +102,127 @@ export default function SoloTutorScreen() {
       initialize(user.id);
     }
   }, [user?.id, isInitialized, initialize]);
+
+  /**
+   * Reset share button state when leaving the solo tab
+   * This ensures the share button visibility timer only persists while on the solo tab
+   */
+  useFocusEffect(
+    React.useCallback(() => {
+      // This runs when the screen comes into focus
+      console.log('📍 Solo Tab - Screen focused');
+      
+      // Return cleanup function that runs when screen loses focus
+      return () => {
+        console.log('👋 Solo Tab - Screen unfocused, resetting share button state');
+        resetShareButtonState();
+      };
+    }, [resetShareButtonState])
+  );
+
+  /**
+   * Handle share button press - opens the share with class modal
+   */
+  const handleSharePress = () => {
+    console.log('🎨 Solo Tab - Share button pressed');
+    
+    // Get the most recent user image
+    const imageUrl = getMostRecentUserImage();
+    
+    if (!imageUrl) {
+      console.log('⚠️ Solo Tab - No image to share');
+      // TODO: Show error in chat as inline message
+      return;
+    }
+    
+    console.log('📸 Solo Tab - Image to share:', imageUrl);
+    
+    // Set image and open modal
+    setSelectedImageForShare(imageUrl);
+    setIsShareModalVisible(true);
+  };
+
+  /**
+   * Handle sharing the image to class feed
+   */
+  const handleShareToClass = async (caption: string) => {
+    console.log('🚀 Solo Tab - Sharing to class with caption:', caption);
+    
+    if (!user?.id || !selectedImageForShare) {
+      console.error('❌ Solo Tab - Missing user or image data');
+      return;
+    }
+
+    // Check if user has a class
+    if (!currentClass) {
+      console.log('⚠️ Solo Tab - User not enrolled in any class');
+      
+      // Add inline error message to chat
+      // TODO: Implement inline error message in chat
+      Alert.alert(
+        'No Class Selected',
+        'Please join a class before sharing your artwork.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    try {
+      // Get user's display name
+      const userName = await getUserDisplayName(user.id);
+      
+      // Create the post
+      const result = await createJuniPost({
+        userId: user.id,
+        imageUrl: selectedImageForShare,
+        caption: caption,
+        userName: userName || undefined,
+        maxViewers: 5,
+        durationHours: 5,
+      });
+
+      if (result.success && result.postId) {
+        console.log('✅ Solo Tab - Successfully shared to class feed');
+        
+        // Close modal
+        setIsShareModalVisible(false);
+        
+        // Reset share button
+        resetShareButtonState();
+        
+        // Hide share button after successful share
+        setShowShareButton(false);
+        
+        // Navigate to class feed
+        console.log('📍 Solo Tab - Navigating to class feed, post ID:', result.postId);
+        
+        // Set the post ID to scroll to in the class store
+        setPendingScrollToPostId(result.postId);
+        
+        // Navigate to the index tab (class feed)
+        router.push('/(tabs)');
+        
+      } else {
+        console.error('❌ Solo Tab - Failed to share:', result.error);
+        
+        // Show error alert
+        Alert.alert(
+          'Share Failed',
+          result.error || 'Failed to share your artwork. Please try again.',
+          [{ text: 'OK' }]
+        );
+      }
+      
+    } catch (error) {
+      console.error('❌ Solo Tab - Unexpected error sharing:', error);
+      
+      Alert.alert(
+        'Share Failed',
+        'An unexpected error occurred. Please try again.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
 
   // Show loading state if user is not available
   if (!user) {
@@ -173,12 +309,21 @@ export default function SoloTutorScreen() {
                 userId: user.id,
               });
             }}
+            onSharePress={handleSharePress}
             isLoading={isSendingMessage}
             disabled={!currentChat || isLoading}
             placeholder="Ask Juni your art question..."
           />
         </View>
       </KeyboardAvoidingView>
+
+      {/* Share with Class Modal */}
+      <ShareWithClassModal
+        visible={isShareModalVisible}
+        imageUrl={selectedImageForShare}
+        onClose={() => setIsShareModalVisible(false)}
+        onShare={handleShareToClass}
+      />
     </SafeAreaView>
   );
 }

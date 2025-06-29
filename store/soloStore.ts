@@ -8,6 +8,7 @@
  * - Error handling and retry functionality
  * - Image upload states
  * - Chat creation and navigation
+ * - Share with class feature state
  */
 
 import { create } from 'zustand';
@@ -46,6 +47,10 @@ export interface SoloState {
   isInitialized: boolean;
   prepopulatedImageUri: string | null;
   
+  // Share with class feature states
+  lastUploadedImageUrl: string | null;
+  showShareButton: boolean;
+  
   // Actions
   initialize: (userId: string) => Promise<void>;
   loadChats: (userId: string) => Promise<void>;
@@ -60,6 +65,12 @@ export interface SoloState {
   reset: () => void;
   setPrepopulatedImageUri: (imageUri: string | null) => void;
   clearPrepopulatedImageUri: () => void;
+  
+  // Share with class feature actions
+  setLastUploadedImageUrl: (imageUrl: string | null) => void;
+  setShowShareButton: (show: boolean) => void;
+  getMostRecentUserImage: () => string | null;
+  resetShareButtonState: () => void;
   
   // Internal state setters
   setCurrentChat: (chat: SoloAIChat | null) => void;
@@ -91,6 +102,10 @@ export const useSoloStore = create<SoloState>((set, get) => ({
   messageError: null,
   isInitialized: false,
   prepopulatedImageUri: null,
+  
+  // Share with class feature initial state
+  lastUploadedImageUrl: null,
+  showShareButton: false,
 
   // Initialize the Solo Tutor store
   initialize: async (userId: string) => {
@@ -188,6 +203,18 @@ export const useSoloStore = create<SoloState>((set, get) => ({
             : chat
         );
         set({ userChats: updatedChats });
+        
+        // Check if this was an image message that Juni responded to
+        if (options.imageUri && result.userMessage.image_url) {
+          console.log('🎉 Solo Store - Juni responded to image message, enabling share button');
+          console.log('📸 Image URL:', result.userMessage.image_url);
+          
+          // Update share button state
+          set({ 
+            lastUploadedImageUrl: result.userMessage.image_url,
+            showShareButton: true 
+          });
+        }
         
       } else {
         console.error('❌ Solo Store - Message send failed:', result.error);
@@ -373,6 +400,8 @@ export const useSoloStore = create<SoloState>((set, get) => ({
       messageError: null,
       isInitialized: false,
       prepopulatedImageUri: null,
+      lastUploadedImageUrl: null,
+      showShareButton: false,
     });
   },
 
@@ -429,6 +458,47 @@ export const useSoloStore = create<SoloState>((set, get) => ({
 
   setInitialized: (initialized: boolean) => {
     set({ isInitialized: initialized });
+  },
+
+  // Share with class feature actions
+  setLastUploadedImageUrl: (imageUrl: string | null) => {
+    console.log('📸 Solo Store - Setting last uploaded image URL:', imageUrl);
+    set({ lastUploadedImageUrl: imageUrl });
+  },
+
+  setShowShareButton: (show: boolean) => {
+    console.log('🔘 Solo Store - Setting share button visibility:', show);
+    set({ showShareButton: show });
+  },
+
+  /**
+   * Get the most recent user-uploaded image from current chat messages
+   * Searches through messages in reverse order to find the latest image
+   */
+  getMostRecentUserImage: () => {
+    const messages = get().messages;
+    console.log('🔍 Solo Store - Searching for most recent user image in', messages.length, 'messages');
+    
+    // Search from newest to oldest
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const message = messages[i];
+      if (message.role === 'user' && message.image_url) {
+        console.log('✅ Solo Store - Found user image:', message.image_url);
+        return message.image_url;
+      }
+    }
+    
+    console.log('⚠️ Solo Store - No user images found in current chat');
+    return null;
+  },
+
+  /**
+   * Reset share button state when leaving solo tab
+   * Clears the share button visibility but preserves the last uploaded image URL
+   */
+  resetShareButtonState: () => {
+    console.log('🔄 Solo Store - Resetting share button state');
+    set({ showShareButton: false });
   },
 
   // Prepopulated image management

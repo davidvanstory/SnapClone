@@ -48,6 +48,7 @@ export interface ClassState {
   // Feed state
   feedRefreshKey: number;
   lastPostUpdate: Date | null;
+  pendingScrollToPostId: string | null; // Track post ID to scroll to after navigation
   
   // Actions
   loadUserClasses: (userId: string) => Promise<void>;
@@ -62,6 +63,7 @@ export interface ClassState {
   markPostAsViewed: (postId: string, userId: string) => Promise<void>;
   createPost: (postData: Partial<Post>) => Promise<{ success: boolean; postId?: string; error?: string }>;
   createComment: (postId: string, userId: string, content: string) => Promise<{ success: boolean; error?: string }>;
+  setPendingScrollToPostId: (postId: string | null) => void;
   
   // Internal state setters
   setLoading: (loading: boolean) => void;
@@ -81,6 +83,7 @@ export const useClassStore = create<ClassState>((set, get) => ({
   isLoadingComments: {},
   feedRefreshKey: 0,
   lastPostUpdate: null,
+  pendingScrollToPostId: null,
 
   // Load user's class memberships
   loadUserClasses: async (userId: string) => {
@@ -533,7 +536,11 @@ export const useClassStore = create<ClassState>((set, get) => ({
       isLoadingPosts: false,
       isLoadingComments: {},
       feedRefreshKey: 0,
-      lastPostUpdate: null
+      lastPostUpdate: null,
+      pendingScrollToPostId: null
     });
-  }
+  },
+
+  // Set pending scroll to post ID
+  setPendingScrollToPostId: (postId: string | null) => set({ pendingScrollToPostId: postId }),
 })); 
