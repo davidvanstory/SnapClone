@@ -35,6 +35,7 @@ export interface ClassFeedListProps {
   onRefresh: () => void;
   onArtworkPress: (post: PostWithUser) => void;
   onCommentPress: (post: PostWithUser) => void;
+  onJuniPress?: (post: PostWithUser) => void; // New prop for Juni navigation
   className: string;
   headerHeight?: number; // Height of fixed header to add padding
   scrollToPostId?: string | null; // Post ID to scroll to when set
@@ -47,6 +48,7 @@ export default function ClassFeedList({
   onRefresh,
   onArtworkPress,
   onCommentPress,
+  onJuniPress,
   className,
   headerHeight = 100, // Default header height including safe area
   scrollToPostId,
@@ -92,8 +94,9 @@ export default function ClassFeedList({
       post={item}
       onArtworkPress={onArtworkPress}
       onCommentPress={onCommentPress}
+      onJuniPress={onJuniPress}
     />
-  ), [onArtworkPress, onCommentPress]);
+  ), [onArtworkPress, onCommentPress, onJuniPress]);
 
   /**
    * Key extractor for FlatList
@@ -132,45 +135,55 @@ export default function ClassFeedList({
   }, [posts]);
 
   return (
-    <FlatList
-      ref={listRef}
-      data={posts}
-      renderItem={renderItem}
-      keyExtractor={keyExtractor}
-      contentContainerStyle={[
-        styles.listContent,
-        { paddingTop: headerHeight }, // Add padding for fixed header
-        posts.length === 0 && styles.emptyListContent,
-      ]}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl
-          refreshing={isLoading}
-          onRefresh={onRefresh}
-          tintColor={colors.textSecondary}
-        />
-      }
-      ListEmptyComponent={renderEmptyState}
-      // Performance optimizations
-      removeClippedSubviews={true}
-      maxToRenderPerBatch={5}
-      windowSize={10}
-      initialNumToRender={5}
-      // Item layout optimization for better scrollToIndex performance
-      getItemLayout={(data, index) => ({
-        length: 260, // Approximate height of each card (60% screen width + metadata)
-        offset: 260 * index,
-        index,
-      })}
-    />
+    <View style={styles.container}>
+      <FlatList
+        ref={listRef}
+        data={posts}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        style={styles.list}
+        contentContainerStyle={[
+          styles.contentContainer,
+          { paddingTop: headerHeight },
+          posts.length === 0 && styles.emptyListContent,
+        ]}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={onRefresh}
+            tintColor={colors.textSecondary}
+          />
+        }
+        ListEmptyComponent={renderEmptyState}
+        // Performance optimizations
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={5}
+        windowSize={10}
+        initialNumToRender={5}
+        // Item layout optimization for better scrollToIndex performance
+        getItemLayout={(data, index) => ({
+          length: 260, // Approximate height of each card (60% screen width + metadata)
+          offset: 260 * index,
+          index,
+        })}
+      />
+    </View>
   );
 }
 
 // Export scrollToPost functionality will be added when needed for Juni integration
 
 const styles = StyleSheet.create({
-  listContent: {
-    paddingBottom: 100, // Space for tab bar
+  container: {
+    flex: 1,
+  },
+  list: {
+    flex: 1,
+  },
+  contentContainer: {
+    paddingBottom: 100,           // Space for floating camera button
+    paddingHorizontal: 20,        // Add horizontal padding to prevent icon cutoff
   },
   emptyListContent: {
     flexGrow: 1,

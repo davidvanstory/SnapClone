@@ -44,6 +44,7 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useAuthStore } from '@/store/authStore';
 import { useClassStore, type PostWithUser } from '@/store/classStore';
+import { useSoloStore } from '@/store/soloStore';
 
 export default function ClassFeedScreen() {
   console.log('🎨 Class Feed Screen - Rendering chat-style vertical feed');
@@ -68,6 +69,9 @@ export default function ClassFeedScreen() {
     createComment,
     markPostAsViewed,
   } = useClassStore();
+  
+  // Solo store for Juni integration
+  const { setPrepopulatedImageUri } = useSoloStore();
   
   // Local state
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -266,6 +270,19 @@ export default function ClassFeedScreen() {
   }, [setCurrentClass]);
 
   /**
+   * Handle Juni press - navigate to Juni with the image
+   */
+  const handleJuniPress = useCallback((post: PostWithUser) => {
+    console.log('🧠 Class Feed Screen - Opening Juni with image from post:', post.id);
+    
+    // Set the shared image in solo store
+    setPrepopulatedImageUri(post.image_url);
+    
+    // Navigate to Juni tab
+    router.push('/solo');
+  }, [setPrepopulatedImageUri]);
+
+  /**
    * Pan gesture handler for swipe-right to go back
    */
   const gestureHandler = useAnimatedGestureHandler({
@@ -407,20 +424,12 @@ export default function ClassFeedScreen() {
             onRefresh={handleRefresh}
             onArtworkPress={handleArtworkPress}
             onCommentPress={handleCommentPress}
+            onJuniPress={handleJuniPress}
             className={currentClass.name}
             headerHeight={100} // Adjust based on actual header height
             scrollToPostId={scrollToPostId}
             onScrollToPostComplete={handleScrollToPostComplete}
           />
-
-          {/* Floating Camera Button */}
-          <TouchableOpacity
-            style={[styles.cameraButton, { backgroundColor: colors.accentSage }]}
-            onPress={handleCameraPress}
-            activeOpacity={0.8}
-          >
-            <ThemedText style={styles.cameraIcon}>📸</ThemedText>
-          </TouchableOpacity>
 
           {/* Full-Screen Artwork View */}
           <FullScreenArtworkView
@@ -559,27 +568,5 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: 'white',
     fontWeight: '500',
-  },
-  
-  // Floating Camera Button
-  cameraButton: {
-    position: 'absolute',
-    bottom: 100, // Above tab bar
-    right: 20,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    
-    // Shadow
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  cameraIcon: {
-    fontSize: 24,
   },
 });
