@@ -1,57 +1,75 @@
-# Welcome to your Expo app 👋
 
-
-To access the RAG features - must use account 
+To access the RAG features - must use account:
 hello@example.com
 123456
+Synthetic data is attached to this user. 
 
 
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Juni - AI-Powered Art Companion
+Juni is a personalized AI tutor for visual artists. This mobile app helps artists get contextual, actionable feedback on their artwork using advanced AI and Retrieval-Augmented Generation (RAG) techniques. And join communities of other artists to share their work and get inspired. 
 
-## Get started
+Overview
+Juni is designed to support artists through intelligent, conversational feedback. It helps users improve their skills, track progress, and feel seen lower the barrier to sharing art. 
+Users can capture an image of their work, engage with Juni, a tailored AI assistant, and optionally join community-driven classes for more human feedback.
 
-1. Install dependencies
+Why Now?
+People increasingly seek rapid feedback loops and digital tools to accelerate learning. Juni allows artists to tap into cutting-edge AI in a clean mobile-first experience to share their art and improve. 
 
-   ```bash
-   npm install
-   ```
 
-2. Start the app
+Key Features
+1. Image Capture and Sharing
+Instantly photograph your art and be able to share it with Juni or a Community
 
-   ```bash
-   npx expo start
-   ```
+2. Contextual Memory via Vector Search
+Juni recalls previous critiques using a vector database, offering a continuous and personalized learning experience.
 
-In the output, you'll find options to open the app in a
+3. Conversational AI Feedback
+Ask Juni questions like "How can I improve this shading?" or "What's a better composition for this piece?" and get helpful, nuanced replies.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+4. Community Classrooms (Work in Progress)
+Join virtual critique classes, receive peer feedback, and share your work in a low stakes setting. 
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+5. Onboarding & Onramp
+A gentle introduction to Juni helps new users understand how to use the app and start receiving useful feedback right away.
 
-## Get a fresh project
+6. Seamless user experience
+Each page has been designed with simple, subtle calls to action or nudges about how to get the most out of the app. 
 
-When you're ready, run:
 
-```bash
-npm run reset-project
-```
+Alex - User Story
+- Alex, who wants to improve as an illustrator takes a photo of his charcoal sketch and asks Juni how to improve facial proportions.
+- Juni responds with tailored suggestions and remembers Alex’s past works, offering continuity and growth tracking.
+- Alex joins a community class, shares his progress, and receives feedback from peers and the AI alike.
+- He reviews his critique history and reflects on how his work has improved over time.
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
-## Learn more
+Screenshots
+Look at the Screenshots folder in the repo to see images
 
-To learn more about developing your project with Expo, look at the following resources:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
 
-## Join the community
+AI + RAG Architecture
+- Uses OpenAI's GPT-4o for conversational interaction.
+- Stores critique sessions in a vector database (e.g. Supabase + pgvector) to retrieve past feedback with semantic similarity.Text-embedding-3-large used to vectorize prior conversations
+- Synthetic database created to showcase RAG function, contains prior conversations with unique/non public info that isn't part of GPT-4o's latent knowledge. 
+- 
 
-Join our community of developers creating universal apps.
+Testing Focus
+- Prioritizing reliability and feedback quality of the AI tutor. Ran a RAG eval and examined similarity scores to test RAG function. 
+- UI usability checks to ensure the app is intuitive for both new and returning users.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+Getting Started
+1. Clone the repo - https://github.com/davidvanstory/SnapClone
+2. Installs dependencies - npm install
+3. Set up environment variables (e.g. OpenAI key, Supabase URL, etc.)
+4. Run locally - expo start
+
+
+Tech Stack
+React Native + Expo
+Shadcn
+Supabase (database, auth, storage)
+gpt4o, text-embeddings-3-large (AI and RAG)
+pgvector (vector embeddings, similarity search)
