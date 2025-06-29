@@ -214,39 +214,37 @@ export async function sendMessage(options: SendMessageOptions): Promise<AIRespon
     }
 
     console.log('✅ Solo Service - AI response received successfully');
-    console.log('🤖 AI Response:', responseData.ai_response || 'No response content');
+    console.log('🤖 AI Response:', responseData.ai_response?.substring(0, 100) + '...');
     console.log('📊 Response data:', {
-      user_message_id: responseData.user_message_id,
       ai_message_id: responseData.ai_message_id,
       processing_time: responseData.processing_time_ms,
+      user_message_id: responseData.user_message_id
     });
-    
-    // Log RAG system details if available
-    if (responseData.rag_details) {
+
+    // 🚨 LOG RAG DEBUG INFORMATION
+    if (responseData.rag_details?.debug_info) {
       console.log('');
-      console.log('🎯 ===== RAG SYSTEM RESULTS =====');
-      console.log('🔍 Vector Similarity Search:');
-      console.log(`   • Historical messages found: ${responseData.rag_details.relevant_history_count || 0}`);
-      console.log(`   • Similarity threshold: ${responseData.rag_details.similarity_threshold || 0.7}`);
+      console.log('🚨🚨🚨 RAG SYSTEM DEBUG INFO 🚨🚨🚨');
+      console.log('🎯 User ID received by Edge Function:', responseData.rag_details.debug_info.user_id_received);
+      console.log('🎯 Chat ID received by Edge Function:', responseData.rag_details.debug_info.chat_id_received);
+      console.log('🎯 Query embedding dimension:', responseData.rag_details.debug_info.query_embedding_dimension);
+      console.log('🎯 Total messages searched:', responseData.rag_details.debug_info.total_messages_searched);
+      console.log('🎯 Search error:', responseData.rag_details.debug_info.search_error || 'None');
       
-      if (responseData.rag_details.relevant_messages && responseData.rag_details.relevant_messages.length > 0) {
-        console.log('   • Similar messages retrieved:');
-        responseData.rag_details.relevant_messages.forEach((msg: any, index: number) => {
-          console.log(`     ${index + 1}. Similarity: ${msg.similarity?.toFixed(4)} | "${msg.content.substring(0, 60)}${msg.content.length > 60 ? '...' : ''}"`);
+      if (responseData.rag_details.debug_info.all_similarity_scores && responseData.rag_details.debug_info.all_similarity_scores.length > 0) {
+        console.log('🎯 ALL SIMILARITY SCORES (top 10):');
+        responseData.rag_details.debug_info.all_similarity_scores.forEach((score: any, index: number) => {
+          console.log(`   ${index + 1}. Similarity: ${score.similarity.toFixed(4)} | "${score.content_preview}..." | ${score.created_at}`);
         });
       } else {
-        console.log('   • No similar messages found above threshold');
+        console.log('🚨 NO SIMILARITY SCORES FOUND - Database returned 0 results');
       }
-      
-      console.log('💬 Recent Context:');
-      console.log(`   • Recent messages: ${responseData.rag_details.recent_conversation_count || 0}`);
-      
-      console.log('🤖 AI Context Usage:');
-      console.log(`   • Enhanced prompt used: ${responseData.rag_details.context_used ? '✅' : '❌'}`);
-      console.log(`   • Context type: ${responseData.rag_details.context_type || 'None'}`);
-      console.log('🎯 ===============================');
+      console.log('🚨🚨🚨 RAG SYSTEM DEBUG INFO END 🚨🚨🚨');
       console.log('');
     }
+
+    console.log('');
+    console.log('🎯 ===== RAG SYSTEM RESULTS =====');
 
     // Fetch the created messages from database to return complete objects
     const [userMessage, aiMessage] = await Promise.all([

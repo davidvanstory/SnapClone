@@ -43,6 +43,18 @@ interface SoloAIResponse {
       similarity: number;
       created_at: string;
     }>;
+    debug_info?: {
+      user_id_received: string;
+      chat_id_received: string;
+      query_embedding_dimension: number;
+      total_messages_searched: number;
+      all_similarity_scores?: Array<{
+        similarity: number;
+        content_preview: string;
+        created_at: string;
+      }>;
+      search_error?: string | null;
+    };
   };
 }
 
@@ -136,7 +148,18 @@ async function searchRelevantHistory(
   chatId: string, 
   userId: string,
   limit: number = 5
-): Promise<DatabaseMessage[]> {
+): Promise<{
+  messages: DatabaseMessage[];
+  debugInfo: {
+    totalMessagesSearched: number;
+    allSimilarityScores: Array<{
+      similarity: number;
+      content_preview: string;
+      created_at: string;
+    }>;
+    searchError: string | null;
+  };
+}> {
   console.log('🔍 Solo AI Function - Searching relevant history for chat:', chatId);
   console.log('📊 Solo AI Function - Query embedding dimension:', queryEmbedding.length);
   
@@ -195,7 +218,7 @@ async function searchRelevantHistory(
     const { data, error } = await supabase
       .rpc('search_similar_messages', {
         query_embedding: embeddingString,
-        similarity_threshold: 0.6,
+        similarity_threshold: 0.5,
         match_count: limit,
         target_user_id: userId
       });
@@ -208,24 +231,46 @@ async function searchRelevantHistory(
       throw new Error(`Database search failed: ${error.message}`);
     }
 
-    console.log('📋 Solo AI Function - Found', data?.length || 0, 'relevant historical messages above 0.6 threshold');
+    console.log('📋 Solo AI Function - Found', data?.length || 0, 'relevant historical messages above 0.5 threshold');
     
     // Log similarity scores above threshold
     if (data && data.length > 0) {
-      console.log('🎯 Solo AI Function - Matches above 0.6 threshold:');
+      console.log('🎯 Solo AI Function - Matches above 0.5 threshold:');
       data.forEach((msg: DatabaseMessage, index: number) => {
         console.log(`   ${index + 1}. Similarity: ${msg.similarity?.toFixed(4)} | "${msg.content.substring(0, 60)}${msg.content.length > 60 ? '...' : ''}"`);
       });
           } else {
-        console.log('🎯 Solo AI Function - No similar messages found above threshold 0.6 (large model)');
+        console.log('🎯 Solo AI Function - No similar messages found above threshold 0.5 (large model)');
       }
     
     console.log('🚨🚨🚨 VECTOR SEARCH DEBUG END 🚨🚨🚨');
-    return data || [];
+    
+    // Return both messages and debug info
+    return {
+      messages: data || [],
+      debugInfo: {
+        totalMessagesSearched: allScores ? allScores.length : 0,
+        allSimilarityScores: allScores ? allScores.slice(0, 10).map((msg: DatabaseMessage) => ({
+          similarity: msg.similarity || 0,
+          content_preview: msg.content.substring(0, 100),
+          created_at: msg.created_at
+        })) : [],
+        searchError: allScoresError ? allScoresError.message : null
+      }
+    };
   } catch (error) {
     console.error('🚨🚨🚨 VECTOR SEARCH FAILED:', error);
     console.error('❌ Solo AI Function - Relevant history search failed:', error);
-    throw new Error(`Relevant history search failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    
+    // Return empty result with error info for debugging
+    return {
+      messages: [],
+      debugInfo: {
+        totalMessagesSearched: 0,
+        allSimilarityScores: [],
+        searchError: error instanceof Error ? error.message : 'Unknown error'
+      }
+    };
   }
 }
 
@@ -502,7 +547,7 @@ Deno.serve(async (req) => {
 
     // Step 2: Search for relevant historical context
     console.log('🔍 Solo AI Function - Step 2: Searching relevant history');
-    const relevantHistory = await searchRelevantHistory(
+    const { messages, debugInfo } = await searchRelevantHistory(
       queryEmbedding,
       requestBody.chat_id,
       requestBody.user_id
@@ -517,7 +562,7 @@ Deno.serve(async (req) => {
     const aiResponse = await generateAIResponse(
       requestBody.user_message,
       requestBody.image_url,
-      relevantHistory,
+      messages,
       recentConversation
     );
 
@@ -548,17 +593,25 @@ Deno.serve(async (req) => {
       ai_message_id: aiMessageId,
       processing_time_ms: processingTime,
               rag_details: {
-          relevant_history_count: relevantHistory.length,
+          relevant_history_count: messages.length,
           recent_conversation_count: recentConversation.length,
-          similarity_threshold: 0.6,
-          context_used: relevantHistory.length > 0 || recentConversation.length > 0,
-          context_type: relevantHistory.length > 0 ? 'RAG with history' : (recentConversation.length > 0 ? 'Recent only' : 'None'),
-          relevant_messages: relevantHistory.map((msg: DatabaseMessage) => ({
+          similarity_threshold: 0.5,
+          context_used: messages.length > 0 || recentConversation.length > 0,
+          context_type: messages.length > 0 ? 'RAG with history' : (recentConversation.length > 0 ? 'Recent only' : 'None'),
+          relevant_messages: messages.map((msg: DatabaseMessage) => ({
             id: msg.id,
             content: msg.content,
             similarity: msg.similarity || 0,
             created_at: msg.created_at
-          }))
+          })),
+          debug_info: {
+            user_id_received: requestBody.user_id,
+            chat_id_received: requestBody.chat_id,
+            query_embedding_dimension: queryEmbedding.length,
+            total_messages_searched: debugInfo.totalMessagesSearched,
+            all_similarity_scores: debugInfo.allSimilarityScores,
+            search_error: debugInfo.searchError
+          }
         }
     };
 
