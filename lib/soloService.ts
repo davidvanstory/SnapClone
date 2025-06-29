@@ -220,6 +220,33 @@ export async function sendMessage(options: SendMessageOptions): Promise<AIRespon
       ai_message_id: responseData.ai_message_id,
       processing_time: responseData.processing_time_ms,
     });
+    
+    // Log RAG system details if available
+    if (responseData.rag_details) {
+      console.log('');
+      console.log('🎯 ===== RAG SYSTEM RESULTS =====');
+      console.log('🔍 Vector Similarity Search:');
+      console.log(`   • Historical messages found: ${responseData.rag_details.relevant_history_count || 0}`);
+      console.log(`   • Similarity threshold: ${responseData.rag_details.similarity_threshold || 0.7}`);
+      
+      if (responseData.rag_details.relevant_messages && responseData.rag_details.relevant_messages.length > 0) {
+        console.log('   • Similar messages retrieved:');
+        responseData.rag_details.relevant_messages.forEach((msg: any, index: number) => {
+          console.log(`     ${index + 1}. Similarity: ${msg.similarity?.toFixed(4)} | "${msg.content.substring(0, 60)}${msg.content.length > 60 ? '...' : ''}"`);
+        });
+      } else {
+        console.log('   • No similar messages found above threshold');
+      }
+      
+      console.log('💬 Recent Context:');
+      console.log(`   • Recent messages: ${responseData.rag_details.recent_conversation_count || 0}`);
+      
+      console.log('🤖 AI Context Usage:');
+      console.log(`   • Enhanced prompt used: ${responseData.rag_details.context_used ? '✅' : '❌'}`);
+      console.log(`   • Context type: ${responseData.rag_details.context_type || 'None'}`);
+      console.log('🎯 ===============================');
+      console.log('');
+    }
 
     // Fetch the created messages from database to return complete objects
     const [userMessage, aiMessage] = await Promise.all([

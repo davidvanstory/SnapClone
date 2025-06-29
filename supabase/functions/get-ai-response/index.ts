@@ -31,6 +31,19 @@ interface SoloAIResponse {
   ai_message_id?: string;
   error?: string;
   processing_time_ms?: number;
+  rag_details?: {
+    relevant_history_count: number;
+    recent_conversation_count: number;
+    similarity_threshold: number;
+    context_used: boolean;
+    context_type: string;
+    relevant_messages?: Array<{
+      id: string;
+      content: string;
+      similarity: number;
+      created_at: string;
+    }>;
+  };
 }
 
 interface DatabaseMessage {
@@ -41,6 +54,7 @@ interface DatabaseMessage {
   image_url?: string;
   embedding?: number[];
   created_at: string;
+  similarity?: number;
 }
 
 interface OpenAIEmbeddingResponse {
@@ -78,7 +92,6 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
  */
 async function generateEmbedding(text: string): Promise<number[]> {
   console.log('📊 Solo AI Function - Generating embedding for text length:', text.length);
-  console.log('📝 Solo AI Function - Text preview:', text.substring(0, 100) + (text.length > 100 ? '...' : ''));
   
   try {
     const response = await fetch('https://api.openai.com/v1/embeddings', {
@@ -104,7 +117,6 @@ async function generateEmbedding(text: string): Promise<number[]> {
     const embedding = data.data[0].embedding;
     
     console.log('✅ Solo AI Function - Generated embedding with dimension:', embedding.length);
-    console.log('📊 Solo AI Function - Embedding sample (first 5 values):', embedding.slice(0, 5));
     return embedding;
   } catch (error) {
     console.error('❌ Solo AI Function - Embedding generation failed:', error);
@@ -123,23 +135,16 @@ async function searchRelevantHistory(
 ): Promise<DatabaseMessage[]> {
   console.log('🔍 Solo AI Function - Searching relevant history for chat:', chatId);
   console.log('📊 Solo AI Function - Query embedding dimension:', queryEmbedding.length);
-  console.log('📊 Solo AI Function - Query embedding sample (first 5):', queryEmbedding.slice(0, 5));
-  console.log('🎯 Solo AI Function - Search parameters:', {
-    similarity_threshold: 0.7,
-    match_count: limit,
-    target_user_id: userId
-  });
   
   try {
     // Convert embedding array to pgvector format
     const embeddingString = '[' + queryEmbedding.join(',') + ']';
-    console.log('🔧 Solo AI Function - Embedding string length:', embeddingString.length);
     
     // Search for relevant messages across all user's chats using cosine similarity
     const { data, error } = await supabase
       .rpc('search_similar_messages', {
         query_embedding: embeddingString,
-        similarity_threshold: 0.7,
+        similarity_threshold: 0.43,
         match_count: limit,
         target_user_id: userId
       });
@@ -151,15 +156,15 @@ async function searchRelevantHistory(
 
     console.log('📋 Solo AI Function - Found', data?.length || 0, 'relevant historical messages');
     
-    // Log detailed results for each retrieved message
+    // Log similarity scores for debugging
     if (data && data.length > 0) {
-      console.log('🎯 Solo AI Function - Vector similarity search results:');
-      data.forEach((msg: any, index: number) => {
-        console.log(`   ${index + 1}. Similarity: ${msg.similarity?.toFixed(4)} | Role: ${msg.role} | Content: "${msg.content.substring(0, 80)}${msg.content.length > 80 ? '...' : ''}" | Date: ${new Date(msg.created_at).toLocaleDateString()}`);
+      console.log('🎯 Solo AI Function - Similarity scores:');
+      data.forEach((msg: DatabaseMessage, index: number) => {
+        console.log(`   ${index + 1}. Similarity: ${msg.similarity?.toFixed(4)} | "${msg.content.substring(0, 60)}${msg.content.length > 60 ? '...' : ''}"`);
       });
-    } else {
-      console.log('⚠️ Solo AI Function - No relevant historical messages found above similarity threshold');
-    }
+          } else {
+        console.log('🎯 Solo AI Function - No similar messages found above threshold 0.43');
+      }
     
     return data || [];
   } catch (error) {
@@ -173,7 +178,6 @@ async function searchRelevantHistory(
  */
 async function getRecentConversation(chatId: string, limit: number = 6): Promise<DatabaseMessage[]> {
   console.log('💬 Solo AI Function - Fetching recent conversation for chat:', chatId);
-  console.log('📊 Solo AI Function - Recent message limit:', limit);
   
   try {
     const { data, error } = await supabase
@@ -191,18 +195,6 @@ async function getRecentConversation(chatId: string, limit: number = 6): Promise
     // Reverse to get chronological order (oldest first)
     const messages = (data || []).reverse();
     console.log('📚 Solo AI Function - Retrieved', messages.length, 'recent messages');
-    
-    // Log details of recent conversation
-    if (messages.length > 0) {
-      console.log('💬 Solo AI Function - Recent conversation context:');
-      messages.forEach((msg: DatabaseMessage, index: number) => {
-        const timeAgo = new Date(msg.created_at).toLocaleString();
-        console.log(`   ${index + 1}. [${timeAgo}] ${msg.role}: "${msg.content.substring(0, 80)}${msg.content.length > 80 ? '...' : ''}"${msg.image_url ? ' [HAS_IMAGE]' : ''}`);
-      });
-    } else {
-      console.log('ℹ️ Solo AI Function - No recent conversation history found');
-    }
-    
     return messages;
   } catch (error) {
     console.error('❌ Solo AI Function - Recent conversation fetch failed:', error);
@@ -267,7 +259,6 @@ async function generateAIResponse(
 ): Promise<string> {
   console.log('🤖 Solo AI Function - Generating AI response');
   console.log('📝 Solo AI Function - User message length:', userMessage.length);
-  console.log('📝 Solo AI Function - User message preview:', userMessage.substring(0, 100) + (userMessage.length > 100 ? '...' : ''));
   console.log('🖼️ Solo AI Function - Has image:', !!imageUrl);
   console.log('📚 Solo AI Function - Relevant history count:', relevantHistory.length);
   console.log('💬 Solo AI Function - Recent conversation count:', recentConversation.length);
@@ -277,44 +268,28 @@ async function generateAIResponse(
     let contextPrompt = '';
     
     if (relevantHistory.length > 0) {
-      console.log('🔍 Solo AI Function - Building relevant history context...');
       contextPrompt += '\n\n=== RELEVANT CONVERSATION HISTORY ===';
       contextPrompt += '\nThese are semantically similar conversations from your past with this student. Reference and build upon these when relevant:\n';
-      relevantHistory.forEach((msg: any, index: number) => {
+      relevantHistory.forEach((msg, index) => {
         const timestamp = new Date(msg.created_at).toLocaleDateString();
-        const contextLine = `[${timestamp}] ${msg.role === 'user' ? 'Student' : 'Canvas'}: ${msg.content}\n`;
-        contextPrompt += contextLine;
-        console.log(`   📋 Adding to context: [${timestamp}] ${msg.role} (similarity: ${msg.similarity?.toFixed(4)})`);
+        contextPrompt += `[${timestamp}] ${msg.role === 'user' ? 'Student' : 'Canvas'}: ${msg.content}\n`;
       });
       contextPrompt += '\n';
-      console.log('✅ Solo AI Function - Relevant history context built');
-    } else {
-      console.log('ℹ️ Solo AI Function - No relevant history to include in context');
     }
 
     // Add recent conversation for immediate context
     if (recentConversation.length > 0) {
-      console.log('💬 Solo AI Function - Building recent conversation context...');
       contextPrompt += '\n=== RECENT CONVERSATION CONTEXT ===';
       contextPrompt += '\nThis is the immediate conversation flow. Maintain continuity with these recent exchanges:\n';
-      recentConversation.forEach((msg: DatabaseMessage, index: number) => {
+      recentConversation.forEach((msg, index) => {
         const timestamp = new Date(msg.created_at).toLocaleTimeString();
-        const contextLine = `[${timestamp}] ${msg.role === 'user' ? 'Student' : 'Canvas'}: ${msg.content}\n`;
-        contextPrompt += contextLine;
-        console.log(`   💬 Adding to context: [${timestamp}] ${msg.role}`);
+        contextPrompt += `[${timestamp}] ${msg.role === 'user' ? 'Student' : 'Canvas'}: ${msg.content}\n`;
       });
       contextPrompt += '\n';
-      console.log('✅ Solo AI Function - Recent conversation context built');
-    } else {
-      console.log('ℹ️ Solo AI Function - No recent conversation to include in context');
     }
 
     if (relevantHistory.length > 0 || recentConversation.length > 0) {
       contextPrompt += '=== INSTRUCTION ===\nYou MUST reference and build upon the above context in your response. Show that you remember and are continuing the student\'s learning journey.\n';
-      console.log('📝 Solo AI Function - Enhanced prompt constructed with context');
-      console.log('📊 Solo AI Function - Total context length:', contextPrompt.length);
-    } else {
-      console.log('⚠️ Solo AI Function - No context available - using base prompt only');
     }
 
     // Prepare messages for OpenAI
@@ -332,9 +307,6 @@ async function generateAIResponse(
       }
     ];
 
-    console.log('🚀 Solo AI Function - Sending request to OpenAI GPT-4o...');
-    console.log('📊 Solo AI Function - Final system prompt length:', (CANVAS_SYSTEM_PROMPT + contextPrompt).length);
-    
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -359,7 +331,6 @@ async function generateAIResponse(
     const aiResponse = data.choices[0].message.content;
     
     console.log('✅ Solo AI Function - Generated AI response length:', aiResponse.length);
-    console.log('📝 Solo AI Function - AI response preview:', aiResponse.substring(0, 150) + (aiResponse.length > 150 ? '...' : ''));
     return aiResponse;
   } catch (error) {
     console.error('❌ Solo AI Function - AI response generation failed:', error);
@@ -377,18 +348,12 @@ async function saveMessage(
   imageUrl?: string
 ): Promise<string> {
   console.log('💾 Solo AI Function - Saving', role, 'message to database');
-  console.log('📝 Solo AI Function - Message content length:', content.length);
-  console.log('📝 Solo AI Function - Message preview:', content.substring(0, 100) + (content.length > 100 ? '...' : ''));
-  console.log('🖼️ Solo AI Function - Has image URL:', !!imageUrl);
   
   try {
     // Generate embedding for the message content
-    console.log('🔄 Solo AI Function - Generating embedding for', role, 'message...');
     const embedding = await generateEmbedding(content);
-    console.log('✅ Solo AI Function - Embedding generated for', role, 'message');
     
     // Insert message into database
-    console.log('💾 Solo AI Function - Inserting', role, 'message into database...');
     const { data, error } = await supabase
       .from('solo_ai_messages')
       .insert({
@@ -407,8 +372,6 @@ async function saveMessage(
     }
 
     console.log('✅ Solo AI Function - Saved', role, 'message with ID:', data.id);
-    console.log('🗃️ Solo AI Function - Message stored in chat:', chatId);
-    console.log('🎯 Solo AI Function - Vector embedding stored for future RAG retrieval');
     return data.id;
   } catch (error) {
     console.error('❌ Solo AI Function - Message save failed:', error);
@@ -521,44 +484,26 @@ Deno.serve(async (req) => {
 
     const processingTime = Date.now() - startTime;
     console.log('✅ Solo AI Function - Request completed successfully in', processingTime, 'ms');
-    
-    // RAG Pipeline Summary
-    console.log('');
-    console.log('🎯 ===== RAG PIPELINE EXECUTION SUMMARY =====');
-    console.log('📊 Query Processing:');
-    console.log(`   • User message: "${requestBody.user_message.substring(0, 60)}${requestBody.user_message.length > 60 ? '...' : ''}"`);
-    console.log(`   • Query embedding generated: ✅`);
-    console.log('');
-    console.log('🔍 Vector Similarity Search:');
-    console.log(`   • Historical messages found: ${relevantHistory.length}`);
-    console.log(`   • Similarity threshold: 0.7`);
-    console.log(`   • Search scope: User-specific (${requestBody.user_id})`);
-    console.log('');
-    console.log('💬 Recent Context Retrieval:');
-    console.log(`   • Recent messages fetched: ${recentConversation.length}`);
-    console.log(`   • Chat context: ${requestBody.chat_id}`);
-    console.log('');
-    console.log('🤖 AI Response Generation:');
-    console.log(`   • Enhanced prompt used: ${relevantHistory.length > 0 || recentConversation.length > 0 ? '✅' : '❌'}`);
-    console.log(`   • Context integration: ${relevantHistory.length > 0 ? 'Historical + Recent' : recentConversation.length > 0 ? 'Recent only' : 'None'}`);
-    console.log(`   • Response generated: ✅`);
-    console.log('');
-    console.log('💾 Database Persistence:');
-    console.log(`   • User message saved: ✅ (ID: ${userMessageId})`);
-    console.log(`   • AI response saved: ✅ (ID: ${aiMessageId})`);
-    console.log(`   • Embeddings generated: ✅ (Both messages)`);
-    console.log(`   • Vector database updated: ✅`);
-    console.log('');
-    console.log(`⏱️ Total processing time: ${processingTime}ms`);
-    console.log('🎯 ============================================');
-    console.log('');
 
     const response: SoloAIResponse = {
       success: true,
       ai_response: aiResponse,
       user_message_id: userMessageId,
       ai_message_id: aiMessageId,
-      processing_time_ms: processingTime
+      processing_time_ms: processingTime,
+              rag_details: {
+          relevant_history_count: relevantHistory.length,
+          recent_conversation_count: recentConversation.length,
+          similarity_threshold: 0.43,
+          context_used: relevantHistory.length > 0 || recentConversation.length > 0,
+          context_type: relevantHistory.length > 0 ? 'RAG with history' : (recentConversation.length > 0 ? 'Recent only' : 'None'),
+          relevant_messages: relevantHistory.map((msg: DatabaseMessage) => ({
+            id: msg.id,
+            content: msg.content,
+            similarity: msg.similarity || 0,
+            created_at: msg.created_at
+          }))
+        }
     };
 
     return new Response(
