@@ -19,10 +19,12 @@
  * - Empty state for new chat sessions
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Keyboard,
+  Platform,
   RefreshControl,
   StyleSheet,
   TouchableOpacity,
@@ -61,6 +63,37 @@ export default function SoloChat({
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const flatListRef = useRef<FlatList>(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  /**
+   * Handle keyboard show/hide events for better scrolling behavior
+   */
+  useEffect(() => {
+    const keyboardWillShowListener = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e) => {
+        setKeyboardHeight(e.endCoordinates.height);
+        // Scroll to end when keyboard appears
+        if (messages.length > 0 && flatListRef.current) {
+          setTimeout(() => {
+            flatListRef.current?.scrollToEnd({ animated: true });
+          }, 100);
+        }
+      }
+    );
+
+    const keyboardWillHideListener = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        setKeyboardHeight(0);
+      }
+    );
+
+    return () => {
+      keyboardWillShowListener.remove();
+      keyboardWillHideListener.remove();
+    };
+  }, [messages.length]);
 
   /**
    * Auto-scroll to bottom when new messages arrive
@@ -189,11 +222,19 @@ export default function SoloChat({
         style={styles.messagesList}
         contentContainerStyle={[
           styles.messagesContainer,
-          messages.length === 0 && styles.emptyMessagesContainer
+          messages.length === 0 && styles.emptyMessagesContainer,
         ]}
+        contentInset={Platform.OS === 'ios' ? { bottom: keyboardHeight > 0 ? keyboardHeight : 0 } : undefined} // iOS-specific keyboard handling
+        automaticallyAdjustsScrollIndicatorInsets={false} // We handle this manually
         showsVerticalScrollIndicator={false}
-        keyboardDismissMode="on-drag"
+        keyboardDismissMode="interactive" // Changed from "on-drag" for smoother interaction
         keyboardShouldPersistTaps="handled"
+        maintainVisibleContentPosition={{ // This helps maintain scroll position
+          minIndexForVisible: 0,
+          autoscrollToTopThreshold: 10, // Reduced threshold for better scrolling
+        }}
+        automaticallyAdjustContentInsets={false} // We handle this manually
+        automaticallyAdjustKeyboardInsets={false} // Disable automatic adjustment to control manually
         ListEmptyComponent={renderEmptyState}
         ListFooterComponent={
           <View style={styles.footerContainer}>
@@ -234,7 +275,7 @@ const styles = StyleSheet.create({
   messagesContainer: {
     paddingHorizontal: 16,        // 16px horizontal padding per UIDesign.md
     paddingTop: 16,               // 16px top padding
-    paddingBottom: 4,             // Minimal bottom padding to prevent cutting off
+    paddingBottom: 0,             // No bottom padding - handled dynamically
   },
   emptyMessagesContainer: {
     flexGrow: 1,                  // Allow centering of empty state
@@ -330,6 +371,6 @@ const styles = StyleSheet.create({
   
   // Footer Container
   footerContainer: {
-    paddingBottom: 2,             // Minimal bottom padding to avoid cutting off content
+    paddingBottom: 0,             // No bottom padding - handled by parent container
   },
 }); 

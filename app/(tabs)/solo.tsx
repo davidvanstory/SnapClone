@@ -24,6 +24,7 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
@@ -31,6 +32,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
 import ChatInput from '@/components/solo/ChatInput';
@@ -48,6 +50,7 @@ export default function SoloTutorScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user } = useAuthStore();
   const {
     currentChat,
@@ -71,6 +74,25 @@ export default function SoloTutorScreen() {
   // Local state for share modal
   const [isShareModalVisible, setIsShareModalVisible] = useState(false);
   const [selectedImageForShare, setSelectedImageForShare] = useState<string | null>(null);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  // Handle keyboard visibility
+  useEffect(() => {
+    const keyboardWillShowListener = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      () => setKeyboardVisible(true)
+    );
+    
+    const keyboardWillHideListener = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => setKeyboardVisible(false)
+    );
+
+    return () => {
+      keyboardWillShowListener.remove();
+      keyboardWillHideListener.remove();
+    };
+  }, []);
 
   // 🚨 DEBUG: Add comprehensive logging for user ID debugging
   console.log('🚨 SOLO DEBUG - Current user state:', {
@@ -245,7 +267,7 @@ export default function SoloTutorScreen() {
       <KeyboardAvoidingView 
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 49 : 78}
       >
         {/* Header - Minimal thin header */}
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
@@ -276,7 +298,10 @@ export default function SoloTutorScreen() {
         )}
 
         {/* Chat Container */}
-        <View style={styles.chatContainer}>
+        <View style={[
+          styles.chatContainer,
+          keyboardVisible && styles.chatContainerKeyboardVisible
+        ]}>
           <SoloChat
             messages={messages}
             isLoading={isSendingMessage}
@@ -289,7 +314,10 @@ export default function SoloTutorScreen() {
         </View>
 
         {/* Chat Input */}
-        <View style={styles.inputContainer}>
+        <View style={[
+          styles.inputContainer,
+          keyboardVisible && styles.inputContainerKeyboardVisible
+        ]}>
           <ChatInput
             onSendMessage={async (message: string, imageUri?: string) => {
               if (!currentChat?.id) return;
@@ -379,6 +407,10 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 0,        // Remove horizontal padding - SoloChat handles its own
     paddingVertical: 0,          // Remove vertical padding to eliminate dead space
+    paddingBottom: 1,          // Space for input field to prevent overlap
+  },
+  chatContainerKeyboardVisible: {
+    paddingBottom: 0,            // No padding when keyboard is visible - KeyboardAvoidingView handles it
   },
   welcomeCard: {
     padding: 24,                 // 24px section spacing per UIDesign.md
@@ -437,7 +469,10 @@ const styles = StyleSheet.create({
   // Input Container
   inputContainer: {
     paddingHorizontal: 12,       // Reduced to minimize dead space
-    paddingBottom: 42,           // Increased space above tab bar (10% higher)
+    paddingBottom: 42,           // Restored original spacing above tab bar
     paddingTop: 0,               // Remove top padding to eliminate dead space
+  },
+  inputContainerKeyboardVisible: {
+    paddingBottom: 0,            // No padding when keyboard is visible to eliminate dead space
   },
 }); 

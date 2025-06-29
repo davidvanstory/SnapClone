@@ -443,6 +443,8 @@ const styles = StyleSheet.create({
     margin: 0,                    // Remove margin to eliminate dead space
     paddingHorizontal: 12,        // Reduced padding to minimize dead space
     paddingVertical: 8,           // Reduced vertical padding to minimize dead space
+    marginBottom: 0,              // Explicitly set marginBottom to 0
+    marginTop: 0,                 // Explicitly set marginTop to 0
   },
   content: {
     gap: 8,                       // Reduced spacing to minimize dead space
