@@ -6,10 +6,7 @@ reset login for hello@example.com
 
 
 
-To access the RAG features - must use account:
-hello@example.com
-123456
-Synthetic data is attached to this user. 
+
 
 
 
@@ -44,7 +41,7 @@ A gentle introduction to Juni helps new users understand how to use the app and 
 Each page has been designed with simple, subtle calls to action or nudges about how to get the most out of the app. 
 
 
-Alex - User Story
+Alex - Persona
 - Alex, who wants to improve as an illustrator takes a photo of his charcoal sketch and asks Juni how to improve facial proportions.
 - Juni responds with tailored suggestions and remembers Alex’s past works, offering continuity and growth tracking.
 - Alex joins a community class, shares his progress, and receives feedback from peers and the AI alike.
@@ -67,6 +64,31 @@ Testing Focus
 - UI usability checks to ensure the app is intuitive for both new and returning users.
 
 
+To test the RAG:
+
+Imaginary Technique
+Q - what was the technique I used for painting those apples again?
+- the user and AI made up a technique called the Crossflow technique for getting smooth painting in still lifes. It has a 4:2:1 rhythm for light, medium, hard pressure with tiny crosshatch motions
+
+Injury Adaptation
+- Q - I’m trying to set up the anchor technique but have forgotten it, remind me?
+- The user is a leftie and was struggling with not smudging their work, because they have an old wrist injury and now it shakes without support. The user and AI came up with a way to manage this call the Anchor Technique where they stabilize with a folded paper towel which is a barrier between wrist and drawinf. 
+
+Project Idea
+- Q - Can you remind me about some key points from the Barista Chronicles?
+- The user has been telling the AI about their project idea called the Barista Chronicles where they have been drawing Emma, who is the morning shift manager in a coffe shop. They drawn her 3 times now. #1 was acrylics but the skin tones were off, #2 they got Emmas olive complexion just right. #3 They did a piece where she was mid laugh and got her laugh lines around the eyes really well. 
+
+Studio Setup
+- Q - What was it thats blocking my light in front of my window?
+- The user talks about the challenge of having a big oak tree block the north facing window which blocks the light in his studio so when he photographs his work it looks more dull than when he paints it. The AI suggested a 75 watt LED after 4pm. 
+
+
+Tech Stack
+React Native + Expo
+Supabase (database, auth, storage)
+gpt4o, text-embeddings-3-large (AI and RAG)
+pgvector (vector embeddings, similarity search)
+
 Getting Started
 1. Clone the repo - https://github.com/davidvanstory/SnapClone
 2. Installs dependencies - npm install
@@ -74,9 +96,3 @@ Getting Started
 4. Run locally - expo start
 
 
-Tech Stack
-React Native + Expo
-Shadcn
-Supabase (database, auth, storage)
-gpt4o, text-embeddings-3-large (AI and RAG)
-pgvector (vector embeddings, similarity search)

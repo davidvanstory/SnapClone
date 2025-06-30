@@ -7,6 +7,7 @@
  * - Photo capture with quality settings
  * - Image preview after capture
  * - Photo upload to Supabase Storage
+ * - Share to class feed functionality with modal
  * - Themed styling that adapts to light/dark mode
  * - Error handling and loading states
  * - Logout functionality for easy user testing
@@ -14,9 +15,11 @@
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import ShareWithClassModal from '@/components/solo/ShareWithClassModal';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { uploadPhoto } from '@/lib/photoService';
+import { createJuniPost, getUserDisplayName } from '@/lib/postService';
 import { useAuthStore } from '@/store/authStore';
 import { useClassStore } from '@/store/classStore';
 import { useSoloStore } from '@/store/soloStore';
@@ -41,12 +44,15 @@ export default function CameraScreen() {
   // State for upload success
   const [uploadSuccess, setUploadSuccess] = useState(false);
   
+  // State for share modal
+  const [isShareModalVisible, setIsShareModalVisible] = useState(false);
+  
   // Camera permissions hook
   const [permission, requestPermission] = useCameraPermissions();
   
   // Auth store for logout functionality
-  const { signOut } = useAuthStore();
-  const { clearClassData } = useClassStore();
+  const { user, signOut } = useAuthStore();
+  const { currentClass, clearClassData, setPendingScrollToPostId } = useClassStore();
   const { setPrepopulatedImageUri } = useSoloStore();
   
   // Themed colors
@@ -217,6 +223,103 @@ export default function CameraScreen() {
     setUploadSuccess(false);
   };
 
+  /**
+   * Handle share button press - opens the share with class modal
+   */
+  const handleSharePress = () => {
+    console.log('🎨 Camera Screen - Share button pressed');
+    
+    if (!capturedPhoto) {
+      console.log('⚠️ Camera Screen - No photo to share');
+      return;
+    }
+    
+    // Open the share modal
+    setIsShareModalVisible(true);
+  };
+
+  /**
+   * Handle sharing the image to class feed
+   */
+  const handleShareToClass = async (caption: string) => {
+    console.log('🚀 Camera Screen - Sharing to class with caption:', caption);
+    
+    if (!user?.id || !capturedPhoto) {
+      console.error('❌ Camera Screen - Missing user or photo data');
+      return;
+    }
+
+    // Check if user has a class
+    if (!currentClass) {
+      console.log('⚠️ Camera Screen - User not enrolled in any class');
+      Alert.alert(
+        'No Class Selected',
+        'Please join a class before sharing your artwork.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    try {
+      // First upload the photo
+      console.log('⏫ Camera Screen - Uploading photo before sharing');
+      const uploadResult = await uploadPhoto(capturedPhoto);
+      
+      if (!uploadResult.success || !uploadResult.publicUrl) {
+        console.error('❌ Camera Screen - Photo upload failed');
+        Alert.alert('Upload Failed', 'Failed to upload photo. Please try again.');
+        return;
+      }
+
+      // Get user's display name
+      const userName = await getUserDisplayName(user.id);
+      
+      // Create the post with the uploaded image URL
+      const result = await createJuniPost({
+        userId: user.id,
+        imageUrl: uploadResult.publicUrl,
+        caption: caption,
+        userName: userName || undefined,
+        maxViewers: 5,
+        durationHours: 5,
+      });
+
+      if (result.success && result.postId) {
+        console.log('✅ Camera Screen - Successfully shared to class feed');
+        
+        // Close modal
+        setIsShareModalVisible(false);
+        
+        // Set the post ID to scroll to in the class store
+        setPendingScrollToPostId(result.postId);
+        
+        // Navigate to class feed
+        console.log('📍 Camera Screen - Navigating to class feed, post ID:', result.postId);
+        router.push('/(tabs)');
+        
+        // Reset camera state after navigation
+        setCapturedPhoto(null);
+        setUploadSuccess(false);
+        
+      } else {
+        console.error('❌ Camera Screen - Failed to share:', result.error);
+        Alert.alert(
+          'Share Failed',
+          result.error || 'Failed to share your artwork. Please try again.',
+          [{ text: 'OK' }]
+        );
+      }
+      
+    } catch (error) {
+      console.error('❌ Camera Screen - Unexpected error sharing:', error);
+      Alert.alert(
+        'Share Failed',
+        'An unexpected error occurred. Please try again.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
   // Handle permission not granted
   if (!permission) {
     console.log('⏳ Camera Screen - Permission loading');
@@ -263,6 +366,20 @@ export default function CameraScreen() {
       {capturedPhoto ? (
         // Photo preview mode
         <>
+          {/* Small X button in top-left corner to reset camera */}
+          <TouchableOpacity
+            style={[styles.closeButton, { backgroundColor: 'rgba(0, 0, 0, 0.6)' }]}
+            onPress={resetCamera}
+            activeOpacity={0.8}
+          >
+            <IconSymbol 
+              name="xmark" 
+              size={20} 
+              color="white" 
+              weight="medium"
+            />
+          </TouchableOpacity>
+
           <Image 
             source={{ uri: capturedPhoto }} 
             style={styles.previewImage}
@@ -272,11 +389,11 @@ export default function CameraScreen() {
             <View style={styles.buttonContainer}>
               <TouchableOpacity
                 style={[styles.secondaryButton, { borderColor: tintColor }]}
-                onPress={resetCamera}
+                onPress={handleSharePress}
                 disabled={isUploading}
               >
                 <Text style={[styles.secondaryButtonText, { color: tintColor }]}>
-                  Take Another
+                  Share
                 </Text>
               </TouchableOpacity>
               
@@ -340,6 +457,14 @@ export default function CameraScreen() {
           </View>
         </>
       )}
+      
+      {/* Share with Class Modal */}
+      <ShareWithClassModal
+        visible={isShareModalVisible}
+        imageUrl={capturedPhoto}
+        onClose={() => setIsShareModalVisible(false)}
+        onShare={handleShareToClass}
+      />
     </View>
   );
 }
@@ -363,6 +488,19 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14,
     fontWeight: '600',
+  },
+  
+  // Close button (X) in top-left
+  closeButton: {
+    position: 'absolute',
+    top: 60, // Below status bar
+    left: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000, // Ensure it's above other elements
   },
   
   // Loading state
